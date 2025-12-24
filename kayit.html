@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ada Sineklik - Müşteri Kayıt</title>
+    <script src="https://www.gstatic.com/firebasejs/9.18.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.18.0/firebase-firestore-compat.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; }
+        .container { max-width: 400px; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin: auto; }
+        input, textarea { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background: #2E7D32; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+        button:hover { background: #1b5e20; }
+        h2 { text-align: center; color: #333; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Müşteri Kayıt Formu</h2>
+    <input type="text" id="adSoyad" placeholder="Ad Soyad (Zorunlu)">
+    <input type="tel" id="telefon" placeholder="Telefon">
+    <input type="email" id="email" placeholder="E-posta">
+    <textarea id="adres" placeholder="Adres" rows="3"></textarea>
+    <textarea id="not" placeholder="Notunuz" rows="2"></textarea>
+    <button onclick="musteriKaydet()">Kaydı Tamamla</button>
+</div>
+
+<script>
+    // 1. BURAYA KENDİ FİREBASE PROJE AYARLARINI YAPIŞTIR
+    const firebaseConfig = {
+        apiKey: "AIza...",
+        authDomain: "projeniz.firebaseapp.com",
+        projectId: "projeniz",
+        storageBucket: "projeniz.appspot.com",
+        messagingSenderId: "...",
+        appId: "..."
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // 2. ANDROID UYGULAMANDAKİ userPath İLE AYNI OLMALI
+    // Örn: "deneme_gmail_com"
+    const userPath = "admin_e_postaniz_com".replace(/\./g, '_'); 
+
+    async function musteriKaydet() {
+        const ad = document.getElementById('adSoyad').value;
+        const tel = document.getElementById('telefon').value;
+        const mail = document.getElementById('email').value;
+        const adres = document.getElementById('adres').value;
+        const not = document.getElementById('not').value;
+
+        if (!ad) { alert("Lütfen Ad Soyad giriniz!"); return; }
+
+        try {
+            const docRef = db.collection("Kullanicilar").document(userPath)
+                             .collection("Veriler").document("Musteriler");
+
+            const doc = await docRef.get();
+            let musteriListesi = [];
+
+            if (doc.exists) {
+                const data = doc.data();
+                musteriListesi = JSON.parse(data.json_data || "[]");
+            }
+
+            // Yeni müşteri objesi (Android'deki modelinle birebir aynı)
+            const yeniMusteri = {
+                adSoyad: ad,
+                telefon: tel.replace(/\D/g,''),
+                email: mail,
+                adres: adres,
+                not: not,
+                borcMiktari: 0.0,
+                toplamSatisTutari: 0.0
+            };
+
+            musteriListesi.push(yeniMusteri);
+
+            await docRef.set({
+                json_data: JSON.stringify(musteriListesi)
+            });
+
+            alert("Kaydınız başarıyla alındı!");
+            location.reload();
+
+        } catch (error) {
+            console.error("Hata:", error);
+            alert("Bir hata oluştu: " + error.message);
+        }
+    }
+</script>
+</body>
+</html>

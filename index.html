@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .table-header { background-color: #2C2C2C; color: white; font-size: 12px; text-align: center; }
-        input, select { border: 1px solid #ccc !important; border-radius: 4px; padding: 6px; width: 100%; font-size: 14px; }
+        input, select { border: 1px solid #ccc !important; border-radius: 4px; padding: 6px; width: 100%; font-size: 14px; background-color: white; }
         .btn-delete { color: #e11d48; font-weight: bold; cursor: pointer; padding: 5px; }
     </style>
 </head>
@@ -47,7 +47,7 @@
                     </tr>
                 </thead>
                 <tbody id="urunTabloGovde" class="text-sm">
-                    </tbody>
+                </tbody>
             </table>
         </div>
 
@@ -66,7 +66,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
-        // Paylaştığınız güncel Firebase yapılandırması
         const firebaseConfig = {
             apiKey: "AIzaSyD5cilsAyJrzPzwtgIBd1w7StfAkUBAO7E",
             authDomain: "adasineklik-f8c9f.firebaseapp.com",
@@ -80,7 +79,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Firebase yolunuz
         const userPath = "adasineklik@54_com"; 
 
         let satirSayaci = 0;
@@ -93,13 +91,30 @@
             row.innerHTML = `
                 <td class="p-2 border text-center font-bold">${satirSayaci}</td>
                 <td class="p-2 border"><select class="yon"><option>Yatay</option><option>Dikey</option></select></td>
-                <td class="p-2 border"><input type="text" class="seri" placeholder="Örn: Gold"></td>
-                <td class="p-2 border"><input type="text" class="model" placeholder="Örn: Plise"></td>
+                <td class="p-2 border">
+                    <select class="seri">
+                        <option>Kalın</option>
+                        <option>İnce</option>
+                    </select>
+                </td>
+                <td class="p-2 border">
+                    <select class="model">
+                        <option>Tek Kanat</option>
+                        <option>Duble</option>
+                        <option>Triple</option>
+                        <option>Menteşeli</option>
+                    </select>
+                </td>
                 <td class="p-2 border"><input type="text" class="renk" placeholder="Örn: Beyaz"></td>
                 <td class="p-2 border"><input type="text" class="en" placeholder="En"></td>
                 <td class="p-2 border"><input type="text" class="boy" placeholder="Boy"></td>
-                <td class="p-2 border"><input type="text" class="tul" placeholder="Standart"></td>
-                <td class="p-2 border"><input type="text" class="adet" value="1"></td>
+                <td class="p-2 border">
+                    <select class="tul">
+                        <option>Standart Tül</option>
+                        <option>Kedi Tül</option>
+                    </select>
+                </td>
+                <td class="p-2 border"><input type="number" class="adet" value="1" min="1"></td>
                 <td class="p-2 border text-center"><span onclick="satirSil('row-${satirSayaci}')" class="btn-delete">SİL</span></td>
             `;
             tbody.appendChild(row);
@@ -130,7 +145,6 @@
             btn.innerText = "Sipariş İletiliyor...";
 
             try {
-                // 1. Sipariş Sayacını ve Listesini Firebase'den al
                 const sayacRef = doc(db, "Kullanicilar", userPath, "Veriler", "SiparisSayaci");
                 const siparislerRef = doc(db, "Kullanicilar", userPath, "Veriler", "Siparisler");
                 
@@ -139,7 +153,6 @@
                 let sonId = (sayacSnap.exists() ? sayacSnap.data().son_id : 0) + 1;
                 let mevcutSiparisler = sipSnap.exists() ? JSON.parse(sipSnap.data().json_data || "[]") : [];
 
-                // 2. Ürünleri Hazırla (APK'daki SiparisUrun modeline göre)
                 const urunlerJson = Array.from(urunRows).map((row, index) => ({
                     siraNo: index + 1,
                     yon: row.querySelector('.yon').value,
@@ -154,10 +167,9 @@
                     musteri: musteriAd
                 }));
 
-                // 3. Sipariş Kaydı (APK'daki SiparisKaydi modeline göre)
                 const yeniSiparis = {
                     siparisKodu: `S-${String(sonId).padStart(4, '0')}`,
-                    durum: "Yeni Sipariş",
+                    durum: "Online Sipariş", // Burası güncellendi
                     musteriAdiSoyadi: musteriAd,
                     telefon: tel,
                     email: document.getElementById('email').value,
@@ -168,10 +180,8 @@
                     urunler: urunlerJson
                 };
 
-                // En başa ekle
                 mevcutSiparisler.unshift(yeniSiparis);
 
-                // 4. Firebase'e Kaydet
                 await Promise.all([
                     setDoc(siparislerRef, { json_data: JSON.stringify(mevcutSiparisler) }),
                     setDoc(sayacRef, { son_id: sonId })
@@ -188,10 +198,7 @@
             }
         };
 
-        // İlk satırı otomatik aç
         yeniSatirEkle();
     </script>
 </body>
 </html>
-
-

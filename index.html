@@ -20,9 +20,18 @@
 <body class="bg-gray-100 min-h-screen p-3 md:p-6">
     <div id="mainContent" style="display: none;">
         <div class="max-w-6xl mx-auto bg-white shadow-2xl rounded-2xl p-4 md:p-8">
-            <div class="flex justify-between items-center border-b pb-4 mb-6">
-                <h1 class="text-2xl md:text-3xl font-extrabold text-gray-800 text-center flex-1">Ada Sineklik Sipariş Paneli</h1>
-                <button onclick="oturumuKapat()" class="text-red-600 font-bold text-sm bg-red-50 px-3 py-2 rounded-lg">Çıkış Yap</button>
+            
+            <div class="flex flex-col md:flex-row justify-between items-center border-b pb-4 mb-6 gap-4">
+                <h1 class="text-2xl md:text-3xl font-extrabold text-gray-800 text-center md:text-left flex-1">Ada Sineklik Sipariş Paneli</h1>
+                
+                <div class="flex items-center gap-2">
+                    <button onclick="window.location.href='siparisdurumu.html'" class="bg-blue-50 text-blue-700 font-bold text-sm px-4 py-2 rounded-lg hover:bg-blue-100 transition border border-blue-200 shadow-sm">
+                        Siparişlerim
+                    </button>
+                    <button onclick="oturumuKapat()" class="text-red-600 font-bold text-sm bg-red-50 px-3 py-2 rounded-lg hover:bg-red-100 transition border border-red-200">
+                        Çıkış Yap
+                    </button>
+                </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 bg-blue-50 p-5 rounded-xl">
@@ -79,7 +88,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
-        // --- 1. GÜVENLİK KONTROLÜ (Hepsinden önce çalışmalı) ---
+        // --- 1. GÜVENLİK KONTROLÜ ---
         const hamVeri = sessionStorage.getItem("girisYapanMusteri");
         if (!hamVeri) {
             window.location.replace("giris.html");
@@ -87,7 +96,7 @@
             const aktifMusteri = JSON.parse(hamVeri);
             document.getElementById('mainContent').style.display = 'block';
             document.getElementById('musteriAd').value = aktifMusteri.adSoyad || "";
-            document.getElementById('telefon').value = aktifMusteri.telefon || "";
+            document.getElementById('telefon').value = aktifMusteri.telefon || aktifMusteri.tel || "";
             document.getElementById('adres').value = aktifMusteri.adres || "";
         }
 
@@ -191,12 +200,11 @@
             
             const urunRows = document.querySelectorAll('#urunTabloGovde tr');
             
-            // --- BOŞ ALAN KONTROLÜ ---
             for (let row of urunRows) {
                 const selects = row.querySelectorAll('select');
                 for (let s of selects) {
                     if (s.value === "") {
-                        alert("Lütfen tüm ürünlerin seçeneklerini (Yön, Seri, Model vb.) seçiniz!");
+                        alert("Lütfen tüm ürünlerin seçeneklerini seçiniz!");
                         return;
                     }
                 }

@@ -3,19 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sipariş ve Ödeme Durumu - Ada Sineklik</title>
+    <title>Hesap Özeti - Ada Sineklik</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .siparis-layout { 
-            background: white; 
-            border-radius: 12px; 
-            border: 2px solid #e5e7eb; 
-            overflow: hidden;
-            margin-bottom: 2rem;
-        }
+        .siparis-layout { background: white; border-radius: 12px; border: 2px solid #e5e7eb; overflow: hidden; margin-bottom: 2rem; }
         .product-table-header { background-color: #2C2C2C; color: white; }
         .badge-status { padding: 4px 10px; border-radius: 999px; font-weight: 600; font-size: 12px; }
-        .text-detail { color: #6b7280; font-size: 13px; }
         .summary-card { background: white; border: 2px solid #e5e7eb; border-radius: 16px; padding: 20px; }
     </style>
 </head>
@@ -35,27 +28,19 @@
                     <p class="text-sm font-bold text-gray-400 uppercase">Toplam Harcama</p>
                     <p id="toplamHarcama" class="text-2xl font-black text-gray-800">0,00 TL</p>
                 </div>
-                <div class="bg-blue-50 p-3 rounded-full">
-                    <span class="text-2xl">💰</span>
-                </div>
+                <div class="bg-blue-50 p-3 rounded-full"><span class="text-2xl">💰</span></div>
             </div>
             <div class="summary-card flex justify-between items-center border-orange-200 bg-orange-50/30">
                 <div>
                     <p class="text-sm font-bold text-orange-400 uppercase">Kalan Cari Borç</p>
                     <p id="cariBorc" class="text-2xl font-black text-orange-600">0,00 TL</p>
                 </div>
-                <div class="bg-orange-100 p-3 rounded-full">
-                    <span class="text-2xl">⏳</span>
-                </div>
+                <div class="bg-orange-100 p-3 rounded-full"><span class="text-2xl">⏳</span></div>
             </div>
         </div>
 
-        <div class="mb-6 border-b border-gray-200">
-            <h2 class="text-lg font-bold text-gray-800 border-b-2 border-blue-600 inline-block pb-2">Siparişlerim ve Ödemelerim</h2>
-        </div>
-
         <div id="anaIcerik" class="space-y-6">
-            <div class="text-center py-10 text-gray-500">Veriler hazırlanıyor...</div>
+            <div class="text-center py-10 text-gray-500">Veriler yükleniyor, lütfen bekleyin...</div>
         </div>
     </div>
 
@@ -76,66 +61,61 @@
         const db = getFirestore(app);
         const userPath = "adasineklik@54_com".replace(/\./g, '_');
 
-        const currency = new NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' });
-
         async function verileriYukle() {
             const container = document.getElementById('anaIcerik');
             const hamVeri = sessionStorage.getItem("girisYapanMusteri");
-            if (!hamVeri) return;
+            
+            if (!hamVeri) {
+                container.innerHTML = "Oturum açılmamış. Lütfen giriş yapın.";
+                return;
+            }
 
             const aktifMusteri = JSON.parse(hamVeri);
-            const tel = aktifMusteri.telefon;
+            const musteriAd = aktifMusteri.adSoyad;
+            const musteriTel = aktifMusteri.telefon;
 
             try {
-                // Firebase'den Siparişleri ve Ödemeleri eşzamanlı çek
                 const [sipSnap, odeSnap] = await Promise.all([
                     getDoc(doc(db, "Kullanicilar", userPath, "Veriler", "Siparisler")),
                     getDoc(doc(db, "Kullanicilar", userPath, "Veriler", "Odemeler"))
                 ]);
 
-                let tumSiparisler = sipSnap.exists() ? JSON.parse(sipSnap.data().json_data || "[]") : [];
-                let tumOdemeler = odeSnap.exists() ? JSON.parse(odeSnap.data().json_data || "[]") : [];
+                const tumSiparisler = sipSnap.exists() ? JSON.parse(sipSnap.data().json_data || "[]") : [];
+                const tumOdemeler = odeSnap.exists() ? JSON.parse(odeSnap.data().json_data || "[]") : [];
 
-                // Filtreleme
-                const musterininSiparisleri = tumSiparisler.filter(s => s.telefon === tel);
-                const musterininOdemeleri = tumOdemeler.filter(o => o.musteriAdiSoyadi === aktifMusteri.adSoyad);
+                const musterininSiparisleri = tumSiparisler.filter(s => s.telefon === musteriTel);
+                const musterininOdemeleri = tumOdemeler.filter(o => o.musteriAdiSoyadi === musteriAd);
 
-                // Hesaplamalar
-                const toplamSiparisTutari = musterininSiparisleri.reduce((sum, s) => sum + (parseFloat(s.toplamTutar) || 0), 0);
-                const toplamOdenen = musterininOdemeleri.reduce((sum, o) => sum + (parseFloat(o.tutar) || 0), 0);
-                const kalanBorc = toplamSiparisTutari - toplamOdenen;
+                const tHarcama = musterininSiparisleri.reduce((sum, s) => sum + (Number(s.toplamTutar) || 0), 0);
+                const tOdenen = musterininOdemeleri.reduce((sum, o) => sum + (Number(o.tutar) || 0), 0);
+                const kBorc = tHarcama - tOdenen;
 
-                // Üst Paneli Güncelle
-                document.getElementById('toplamHarcama').innerText = toplamSiparisTutari.toLocaleString('tr-TR') + " TL";
-                document.getElementById('cariBorc').innerText = kalanBorc.toLocaleString('tr-TR') + " TL";
+                document.getElementById('toplamHarcama').innerText = tHarcama.toLocaleString('tr-TR', {minimumFractionDigits: 2}) + " TL";
+                document.getElementById('cariBorc').innerText = kBorc.toLocaleString('tr-TR', {minimumFractionDigits: 2}) + " TL";
 
-                let htmlContent = "";
+                let html = "";
 
-                // 1. ÖDEMELER LİSTESİ (Yeni eklenen kısım)
+                // Ödemeler Bölümü
                 if (musterininOdemeleri.length > 0) {
-                    htmlContent += `
-                        <div class="siparis-layout p-5 border-blue-200 bg-blue-50/20">
-                            <h3 class="font-black text-blue-800 mb-4 flex items-center">
-                                <span class="mr-2">💳</span> Yapılan Ödemeler
-                            </h3>
-                            <div class="space-y-3">
-                                ${musterininOdemeleri.sort((a,b) => b.tarih - a.tarih).map(o => `
-                                    <div class="flex justify-between items-center bg-white p-3 rounded-lg border border-blue-100 shadow-sm">
-                                        <div>
-                                            <p class="text-xs text-gray-400 font-bold">${new Date(o.tarih).toLocaleDateString('tr-TR')}</p>
-                                            <p class="font-bold text-gray-700 underline decoration-blue-200">Tahsilat Kaydı</p>
+                    html += `<div class="siparis-layout p-5 border-blue-200 bg-blue-50/20">
+                                <h3 class="font-black text-blue-800 mb-4 uppercase text-sm">💳 Yapılan Ödemeler</h3>
+                                <div class="space-y-3">
+                                    ${musterininOdemeleri.sort((a,b) => b.tarih - a.tarih).map(o => `
+                                        <div class="flex justify-between items-center bg-white p-3 rounded-lg border border-blue-100 shadow-sm">
+                                            <div>
+                                                <p class="text-[10px] text-gray-400 font-bold">${new Date(o.tarih).toLocaleDateString('tr-TR')}</p>
+                                                <p class="font-bold text-gray-700">Tahsilat</p>
+                                            </div>
+                                            <p class="text-lg font-black text-blue-600">+ ${Number(o.tutar).toLocaleString('tr-TR', {minimumFractionDigits: 2})} TL</p>
                                         </div>
-                                        <p class="text-lg font-black text-blue-600">+ ${o.tutar.toLocaleString('tr-TR')} TL</p>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                    `;
+                                    `).join('')}
+                                </div>
+                            </div>`;
                 }
 
-                // 2. SİPARİŞLER LİSTESİ
+                // Siparişler Bölümü
                 if (musterininSiparisleri.length > 0) {
-                    htmlContent += musterininSiparisleri.map(sip => `
+                    html += musterininSiparisleri.map(sip => `
                         <div class="siparis-layout">
                             <div class="p-4 border-b bg-gray-50 flex justify-between items-center">
                                 <div>
@@ -143,19 +123,13 @@
                                     <p class="font-black text-gray-800">${new Date(sip.olusturmaTarihi).toLocaleDateString('tr-TR')}</p>
                                 </div>
                                 <div class="text-right">
-                                    <span class="badge-status ${sip.durum === 'Tamamlandı' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}">
-                                        ${sip.durum}
-                                    </span>
-                                    <p class="font-bold text-gray-800 mt-1">${sip.toplamTutar.toLocaleString('tr-TR')} TL</p>
+                                    <span class="badge-status ${sip.durum === 'Tamamlandı' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}">${sip.durum}</span>
+                                    <p class="font-bold text-gray-800 mt-1">${Number(sip.toplamTutar).toLocaleString('tr-TR', {minimumFractionDigits: 2})} TL</p>
                                 </div>
                             </div>
                             <table class="w-full text-left">
                                 <thead class="product-table-header text-[11px] uppercase">
-                                    <tr>
-                                        <th class="px-4 py-2">Ürün Detayı</th>
-                                        <th class="px-4 py-2 text-center">Ölçü</th>
-                                        <th class="px-4 py-2 text-center">Adet</th>
-                                    </tr>
+                                    <tr><th class="px-4 py-2">Ürün Bilgileri</th><th class="px-4 py-2 text-center">Ölçü</th><th class="px-4 py-2 text-center">Adet</th></tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-100">
                                     ${sip.urunler.map(u => `
@@ -174,11 +148,11 @@
                     `).join('');
                 }
 
-                container.innerHTML = htmlContent || '<p class="text-center text-gray-400">Kayıt bulunamadı.</p>';
+                container.innerHTML = html || '<div class="text-center py-10 bg-white rounded-xl border-2 border-dashed text-gray-400">Henüz kayıtlı bir işleminiz bulunmuyor.</div>';
 
-            } catch (error) {
-                console.error(error);
-                container.innerHTML = "Veri çekilirken bir hata oluştu.";
+            } catch (err) {
+                console.error("Hata Detayı:", err);
+                container.innerHTML = `<div class="p-4 bg-red-50 text-red-600 rounded-lg">Veriler yüklenirken bir sorun oluştu. Lütfen bağlantınızı kontrol edin.</div>`;
             }
         }
 

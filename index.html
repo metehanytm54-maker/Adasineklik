@@ -7,56 +7,66 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .table-header { background-color: #2C2C2C; color: white; font-size: 12px; text-align: center; }
-        input, select { border: 1px solid #ccc !important; border-radius: 4px; padding: 6px; width: 100%; font-size: 14px; background-color: white; }
-        .btn-delete { color: #e11d48; font-weight: bold; cursor: pointer; padding: 5px; }
+        input, select, textarea { border: 1px solid #ccc !important; border-radius: 6px; padding: 10px; width: 100%; font-size: 14px; background-color: white; }
+        input:focus, select:focus, textarea:focus { border-color: #2563eb !important; outline: none; ring: 2px ring-blue-500; }
+        .btn-delete { color: #e11d48; font-weight: bold; cursor: pointer; padding: 8px; display: inline-block; }
+        /* Mobil tablo düzenlemesi */
+        @media (max-width: 768px) {
+            .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            table { min-width: 800px; }
+        }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen p-2 md:p-6">
-    <div class="max-w-6xl mx-auto bg-white shadow-2xl rounded-xl p-4 md:p-8">
-        <h1 class="text-2xl md:text-3xl font-extrabold text-gray-800 border-b pb-4 mb-6 text-center md:text-left">Ada Sineklik Sipariş Oluştur</h1>
+<body class="bg-gray-100 min-h-screen p-3 md:p-6">
+    <div class="max-w-6xl mx-auto bg-white shadow-2xl rounded-2xl p-4 md:p-8">
+        <h1 class="text-2xl md:text-3xl font-extrabold text-gray-800 border-b pb-4 mb-6 text-center">Ada Sineklik Sipariş Paneli</h1>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 bg-blue-50 p-4 rounded-lg">
-            <div>
-                <label class="block text-sm font-bold text-gray-700 mb-1">Müşteri Ad Soyad *</label>
-                <input type="text" id="musteriAd" placeholder="Örn: Ebubekir Yetim" required>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 bg-blue-50 p-5 rounded-xl">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Müşteri Ad Soyad *</label>
+                    <input type="text" id="musteriAd" placeholder="Örn: Ebubekir Yetim" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Telefon Numarası *</label>
+                    <input type="tel" id="telefon" placeholder="05XXXXXXXXX" required>
+                </div>
             </div>
-            <div>
-                <label class="block text-sm font-bold text-gray-700 mb-1">Telefon Numarası *</label>
-                <input type="tel" id="telefon" placeholder="05XXXXXXXXX" required>
-            </div>
-            <div>
-                <label class="block text-sm font-bold text-gray-700 mb-1">E-mail (İsteğe Bağlı)</label>
-                <input type="email" id="email" placeholder="mail@ornek.com">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Montaj / Teslimat Adresi *</label>
+                    <textarea id="adres" rows="3" placeholder="Mahalle, Sokak, No, Kat/Daire..."></textarea>
+                </div>
             </div>
         </div>
 
-        <div class="overflow-x-auto border rounded-lg shadow-sm">
+        <div class="table-container border rounded-xl shadow-sm bg-white">
             <table class="w-full border-collapse">
                 <thead>
-                    <tr class="table-header">
-                        <th class="p-2 border">S.No</th>
-                        <th class="p-2 border">Yön</th>
-                        <th class="p-2 border">Seri</th>
-                        <th class="p-2 border">Model</th>
-                        <th class="p-2 border">Renk</th>
-                        <th class="p-2 border">En</th>
-                        <th class="p-2 border">Boy</th>
-                        <th class="p-2 border">Tül Cinsi</th>
-                        <th class="p-2 border">Adet</th>
-                        <th class="p-2 border">İşlem</th>
+                    <tr class="table-header uppercase tracking-wider">
+                        <th class="p-3 border">No</th>
+                        <th class="p-3 border">Yön</th>
+                        <th class="p-3 border">Seri</th>
+                        <th class="p-3 border">Model</th>
+                        <th class="p-3 border">Renk</th>
+                        <th class="p-3 border">En (cm)</th>
+                        <th class="p-3 border">Boy (cm)</th>
+                        <th class="p-3 border">Tül</th>
+                        <th class="p-3 border">Adet</th>
+                        <th class="p-3 border">İşlem</th>
                     </tr>
                 </thead>
                 <tbody id="urunTabloGovde" class="text-sm">
-                </tbody>
+                    </tbody>
             </table>
         </div>
 
         <div class="flex flex-col md:flex-row justify-between items-center mt-8 gap-4">
-            <button onclick="yeniSatirEkle()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition shadow-md w-full md:w-auto">
-                + Yeni Ürün Ekle
+            <button onclick="yeniSatirEkle()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-xl transition shadow-md w-full md:w-auto flex items-center justify-center">
+                <span class="text-xl mr-2">+</span> Yeni Ürün Ekle
             </button>
             
-            <button onclick="siparisiKaydet()" id="btnKaydet" class="bg-blue-600 hover:bg-blue-800 text-white font-bold py-4 px-12 rounded-xl text-xl transition shadow-xl w-full md:w-auto">
+            <button onclick="siparisiKaydet()" id="btnKaydet" class="bg-blue-600 hover:bg-blue-800 text-white font-bold py-5 px-14 rounded-2xl text-xl transition shadow-xl w-full md:w-auto active:scale-95">
                 Siparişi APK'ya Gönder
             </button>
         </div>
@@ -78,7 +88,6 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-
         const userPath = "adasineklik@54_com"; 
 
         let satirSayaci = 0;
@@ -88,42 +97,37 @@
             const tbody = document.getElementById('urunTabloGovde');
             const row = document.createElement('tr');
             row.id = `row-${satirSayaci}`;
+            row.className = "hover:bg-gray-50 transition";
             row.innerHTML = `
-                <td class="p-2 border text-center font-bold">${satirSayaci}</td>
+                <td class="p-2 border text-center font-bold text-gray-500">${satirSayaci}</td>
                 <td class="p-2 border"><select class="yon"><option>Yatay</option><option>Dikey</option></select></td>
+                <td class="p-2 border"><select class="seri"><option>Kalın</option><option>İnce</option></select></td>
+                <td class="p-2 border"><select class="model"><option>Tek Kanat</option><option>Duble</option><option>Triple</option><option>Menteşeli</option></select></td>
                 <td class="p-2 border">
-                    <select class="seri">
-                        <option>Kalın</option>
-                        <option>İnce</option>
+                    <select class="renk">
+                        <option>Beyaz</option>
+                        <option>Antrasit</option>
+                        <option>Altın Meşe</option>
+                        <option>Vizon</option>
                     </select>
                 </td>
-                <td class="p-2 border">
-                    <select class="model">
-                        <option>Tek Kanat</option>
-                        <option>Duble</option>
-                        <option>Triple</option>
-                        <option>Menteşeli</option>
-                    </select>
-                </td>
-                <td class="p-2 border"><input type="text" class="renk" placeholder="Örn: Beyaz"></td>
-                <td class="p-2 border"><input type="text" class="en" placeholder="En"></td>
-                <td class="p-2 border"><input type="text" class="boy" placeholder="Boy"></td>
-                <td class="p-2 border">
-                    <select class="tul">
-                        <option>Standart Tül</option>
-                        <option>Kedi Tül</option>
-                    </select>
-                </td>
+                <td class="p-2 border"><input type="number" class="en" placeholder="En"></td>
+                <td class="p-2 border"><input type="number" class="boy" placeholder="Boy"></td>
+                <td class="p-2 border"><select class="tul"><option>Standart Tül</option><option>Kedi Tül</option></select></td>
                 <td class="p-2 border"><input type="number" class="adet" value="1" min="1"></td>
-                <td class="p-2 border text-center"><span onclick="satirSil('row-${satirSayaci}')" class="btn-delete">SİL</span></td>
+                <td class="p-2 border text-center"><button onclick="satirSil('row-${satirSayaci}')" class="btn-delete">SİL</button></td>
             `;
             tbody.appendChild(row);
             numaralariGuncelle();
         };
 
         window.satirSil = (id) => {
-            document.getElementById(id).remove();
-            numaralariGuncelle();
+            if(document.querySelectorAll('#urunTabloGovde tr').length > 1) {
+                document.getElementById(id).remove();
+                numaralariGuncelle();
+            } else {
+                alert("En az bir ürün bulunmalıdır.");
+            }
         };
 
         function numaralariGuncelle() {
@@ -134,15 +138,14 @@
         window.siparisiKaydet = async () => {
             const musteriAd = document.getElementById('musteriAd').value.trim();
             const tel = document.getElementById('telefon').value.trim();
+            const adres = document.getElementById('adres').value.trim();
             
-            if(!musteriAd || !tel) return alert("Lütfen Müşteri Adı ve Telefonu girin!");
+            if(!musteriAd || !tel || !adres) return alert("Lütfen Müşteri Adı, Telefon ve Adres bilgilerini eksiksiz doldurun!");
 
             const urunRows = document.querySelectorAll('#urunTabloGovde tr');
-            if(urunRows.length === 0) return alert("Siparişe en az 1 ürün eklemelisiniz!");
-
             const btn = document.getElementById('btnKaydet');
             btn.disabled = true;
-            btn.innerText = "Sipariş İletiliyor...";
+            btn.innerText = "Gönderiliyor...";
 
             try {
                 const sayacRef = doc(db, "Kullanicilar", userPath, "Veriler", "SiparisSayaci");
@@ -158,21 +161,20 @@
                     yon: row.querySelector('.yon').value,
                     seri: row.querySelector('.seri').value,
                     model: row.querySelector('.model').value,
+                    renk: row.querySelector('.renk').value,
                     en: row.querySelector('.en').value,
                     boy: row.querySelector('.boy').value,
                     tulCinsi: row.querySelector('.tul').value,
-                    renk: row.querySelector('.renk').value,
                     adet: row.querySelector('.adet').value,
-                    tulTP: row.querySelector('.adet').value,
                     musteri: musteriAd
                 }));
 
                 const yeniSiparis = {
                     siparisKodu: `S-${String(sonId).padStart(4, '0')}`,
-                    durum: "Online Sipariş", // Burası güncellendi
+                    durum: "Online Sipariş",
                     musteriAdiSoyadi: musteriAd,
                     telefon: tel,
-                    email: document.getElementById('email').value,
+                    adres: adres, // Yeni eklenen alan
                     toplamTutar: 0.0,
                     fiyat: 0.0,
                     maliyet: 0.0,
@@ -187,17 +189,18 @@
                     setDoc(sayacRef, { son_id: sonId })
                 ]);
 
-                alert(`Sipariş ${yeniSiparis.siparisKodu} koduyla APK'ya gönderildi!`);
+                alert(`Sipariş Başarıyla Gönderildi!\nKod: ${yeniSiparis.siparisKodu}`);
                 location.reload();
 
             } catch (error) {
                 console.error(error);
-                alert("Bağlantı Hatası: " + error.message);
+                alert("Hata oluştu: " + error.message);
                 btn.disabled = false;
                 btn.innerText = "Siparişi APK'ya Gönder";
             }
         };
 
+        // Açılışta bir satır ekle
         yeniSatirEkle();
     </script>
 </body>

@@ -47,7 +47,6 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Admin yolun (Android ile aynı olmalı)
     const userPath = "adasineklik@54_com".replace(/\./g, '_'); 
 
     document.getElementById('btnGiris').addEventListener('click', async () => {
@@ -67,16 +66,17 @@
                 const data = docSnap.data();
                 const musteriler = JSON.parse(data.json_data || "[]");
 
-                // Müşteri listesinde Ad ve Şifre (Not) eşleşmesi ara
                 const bulunanMusteri = musteriler.find(m => 
                     m.adSoyad.toLocaleLowerCase('tr') === ad.toLocaleLowerCase('tr') && 
                     m.not === sifre
                 );
 
                 if (bulunanMusteri) {
+                    // --- KRİTİK EKLENTİ: Giriş Bilgisini Hafızaya Al ---
+                    sessionStorage.setItem("girisYapanMusteri", JSON.stringify(bulunanMusteri));
+                    
                     alert("Giriş Başarılı! Hoş geldiniz, " + bulunanMusteri.adSoyad);
-                    // Giriş yapınca nereye gitsin? Buraya istediğiniz linki yazın:
-                    window.location.href = "index.html";
+                    window.location.replace("index.html"); // Yönlendirme
                 } else {
                     alert("Hatalı Ad Soyad veya Şifre!");
                 }
@@ -91,6 +91,4 @@
 </script>
 
 </body>
-
 </html>
-

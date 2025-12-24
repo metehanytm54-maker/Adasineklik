@@ -6,7 +6,14 @@
     <title>Sipariş Durumu - Ada Sineklik</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .detail-card { background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        /* Sipariş kartı için çerçeve ve tasarım ayarları */
+        .siparis-layout { 
+            background: white; 
+            border-radius: 12px; 
+            border: 2px solid #e5e7eb; /* Belirgin çerçeve */
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
         .product-table-header { background-color: #2C2C2C; color: white; }
         .badge-status { padding: 6px 12px; border-radius: 999px; font-weight: 600; font-size: 14px; }
         .text-detail { color: #6b7280; font-size: 13px; }
@@ -62,15 +69,16 @@
 
                 if (snap.exists()) {
                     const tumSiparisler = JSON.parse(snap.data().json_data || "[]");
+                    // Telefon numarasına göre filtreleme
                     const musterininSiparisleri = tumSiparisler.filter(s => s.telefon === aktifMusteri.telefon);
 
                     if (musterininSiparisleri.length === 0) {
-                        container.innerHTML = `<div class="p-10 text-center text-gray-500 bg-white rounded-2xl">Henüz bir siparişiniz bulunmuyor.</div>`;
+                        container.innerHTML = `<div class="p-10 text-center text-gray-500 bg-white rounded-2xl border-2 border-dashed">Henüz bir siparişiniz bulunmuyor.</div>`;
                         return;
                     }
 
                     container.innerHTML = musterininSiparisleri.map(sip => `
-                        <div class="detail-card overflow-hidden mb-8 border border-gray-100">
+                        <div class="siparis-layout">
                             <div class="p-5 border-b bg-gray-50 flex flex-wrap justify-between items-center gap-4">
                                 <div>
                                     <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Sipariş Kodu</span>
@@ -94,9 +102,9 @@
                                 <table class="w-full text-left">
                                     <thead>
                                         <tr class="product-table-header text-[12px] uppercase">
-                                            <th class="px-6 py-3">Ürün Bilgileri (Detaylı)</th>
-                                            <th class="px-6 py-3 text-center">Ölçü</th>
-                                            <th class="px-6 py-3 text-center">Adet</th>
+                                            <th class="px-6 py-3 text-white">Ürün Bilgileri (Detaylı)</th>
+                                            <th class="px-6 py-3 text-center text-white">Ölçü</th>
+                                            <th class="px-6 py-3 text-center text-white">Adet</th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-gray-100">
@@ -120,10 +128,6 @@
                                         `).join('')}
                                     </tbody>
                                 </table>
-                            </div>
-                            
-                            <div class="p-4 bg-gray-50 border-t text-detail">
-                                <strong>Adres:</strong> ${sip.adres}
                             </div>
                         </div>
                     `).join('');

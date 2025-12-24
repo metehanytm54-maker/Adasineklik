@@ -79,6 +79,18 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
+        // --- 1. GÜVENLİK KONTROLÜ (Hepsinden önce çalışmalı) ---
+        const hamVeri = sessionStorage.getItem("girisYapanMusteri");
+        if (!hamVeri) {
+            window.location.replace("giris.html");
+        } else {
+            const aktifMusteri = JSON.parse(hamVeri);
+            document.getElementById('mainContent').style.display = 'block';
+            document.getElementById('musteriAd').value = aktifMusteri.adSoyad || "";
+            document.getElementById('telefon').value = aktifMusteri.telefon || "";
+            document.getElementById('adres').value = aktifMusteri.adres || "";
+        }
+
         // Firebase Ayarları
         const firebaseConfig = {
             apiKey: "AIzaSyD5cilsAyJrzPzwtgIBd1w7StfAkUBAO7E",
@@ -93,30 +105,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const userPath = "adasineklik@54_com".replace(/\./g, '_'); 
-
-        // --- GÜVENLİK VE GİRİŞ KONTROLÜ ---
-        function checkLogin() {
-            const hamVeri = sessionStorage.getItem("girisYapanMusteri");
-            
-            if (!hamVeri || hamVeri === "undefined") {
-                window.location.replace("giris.html"); // Geri dönmeyi engellemek için replace kullanıyoruz
-                return;
-            }
-
-            try {
-                const aktifMusteri = JSON.parse(hamVeri);
-                document.getElementById('mainContent').style.display = 'block';
-                document.getElementById('musteriAd').value = aktifMusteri.adSoyad || "";
-                document.getElementById('telefon').value = aktifMusteri.telefon || "";
-                document.getElementById('adres').value = aktifMusteri.adres || "";
-            } catch (e) {
-                console.error("Veri okuma hatası:", e);
-                window.location.replace("giris.html");
-            }
-        }
-
-        // Sayfa yüklenir yüklenmez kontrol et
-        checkLogin();
 
         let satirSayaci = 0;
 
@@ -133,11 +121,32 @@
             row.className = "hover:bg-gray-50 transition";
             row.innerHTML = `
                 <td class="p-2 border text-center font-bold text-gray-500">${satirSayaci}</td>
-                <td class="p-2 border"><select class="yon"><option>Yatay</option><option>Dikey</option></select></td>
-                <td class="p-2 border"><select class="seri"><option>Kalın</option><option>İnce</option></select></td>
-                <td class="p-2 border"><select class="model"><option>Tek Kanat</option><option>Duble</option><option>Triple</option><option>Menteşeli</option></select></td>
+                <td class="p-2 border">
+                    <select class="yon">
+                        <option value="" disabled selected>Seçiniz</option>
+                        <option>Yatay</option>
+                        <option>Dikey</option>
+                    </select>
+                </td>
+                <td class="p-2 border">
+                    <select class="seri">
+                        <option value="" disabled selected>Seçiniz</option>
+                        <option>Kalın</option>
+                        <option>İnce</option>
+                    </select>
+                </td>
+                <td class="p-2 border">
+                    <select class="model">
+                        <option value="" disabled selected>Seçiniz</option>
+                        <option>Tek Kanat</option>
+                        <option>Duble</option>
+                        <option>Triple</option>
+                        <option>Menteşeli</option>
+                    </select>
+                </td>
                 <td class="p-2 border">
                     <select class="renk">
+                        <option value="" disabled selected>Seçiniz</option>
                         <option>Beyaz</option>
                         <option>Antrasit</option>
                         <option>Altın Meşe</option>
@@ -147,7 +156,13 @@
                 </td>
                 <td class="p-2 border"><input type="number" class="en" placeholder="En"></td>
                 <td class="p-2 border"><input type="number" class="boy" placeholder="Boy"></td>
-                <td class="p-2 border"><select class="tul"><option>Standart Tül</option><option>Kedi Tül</option></select></td>
+                <td class="p-2 border">
+                    <select class="tul">
+                        <option value="" disabled selected>Seçiniz</option>
+                        <option>Standart Tül</option>
+                        <option>Kedi Tül</option>
+                    </select>
+                </td>
                 <td class="p-2 border"><input type="number" class="adet" value="1" min="1"></td>
                 <td class="p-2 border text-center"><button onclick="satirSil('row-${satirSayaci}')" class="btn-delete">SİL</button></td>
             `;
@@ -175,6 +190,22 @@
             const adres = document.getElementById('adres').value;
             
             const urunRows = document.querySelectorAll('#urunTabloGovde tr');
+            
+            // --- BOŞ ALAN KONTROLÜ ---
+            for (let row of urunRows) {
+                const selects = row.querySelectorAll('select');
+                for (let s of selects) {
+                    if (s.value === "") {
+                        alert("Lütfen tüm ürünlerin seçeneklerini (Yön, Seri, Model vb.) seçiniz!");
+                        return;
+                    }
+                }
+                if (!row.querySelector('.en').value || !row.querySelector('.boy').value) {
+                    alert("Lütfen tüm ürünlerin En ve Boy ölçülerini giriniz!");
+                    return;
+                }
+            }
+
             const btn = document.getElementById('btnKaydet');
             btn.disabled = true;
             btn.innerText = "Gönderiliyor...";

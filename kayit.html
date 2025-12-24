@@ -4,93 +4,104 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ada Sineklik - Müşteri Kayıt</title>
-    <script src="https://www.gstatic.com/firebasejs/9.18.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.18.0/firebase-firestore-compat.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; }
-        .container { max-width: 400px; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin: auto; }
-        input, textarea { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        button { width: 100%; padding: 10px; background: #2E7D32; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 450px; }
+        h2 { text-align: center; color: #1b5e20; margin-bottom: 20px; }
+        input, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
+        button { width: 100%; padding: 14px; background: #2e7d32; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 15px; transition: 0.3s; }
         button:hover { background: #1b5e20; }
-        h2 { text-align: center; color: #333; }
+        .footer { text-align: center; font-size: 12px; color: #888; margin-top: 20px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>Müşteri Kayıt Formu</h2>
+<div class="card">
+    <h2>Müşteri Kayıt Portalı</h2>
     <input type="text" id="adSoyad" placeholder="Ad Soyad (Zorunlu)">
-    <input type="tel" id="telefon" placeholder="Telefon">
-    <input type="email" id="email" placeholder="E-posta">
-    <textarea id="adres" placeholder="Adres" rows="3"></textarea>
-    <textarea id="not" placeholder="Notunuz" rows="2"></textarea>
-    <button onclick="musteriKaydet()">Kaydı Tamamla</button>
+    <input type="tel" id="telefon" placeholder="Telefon (05xx)">
+    <input type="email" id="email" placeholder="E-posta Adresi">
+    <textarea id="adres" placeholder="Adres Bilgisi" rows="3"></textarea>
+    <textarea id="not" placeholder="Eklemek istediğiniz notlar..." rows="2"></textarea>
+    <button id="btnKaydet">Kayıt Ol</button>
+    <div class="footer">© 2025 Ada Sineklik Sistemi</div>
 </div>
 
-<script>
-    // 1. BURAYA KENDİ FİREBASE PROJE AYARLARINI YAPIŞTIR
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.18.0/firebase-app.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.18.0/firebase-firestore.js";
+
+    // Senin Paylaştığın Firebase Yapılandırması
     const firebaseConfig = {
-        apiKey: "AIza...",
-        authDomain: "projeniz.firebaseapp.com",
-        projectId: "projeniz",
-        storageBucket: "projeniz.appspot.com",
-        messagingSenderId: "...",
-        appId: "..."
+        apiKey: "AIzaSyD5cilsAyJrzPzwtgIBd1w7StfAkUBAO7E",
+        authDomain: "adasineklik-f8c9f.firebaseapp.com",
+        projectId: "adasineklik-f8c9f",
+        storageBucket: "adasineklik-f8c9f.firebasestorage.app",
+        messagingSenderId: "612764827500",
+        appId: "1:612764827500:web:5b11b94229a36336547d49",
+        measurementId: "G-F1YF4VDFBL"
     };
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+    // Firebase Başlat
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-    // 2. ANDROID UYGULAMANDAKİ userPath İLE AYNI OLMALI
-    // Örn: "deneme_gmail_com"
-    const userPath = "admin_e_postaniz_com".replace(/\./g, '_'); 
+    // DİKKAT: Android uygulandaki giriş yaptığın e-posta adresi nedir?
+    // Örn: adasineklik@gmail.com ise aşağıyı "adasineklik_gmail_com" yapmalısın.
+    const userPath = "adasineklik@54_com".replace(/\./g, '_'); 
 
-    async function musteriKaydet() {
+    document.getElementById('btnKaydet').addEventListener('click', async () => {
         const ad = document.getElementById('adSoyad').value;
         const tel = document.getElementById('telefon').value;
         const mail = document.getElementById('email').value;
         const adres = document.getElementById('adres').value;
         const not = document.getElementById('not').value;
 
-        if (!ad) { alert("Lütfen Ad Soyad giriniz!"); return; }
+        if (!ad) {
+            alert("Lütfen en az Ad Soyad bilgisini doldurun.");
+            return;
+        }
 
         try {
-            const docRef = db.collection("Kullanicilar").document(userPath)
-                             .collection("Veriler").document("Musteriler");
+            // Müşteriler dökümanını referans al
+            const docRef = doc(db, "Kullanicilar", userPath, "Veriler", "Musteriler");
+            const docSnap = await getDoc(docRef);
 
-            const doc = await docRef.get();
             let musteriListesi = [];
-
-            if (doc.exists) {
-                const data = doc.data();
+            if (docSnap.exists()) {
+                const data = docSnap.data();
                 musteriListesi = JSON.parse(data.json_data || "[]");
             }
 
-            // Yeni müşteri objesi (Android'deki modelinle birebir aynı)
+            // Android tarafındaki modelinle %100 uyumlu yapı
             const yeniMusteri = {
-                adSoyad: ad,
+                adSoyad: ad.trim(),
                 telefon: tel.replace(/\D/g,''),
-                email: mail,
-                adres: adres,
-                not: not,
+                email: mail.trim(),
+                adres: adres.trim(),
+                not: not.trim(),
                 borcMiktari: 0.0,
-                toplamSatisTutari: 0.0
+                toplamSatisTutari: 0.0,
+                eklenmeTarihi: Date.now()
             };
 
-            musteriListesi.push(yeniMusteri);
+            // Yeni müşteriyi listenin başına ekle
+            musteriListesi.unshift(yeniMusteri);
 
-            await docRef.set({
+            // Geriye JSON olarak paketle ve gönder
+            await setDoc(docRef, {
                 json_data: JSON.stringify(musteriListesi)
             });
 
-            alert("Kaydınız başarıyla alındı!");
-            location.reload();
+            alert("Kaydınız başarıyla oluşturuldu! Uygulama listesine eklendi.");
+            window.location.reload();
 
         } catch (error) {
-            console.error("Hata:", error);
-            alert("Bir hata oluştu: " + error.message);
+            console.error("Hata oluştu:", error);
+            alert("Bir hata oluştu. Lütfen tekrar deneyin.");
         }
-    }
+    });
 </script>
+
 </body>
 </html>

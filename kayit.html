@@ -8,7 +8,8 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
         .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 450px; }
         h2 { text-align: center; color: #1b5e20; margin-bottom: 20px; }
-        input, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
+        textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px; resize: none; }
         button { width: 100%; padding: 14px; background: #2e7d32; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 15px; transition: 0.3s; }
         button:hover { background: #1b5e20; }
         .footer { text-align: center; font-size: 12px; color: #888; margin-top: 20px; }
@@ -22,7 +23,7 @@
     <input type="tel" id="telefon" placeholder="Telefon (05xx)">
     <input type="email" id="email" placeholder="E-posta Adresi">
     <textarea id="adres" placeholder="Adres Bilgisi" rows="3"></textarea>
-    <textarea id="not" placeholder="Eklemek istediğiniz notlar..." rows="2"></textarea>
+    <input type="password" id="sifre" placeholder="Şifre Belirle">
     <button id="btnKaydet">Kayıt Ol</button>
     <div class="footer">© 2025 Ada Sineklik Sistemi</div>
 </div>
@@ -31,7 +32,6 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.18.0/firebase-app.js";
     import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.18.0/firebase-firestore.js";
 
-    // Senin Paylaştığın Firebase Yapılandırması
     const firebaseConfig = {
         apiKey: "AIzaSyD5cilsAyJrzPzwtgIBd1w7StfAkUBAO7E",
         authDomain: "adasineklik-f8c9f.firebaseapp.com",
@@ -42,12 +42,9 @@
         measurementId: "G-F1YF4VDFBL"
     };
 
-    // Firebase Başlat
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // DİKKAT: Android uygulandaki giriş yaptığın e-posta adresi nedir?
-    // Örn: adasineklik@gmail.com ise aşağıyı "adasineklik_gmail_com" yapmalısın.
     const userPath = "adasineklik@54_com".replace(/\./g, '_'); 
 
     document.getElementById('btnKaydet').addEventListener('click', async () => {
@@ -55,7 +52,7 @@
         const tel = document.getElementById('telefon').value;
         const mail = document.getElementById('email').value;
         const adres = document.getElementById('adres').value;
-        const not = document.getElementById('not').value;
+        const sifre = document.getElementById('sifre').value; // Şifre kutusundan veri al
 
         if (!ad) {
             alert("Lütfen en az Ad Soyad bilgisini doldurun.");
@@ -63,7 +60,6 @@
         }
 
         try {
-            // Müşteriler dökümanını referans al
             const docRef = doc(db, "Kullanicilar", userPath, "Veriler", "Musteriler");
             const docSnap = await getDoc(docRef);
 
@@ -73,22 +69,19 @@
                 musteriListesi = JSON.parse(data.json_data || "[]");
             }
 
-            // Android tarafındaki modelinle %100 uyumlu yapı
             const yeniMusteri = {
                 adSoyad: ad.trim(),
                 telefon: tel.replace(/\D/g,''),
                 email: mail.trim(),
                 adres: adres.trim(),
-                not: not.trim(),
+                not: sifre, // Kullanıcının belirlediği şifreyi NOT alanına yazıyoruz
                 borcMiktari: 0.0,
                 toplamSatisTutari: 0.0,
                 eklenmeTarihi: Date.now()
             };
 
-            // Yeni müşteriyi listenin başına ekle
             musteriListesi.unshift(yeniMusteri);
 
-            // Geriye JSON olarak paketle ve gönder
             await setDoc(docRef, {
                 json_data: JSON.stringify(musteriListesi)
             });

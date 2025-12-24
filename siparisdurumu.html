@@ -40,7 +40,7 @@
         </div>
 
         <div id="anaIcerik" class="space-y-6">
-            <div class="text-center py-10 text-gray-500">Veriler yükleniyor, lütfen bekleyin...</div>
+            <div class="text-center py-10 text-gray-500">Veriler yükleniyor...</div>
         </div>
     </div>
 
@@ -66,7 +66,7 @@
             const hamVeri = sessionStorage.getItem("girisYapanMusteri");
             
             if (!hamVeri) {
-                container.innerHTML = "Oturum açılmamış. Lütfen giriş yapın.";
+                container.innerHTML = "Oturum açılmamış.";
                 return;
             }
 
@@ -90,56 +90,58 @@
                 const tOdenen = musterininOdemeleri.reduce((sum, o) => sum + (Number(o.tutar) || 0), 0);
                 const kBorc = tHarcama - tOdenen;
 
-                document.getElementById('toplamHarcama').innerText = tHarcama.toLocaleString('tr-TR', {minimumFractionDigits: 2}) + " TL";
-                document.getElementById('cariBorc').innerText = kBorc.toLocaleString('tr-TR', {minimumFractionDigits: 2}) + " TL";
+                document.getElementById('toplamHarcama').innerText = tHarcama.toLocaleString('tr-TR') + " TL";
+                document.getElementById('cariBorc').innerText = kBorc.toLocaleString('tr-TR') + " TL";
 
                 let html = "";
 
-                // Ödemeler Bölümü
+                // ÖDEMELER
                 if (musterininOdemeleri.length > 0) {
                     html += `<div class="siparis-layout p-5 border-blue-200 bg-blue-50/20">
-                                <h3 class="font-black text-blue-800 mb-4 uppercase text-sm">💳 Yapılan Ödemeler</h3>
+                                <h3 class="font-black text-blue-800 mb-4 uppercase text-xs">💳 Ödeme Geçmişi</h3>
                                 <div class="space-y-3">
                                     ${musterininOdemeleri.sort((a,b) => b.tarih - a.tarih).map(o => `
                                         <div class="flex justify-between items-center bg-white p-3 rounded-lg border border-blue-100 shadow-sm">
                                             <div>
                                                 <p class="text-[10px] text-gray-400 font-bold">${new Date(o.tarih).toLocaleDateString('tr-TR')}</p>
-                                                <p class="font-bold text-gray-700">Tahsilat</p>
+                                                <p class="font-bold text-gray-700 italic">Tahsilat Edildi</p>
                                             </div>
-                                            <p class="text-lg font-black text-blue-600">+ ${Number(o.tutar).toLocaleString('tr-TR', {minimumFractionDigits: 2})} TL</p>
+                                            <p class="text-lg font-black text-blue-600">+ ${Number(o.tutar).toLocaleString('tr-TR')} TL</p>
                                         </div>
                                     `).join('')}
                                 </div>
                             </div>`;
                 }
 
-                // Siparişler Bölümü
+                // SİPARİŞLER
                 if (musterininSiparisleri.length > 0) {
                     html += musterininSiparisleri.map(sip => `
                         <div class="siparis-layout">
                             <div class="p-4 border-b bg-gray-50 flex justify-between items-center">
                                 <div>
-                                    <span class="text-[10px] font-bold text-gray-400 uppercase">Kod: ${sip.siparisKodu}</span>
+                                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Kod: ${sip.siparisKodu}</span>
                                     <p class="font-black text-gray-800">${new Date(sip.olusturmaTarihi).toLocaleDateString('tr-TR')}</p>
                                 </div>
                                 <div class="text-right">
                                     <span class="badge-status ${sip.durum === 'Tamamlandı' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}">${sip.durum}</span>
-                                    <p class="font-bold text-gray-800 mt-1">${Number(sip.toplamTutar).toLocaleString('tr-TR', {minimumFractionDigits: 2})} TL</p>
+                                    <p class="font-bold text-gray-800 mt-1">${Number(sip.toplamTutar).toLocaleString('tr-TR')} TL</p>
                                 </div>
                             </div>
                             <table class="w-full text-left">
-                                <thead class="product-table-header text-[11px] uppercase">
+                                <thead class="product-table-header text-[11px] uppercase tracking-wide">
                                     <tr><th class="px-4 py-2">Ürün Bilgileri</th><th class="px-4 py-2 text-center">Ölçü</th><th class="px-4 py-2 text-center">Adet</th></tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-100">
                                     ${sip.urunler.map(u => `
                                         <tr>
-                                            <td class="px-4 py-3 text-sm">
-                                                <div class="font-bold text-gray-800">${u.model}</div>
-                                                <div class="text-[11px] text-gray-500">${u.renk} | ${u.tulCinsi}</div>
+                                            <td class="px-4 py-4 text-sm">
+                                                <div class="font-bold text-gray-800 text-base">${u.model} <span class="text-gray-400 font-normal">(${u.seri})</span></div>
+                                                <div class="text-[12px] text-gray-500 mt-1">
+                                                    <b>Renk:</b> ${u.renk} | <b>Yön:</b> ${u.yon} | <b>Tül:</b> ${u.tulCinsi}
+                                                </div>
                                             </td>
-                                            <td class="px-4 py-3 text-center font-bold text-gray-600 text-sm">${u.en}x${u.boy}</td>
-                                            <td class="px-4 py-3 text-center font-bold text-gray-800 text-sm">${u.adet} Ad.</td>
+                                            <td class="px-4 py-4 text-center font-bold text-gray-600 text-base">${u.en} x ${u.boy}</td>
+                                            <td class="px-4 py-4 text-center font-bold text-gray-800 text-base">${u.adet} Ad.</td>
                                         </tr>
                                     `).join('')}
                                 </tbody>
@@ -148,11 +150,11 @@
                     `).join('');
                 }
 
-                container.innerHTML = html || '<div class="text-center py-10 bg-white rounded-xl border-2 border-dashed text-gray-400">Henüz kayıtlı bir işleminiz bulunmuyor.</div>';
+                container.innerHTML = html || '<p class="text-center text-gray-400">İşlem kaydı bulunamadı.</p>';
 
             } catch (err) {
-                console.error("Hata Detayı:", err);
-                container.innerHTML = `<div class="p-4 bg-red-50 text-red-600 rounded-lg">Veriler yüklenirken bir sorun oluştu. Lütfen bağlantınızı kontrol edin.</div>`;
+                console.error(err);
+                container.innerHTML = "Veriler yüklenirken bir hata oluştu.";
             }
         }
 

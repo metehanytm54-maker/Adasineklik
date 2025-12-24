@@ -3,39 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ada Sineklik - Sipariş Geçmişim</title>
+    <title>Sipariş Durumu - Ada Sineklik</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .siparis-card { border-left: 5px solid #2563eb; transition: transform 0.2s; }
-        .siparis-card:hover { transform: translateY(-3px); }
-        .durum-badge { padding: 4px 12px; border-radius: 99px; font-size: 12px; font-weight: bold; }
-        .durum-yeni { background: #dbeafe; color: #1e40af; }
-        .durum-imalat { background: #fef3c7; color: #92400e; }
-        .durum-tamam { background: #dcfce7; color: #166534; }
-        .durum-online { background: #f3e8ff; color: #6b21a8; }
+        .detail-card { background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .product-table-header { background-color: #2C2C2C; color: white; }
+        .badge-status { padding: 6px 12px; border-radius: 999px; font-weight: 600; font-size: 14px; }
+        .text-detail { color: #6b7280; font-size: 13px; }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen p-4 md:p-8">
+<body class="bg-gray-50 min-h-screen p-4 md:p-8">
 
-    <div id="mainContent" style="display: none;" class="max-w-4xl mx-auto">
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl font-bold text-gray-800">Sipariş Geçmişim</h1>
-            <button onclick="window.location.href='index.html'" class="bg-gray-600 text-white px-4 py-2 rounded-lg text-sm">Geri Dön</button>
+    <div class="max-w-4xl mx-auto">
+        <div class="flex items-center justify-between mb-8">
+            <button onclick="window.location.href='index.html'" class="flex items-center text-blue-600 font-semibold hover:underline">
+                <span class="mr-2">←</span> Sipariş Paneline Dön
+            </button>
+            <h1 class="text-2xl font-bold text-gray-800">Sipariş Durumum</h1>
         </div>
 
-        <div id="musteriOzet" class="bg-white p-4 rounded-xl shadow-sm mb-6 flex justify-between items-center border border-blue-100">
-            <div>
-                <p class="text-sm text-gray-500">Hoş geldiniz,</p>
-                <p id="ozetAd" class="font-bold text-lg text-blue-900"></p>
-            </div>
-            <div class="text-right">
-                <p class="text-sm text-gray-500">Toplam Harcama</p>
-                <p id="genelToplam" class="font-bold text-xl text-green-600">0.00 TL</p>
-            </div>
-        </div>
-
-        <div id="siparisListesi" class="space-y-4">
-            <div class="text-center py-10 text-gray-500">Siparişleriniz yükleniyor...</div>
+        <div id="siparisListesi" class="space-y-6">
+            <div class="text-center py-10 text-gray-500">Yükleniyor...</div>
         </div>
     </div>
 
@@ -49,99 +37,107 @@
             projectId: "adasineklik-f8c9f",
             storageBucket: "adasineklik-f8c9f.firebasestorage.app",
             messagingSenderId: "612764827500",
-            appId: "1:612764827500:web:5b11b94229a36336547d49"
+            appId: "1:612764827500:web:5b11b94229a36336547d49",
+            measurementId: "G-F1YF4VDFBL"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const userPath = "adasineklik@54_com".replace(/\./g, '_');
 
-        const hamVeri = sessionStorage.getItem("girisYapanMusteri");
-        if (!hamVeri) {
-            window.location.replace("giris.html");
-        } else {
+        async function siparisleriYukle() {
+            const container = document.getElementById('siparisListesi');
+            const hamVeri = sessionStorage.getItem("girisYapanMusteri");
+            
+            if (!hamVeri) {
+                container.innerHTML = `<div class="p-6 bg-red-50 text-red-600 rounded-xl">Oturum bilgisi bulunamadı.</div>`;
+                return;
+            }
+
             const aktifMusteri = JSON.parse(hamVeri);
-            document.getElementById('mainContent').style.display = 'block';
-            document.getElementById('ozetAd').innerText = aktifMusteri.adSoyad;
-            siparisleriGetir(aktifMusteri);
-        }
 
-        async function siparisleriGetir(musteri) {
             try {
-                const docRef = doc(db, "Kullanicilar", userPath, "Veriler", "Siparisler");
-                const docSnap = await getDoc(docRef);
+                const sipRef = doc(db, "Kullanicilar", userPath, "Veriler", "Siparisler");
+                const snap = await getDoc(sipRef);
 
-                if (docSnap.exists()) {
-                    const tumSiparisler = JSON.parse(docSnap.data().json_data || "[]");
-                    
-                    // Sadece bu müşteriye ait siparişleri filtrele (Ad Soyad ve Telefon eşleşmesi)
-                    const filtrelenmis = tumSiparisler.filter(s => 
-                        s.musteriAdiSoyadi.toLowerCase() === musteri.adSoyad.toLowerCase() &&
-                        (s.telefon === musteri.telefon || s.telefon === musteri.tel)
-                    );
+                if (snap.exists()) {
+                    const tumSiparisler = JSON.parse(snap.data().json_data || "[]");
+                    const musterininSiparisleri = tumSiparisler.filter(s => s.telefon === aktifMusteri.telefon);
 
-                    const listeDiv = document.getElementById('siparisListesi');
-                    listeDiv.innerHTML = "";
-                    let toplamHarcama = 0;
-
-                    if (filtrelenmis.length === 0) {
-                        listeDiv.innerHTML = `<div class="bg-white p-8 rounded-xl text-center text-gray-500">Henüz bir siparişiniz bulunmuyor.</div>`;
+                    if (musterininSiparisleri.length === 0) {
+                        container.innerHTML = `<div class="p-10 text-center text-gray-500 bg-white rounded-2xl">Henüz bir siparişiniz bulunmuyor.</div>`;
                         return;
                     }
 
-                    filtrelenmis.forEach(siparis => {
-                        const tutar = siparis.toplamTutar > 0 ? siparis.toplamTutar : siparis.fiyat;
-                        toplamHarcama += tutar;
-
-                        const tarih = new Date(siparis.olusturmaTarihi).toLocaleDateString('tr-TR');
-                        
-                        let durumClass = "durum-yeni";
-                        if(siparis.durum.includes("İmalat")) durumClass = "durum-imalat";
-                        if(siparis.durum.includes("Tamam")) durumClass = "durum-tamam";
-                        if(siparis.durum.includes("Online")) durumClass = "durum-online";
-
-                        const urunlerHtml = siparis.urunler.map(u => 
-                            `<div class="text-xs text-gray-600 border-b border-gray-50 py-1">
-                                ${u.adet} Adet - ${u.model} (${u.en}x${u.boy}) - ${u.renk}
-                            </div>`
-                        ).join('');
-
-                        listeDiv.innerHTML += `
-                            <div class="bg-white p-5 rounded-xl shadow-sm siparis-card border border-gray-200">
-                                <div class="flex justify-between items-start mb-3">
-                                    <div>
-                                        <span class="text-xs font-bold text-blue-600">${siparis.siparisKodu}</span>
-                                        <p class="text-xs text-gray-400">${tarih}</p>
+                    container.innerHTML = musterininSiparisleri.map(sip => `
+                        <div class="detail-card overflow-hidden mb-8 border border-gray-100">
+                            <div class="p-5 border-b bg-gray-50 flex flex-wrap justify-between items-center gap-4">
+                                <div>
+                                    <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Sipariş Kodu</span>
+                                    <p class="text-lg font-extrabold text-gray-800">${sip.siparisKodu}</p>
+                                </div>
+                                <div class="flex items-center gap-6">
+                                    <div class="text-right">
+                                        <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Satış Tutarı</span>
+                                        <p class="text-lg font-bold text-green-600">${sip.toplamTutar > 0 ? sip.toplamTutar + ' TL' : 'Fiyat Bekleniyor'}</p>
                                     </div>
-                                    <span class="durum-badge ${durumClass}">${siparis.durum}</span>
-                                </div>
-                                <div class="mb-4">
-                                    <p class="text-sm font-bold text-gray-700 mb-2">Ürün Detayları:</p>
-                                    ${urunHtml(siparis.urunler)}
-                                </div>
-                                <div class="flex justify-between items-center pt-3 border-t border-dashed">
-                                    <span class="text-sm text-gray-500">Sipariş Tutarı:</span>
-                                    <span class="font-bold text-lg text-gray-800">${tutar.toFixed(2)} TL</span>
+                                    <div class="text-right">
+                                        <span class="text-xs font-bold text-gray-400 uppercase tracking-widest block mb-1">Durum</span>
+                                        <span class="badge-status ${sip.durum === 'Tamamlandı' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}">
+                                            ${sip.durum}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
-                        `;
-                    });
 
-                    document.getElementById('genelToplam').innerText = toplamHarcama.toFixed(2) + " TL";
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left">
+                                    <thead>
+                                        <tr class="product-table-header text-[12px] uppercase">
+                                            <th class="px-6 py-3">Ürün Bilgileri (Detaylı)</th>
+                                            <th class="px-6 py-3 text-center">Ölçü</th>
+                                            <th class="px-6 py-3 text-center">Adet</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-100">
+                                        ${sip.urunler.map(u => `
+                                            <tr class="hover:bg-gray-50 transition">
+                                                <td class="px-6 py-4">
+                                                    <div class="font-bold text-gray-800 text-base">${u.model} (${u.seri})</div>
+                                                    <div class="text-detail mt-1">
+                                                        Renk: <span class="text-gray-700 font-medium">${u.renk}</span> | 
+                                                        Tül: <span class="text-gray-700 font-medium">${u.tulCinsi}</span> | 
+                                                        Yön: <span class="text-gray-700 font-medium">${u.yon}</span>
+                                                    </div>
+                                                </td>
+                                                <td class="px-6 py-4 text-center font-bold text-gray-700 text-base">
+                                                    ${u.en} x ${u.boy}
+                                                </td>
+                                                <td class="px-6 py-4 text-center font-bold text-gray-700 text-base">
+                                                    ${u.adet} Ad.
+                                                </td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <div class="p-4 bg-gray-50 border-t text-detail">
+                                <strong>Adres:</strong> ${sip.adres}
+                            </div>
+                        </div>
+                    `).join('');
+
+                } else {
+                    container.innerHTML = `<div class="p-10 text-center text-gray-500">Veri bulunamadı.</div>`;
                 }
             } catch (error) {
-                console.error("Hata:", error);
+                console.error(error);
+                container.innerHTML = `<div class="p-6 bg-red-50 text-red-600 rounded-xl">Hata: ${error.message}</div>`;
             }
         }
 
-        function urunHtml(urunler) {
-            return urunler.map(u => `
-                <div class="flex justify-between text-xs py-1 border-b border-gray-50">
-                    <span>${u.adet}x ${u.model} (${u.renk})</span>
-                    <span class="text-gray-400">${u.en}x${u.boy}</span>
-                </div>
-            `).join('');
-        }
+        siparisleriYukle();
     </script>
 </body>
 </html>

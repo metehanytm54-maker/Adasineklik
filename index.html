@@ -3,167 +3,196 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detaylı Sipariş Formu - Ada Sineklik</title>
+    <title>Ada Sineklik - Web Sipariş Paneli</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        input, select { border: 1px solid #ddd !important; padding: 8px !important; border-radius: 4px !important; width: 100%; }
-        th { background-color: #2C2C2C; color: white; padding: 10px; font-size: 12px; }
-        td { border-bottom: 1px solid #eee; padding: 5px; }
+        .table-header { background-color: #2C2C2C; color: white; font-size: 12px; text-align: center; }
+        input, select { border: 1px solid #ccc !important; border-radius: 4px; padding: 4px; width: 100%; font-size: 14px; }
+        .btn-delete { color: #e11d48; font-weight: bold; cursor: pointer; }
     </style>
 </head>
-<body class="bg-gray-100 p-2 md:p-10">
-    <div class="max-w-6xl mx-auto bg-white p-6 rounded-lg shadow-lg">
-        <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Ada Sineklik Detaylı Sipariş Formu</h2>
-        
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 bg-gray-50 p-4 rounded">
+<body class="bg-gray-100 min-h-screen p-4">
+    <div class="max-w-6xl mx-auto bg-white shadow-2xl rounded-xl p-6">
+        <h1 class="text-3xl font-extrabold text-gray-800 border-b pb-4 mb-6">Sipariş Oluştur</h1>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 bg-blue-50 p-4 rounded-lg">
             <div>
-                <label class="block font-bold mb-1">Müşteri Ad Soyad *</label>
-                <input type="text" id="musteriAd" required placeholder="Ad Soyad">
+                <label class="block text-sm font-bold text-gray-700 mb-1">Müşteri Ad Soyad *</label>
+                <input type="text" id="musteriAd" placeholder="Ahmet Yılmaz" required>
             </div>
             <div>
-                <label class="block font-bold mb-1">Telefon Numarası *</label>
-                <input type="tel" id="telefon" required placeholder="05xx xxx xx xx">
+                <label class="block text-sm font-bold text-gray-700 mb-1">Telefon Numarası *</label>
+                <input type="tel" id="telefon" placeholder="05XXXXXXXXX" required>
             </div>
             <div>
-                <label class="block font-bold mb-1">E-mail (Opsiyonel)</label>
-                <input type="email" id="email" placeholder="ornek@mail.com">
+                <label class="block text-sm font-bold text-gray-700 mb-1">E-mail (İsteğe Bağlı)</label>
+                <input type="email" id="email" placeholder="mail@ornek.com">
             </div>
         </div>
 
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse" id="urunTablosu">
+        <div class="overflow-x-auto border rounded-lg">
+            <table class="w-full border-collapse">
                 <thead>
-                    <tr>
-                        <th style="width: 50px;">S.No</th>
-                        <th>Yön</th>
-                        <th>Seri</th>
-                        <th>Model</th>
-                        <th>Renk</th>
-                        <th>En</th>
-                        <th>Boy</th>
-                        <th>Tül Cinsi</th>
-                        <th>Adet</th>
-                        <th>İşlem</th>
+                    <tr class="table-header">
+                        <th class="p-2 border">S.No</th>
+                        <th class="p-2 border">Yön</th>
+                        <th class="p-2 border">Seri</th>
+                        <th class="p-2 border">Model</th>
+                        <th class="p-2 border">Renk</th>
+                        <th class="p-2 border w-20">En</th>
+                        <th class="p-2 border w-20">Boy</th>
+                        <th class="p-2 border">Tül Cinsi</th>
+                        <th class="p-2 border w-16">Adet</th>
+                        <th class="p-2 border">İşlem</th>
                     </tr>
                 </thead>
-                <tbody id="tabloGövde">
+                <tbody id="urunTabloGovde" class="text-sm">
                     </tbody>
             </table>
         </div>
 
-        <button onclick="satirEkle()" class="mt-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 font-bold">
-            + Yeni Ürün Ekle
-        </button>
-
-        <button onclick="siparisGonder()" id="gonderBtn" class="mt-10 w-full bg-blue-700 text-white py-4 rounded-lg text-xl font-bold hover:bg-blue-800 transition shadow-lg">
-            Siparişi APK'ya Kaydet
-        </button>
+        <div class="flex flex-col md:flex-row justify-between items-center mt-6 gap-4">
+            <button onclick="yeniSatirEkle()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition shadow-md">
+                + Yeni Ürün Ekle
+            </button>
+            
+            <button onclick="siparisiKaydet()" id="btnKaydet" class="bg-blue-600 hover:bg-blue-800 text-white font-bold py-4 px-12 rounded-xl text-xl transition shadow-xl w-full md:w-auto">
+                Siparişi APK'ya Gönder
+            </button>
+        </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
-        // FIREBASE CONFIG - KENDİ BİLGİLERİNİZİ BURAYA YAPIŞTIRIN
+        // FIREBASE CONFIG - BURAYA KENDİ BİLGİLERİNİ YAPIŞTIR
         const firebaseConfig = {
-            apiKey: "BUNU_DEGISTIR",
-            authDomain: "BUNU_DEGISTIR",
-            projectId: "BUNU_DEGISTIR",
-            storageBucket: "BUNU_DEGISTIR",
-            messagingSenderId: "BUNU_DEGISTIR",
-            appId: "BUNU_DEGISTIR"
+            apiKey: "AIza...",
+            authDomain: "projeniz.firebaseapp.com",
+            projectId: "projeniz",
+            storageBucket: "projeniz.appspot.com",
+            messagingSenderId: "...",
+            appId: "..."
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        let satirSayisi = 0;
+        // APK ile aynı UserPath: nokta yerine alt tire
+        const userPath = "metehanytm54_gmail_com"; 
 
-        // Otomatik Sıra No ile Satır Ekleme
-        window.satirEkle = () => {
-            satirSayisi++;
-            const tbody = document.getElementById('tabloGövde');
+        let satirId = 0;
+
+        // APK'daki Seçenekleri Simüle Edelim
+        window.yeniSatirEkle = () => {
+            satirId++;
+            const tbody = document.getElementById('urunTabloGovde');
             const row = document.createElement('tr');
-            row.id = `satir-${satirSayisi}`;
+            row.id = `row-${satirId}`;
             row.innerHTML = `
-                <td class="text-center font-bold">${satirSayisi}</td>
-                <td><select class="yon"><option>Yatay</option><option>Dikey</option></select></td>
-                <td><input type="text" class="seri" placeholder="Örn: Gold"></td>
-                <td><input type="text" class="model" placeholder="Örn: Plise"></td>
-                <td><input type="text" class="renk" placeholder="Örn: Beyaz"></td>
-                <td><input type="number" class="en" placeholder="En"></td>
-                <td><input type="number" class="boy" placeholder="Boy"></td>
-                <td><input type="text" class="tul" placeholder="Standart"></td>
-                <td><input type="number" class="adet" value="1"></td>
-                <td><button onclick="satirSil(${satirSayisi})" class="text-red-600 font-bold">Sil</button></td>
+                <td class="p-2 border text-center font-bold">${satirId}</td>
+                <td class="p-2 border"><select class="yon"><option>Yatay</option><option>Dikey</option></select></td>
+                <td class="p-2 border"><input type="text" class="seri" placeholder="Gold"></td>
+                <td class="p-2 border"><input type="text" class="model" placeholder="Plise"></td>
+                <td class="p-2 border"><input type="text" class="renk" placeholder="Beyaz"></td>
+                <td class="p-2 border"><input type="number" class="en" placeholder="0"></td>
+                <td class="p-2 border"><input type="number" class="boy" placeholder="0"></td>
+                <td class="p-2 border"><input type="text" class="tul" placeholder="Standart"></td>
+                <td class="p-2 border"><input type="number" class="adet" value="1"></td>
+                <td class="p-2 border text-center"><span onclick="satirSil('row-${satirId}')" class="btn-delete">SİL</span></td>
             `;
             tbody.appendChild(row);
+            numaralariGuncelle();
         };
 
         window.satirSil = (id) => {
-            document.getElementById(`satir-${id}`).remove();
-            // Sıra numaralarını yeniden düzenle
-            const rows = document.querySelectorAll('#tabloGövde tr');
-            rows.forEach((r, index) => {
-                r.cells[0].innerText = index + 1;
-            });
-            satirSayisi = rows.length;
+            document.getElementById(id).remove();
+            numaralariGuncelle();
         };
 
-        // İlk satırı otomatik aç
-        satirEkle();
+        function numaralariGuncelle() {
+            const rows = document.querySelectorAll('#urunTabloGovde tr');
+            rows.forEach((r, i) => r.cells[0].innerText = i + 1);
+        }
 
-        window.siparisGonder = async () => {
+        window.siparisiKaydet = async () => {
             const musteriAd = document.getElementById('musteriAd').value;
             const tel = document.getElementById('telefon').value;
-            if(!musteriAd || !tel) { alert("Lütfen yıldızlı alanları doldurun!"); return; }
-
-            const urunler = [];
-            const rows = document.querySelectorAll('#tabloGövde tr');
             
-            rows.forEach(row => {
-                urunler.push({
+            if(!musteriAd || !tel) return alert("Lütfen Müşteri Adı ve Telefonu girin!");
+
+            const urunRows = document.querySelectorAll('#urunTabloGovde tr');
+            if(urunRows.length === 0) return alert("Siparişe en az 1 ürün eklemelisiniz!");
+
+            const btn = document.getElementById('btnKaydet');
+            btn.disabled = true;
+            btn.innerText = "Gönderiliyor...";
+
+            try {
+                // 1. Sayacı Al (APK'daki SiparisSayaci dokümanı)
+                const sayacRef = doc(db, "Kullanicilar", userPath, "Veriler", "SiparisSayaci");
+                const sayacSnap = await getDoc(sayacRef);
+                let yeniId = (sayacSnap.exists() ? sayacSnap.data().son_id : 0) + 1;
+
+                // 2. Mevcut Sipariş Listesini Al
+                const siparislerRef = doc(db, "Kullanicilar", userPath, "Veriler", "Siparisler");
+                const sipSnap = await getDoc(siparislerRef);
+                let bulutListesi = sipSnap.exists() ? JSON.parse(sipSnap.data().json_data || "[]") : [];
+
+                // 3. Ürünleri Listeye Dönüştür (APK'daki SiparisUrun modeliyle aynı)
+                const urunlerJson = Array.from(urunRows).map((row, index) => ({
+                    siraNo: index + 1,
                     yon: row.querySelector('.yon').value,
                     seri: row.querySelector('.seri').value,
                     model: row.querySelector('.model').value,
-                    renk: row.querySelector('.renk').value,
                     en: row.querySelector('.en').value,
                     boy: row.querySelector('.boy').value,
                     tulCinsi: row.querySelector('.tul').value,
-                    adet: parseInt(row.querySelector('.adet').value)
-                });
-            });
+                    renk: row.querySelector('.renk').value,
+                    adet: row.querySelector('.adet').value,
+                    tulTP: row.querySelector('.adet').value,
+                    musteri: musteriAd
+                }));
 
-            if(urunler.length === 0) { alert("En az bir ürün eklemelisiniz!"); return; }
-
-            const userPath = "metehanytm54_gmail_com"; // APK'daki mail yapınız
-            const docRef = doc(db, "Kullanicilar", userPath, "Veriler", "Siparisler");
-
-            try {
-                const docSnap = await getDoc(docRef);
-                let tumSiparisler = docSnap.exists() ? JSON.parse(docSnap.data().json_data || "[]") : [];
-
+                // 4. Yeni Sipariş Kaydı (APK'daki SiparisKaydi modeli)
                 const yeniSiparis = {
-                    siparisKodu: "WEB-" + Math.floor(Math.random() * 100000),
+                    siparisKodu: `S-${String(yeniId).padStart(4, '0')}`,
+                    durum: "Yeni Sipariş",
                     musteriAdiSoyadi: musteriAd,
                     telefon: tel,
                     email: document.getElementById('email').value,
+                    toplamTutar: 0.0,
+                    fiyat: 0.0,
+                    maliyet: 0.0,
                     olusturmaTarihi: Date.now(),
-                    durum: "Yeni Sipariş",
-                    urunler: urunler,
-                    maliyet: 0,
-                    fiyat: 0,
-                    toplamTutar: 0
+                    urunler: urunJsonDuzenle(urunlerJson) 
                 };
 
-                tumSiparisler.unshift(yeniSiparis);
-                await setDoc(docRef, { json_data: JSON.stringify(tumSiparisler) });
-                alert("Sipariş APK'ya başarıyla iletildi!");
+                bulutListesi.unshift(yeniSiparis); // Yeni siparişi en başa ekle
+
+                // 5. Firebase Güncelleme
+                await setDoc(siparislerRef, { json_data: JSON.stringify(bulutListesi) });
+                await setDoc(sayacRef, { son_id: yeniId });
+
+                alert(`Sipariş ${yeniSiparis.siparisKodu} koduyla başarıyla APK'ya gönderildi!`);
                 location.reload();
-            } catch (e) {
-                alert("Hata: " + e.message);
+
+            } catch (error) {
+                console.error(error);
+                alert("Hata oluştu: " + error.message);
+                btn.disabled = false;
+                btn.innerText = "Siparişi APK'ya Gönder";
             }
         };
+
+        // APK'daki ürün listesi yapısına tam uyum sağlamak için yardımcı fonksiyon
+        function urunJsonDuzenle(liste) {
+            return liste; // APK SiparisUrun sınıfınızla birebir aynı anahtarlar kullanıldı
+        }
+
+        // Başlangıçta 1 boş satır aç
+        yeniSatirEkle();
     </script>
 </body>
 </html>

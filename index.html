@@ -8,7 +8,6 @@
     <style>
         .table-header { background-color: #2C2C2C; color: white; font-size: 12px; text-align: center; }
         input, select, textarea { border: 1px solid #ccc !important; border-radius: 6px; padding: 10px; width: 100%; font-size: 14px; background-color: white; }
-        /* Kilitli inputlar için stil */
         input[readonly], textarea[readonly] { background-color: #f3f4f6 !important; color: #4b5563; cursor: not-allowed; }
         input:focus, select:focus, textarea:focus { border-color: #2563eb !important; outline: none; }
         .btn-delete { color: #e11d48; font-weight: bold; cursor: pointer; padding: 8px; display: inline-block; }
@@ -69,7 +68,6 @@
                 <button onclick="yeniSatirEkle()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-xl transition shadow-md w-full md:w-auto flex items-center justify-center">
                     <span class="text-xl mr-2">+</span> Yeni Ürün Ekle
                 </button>
-                
                 <button onclick="siparisiKaydet()" id="btnKaydet" class="bg-blue-600 hover:bg-blue-800 text-white font-bold py-5 px-14 rounded-2xl text-xl transition shadow-xl w-full md:w-auto active:scale-95">
                     Siparişi Gönder
                 </button>
@@ -81,21 +79,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
-        // GÜVENLİK KONTROLÜ
-        const hamVeri = sessionStorage.getItem("girisYapanMusteri");
-        if (!hamVeri) {
-            alert("Giriş yapmanız gerekiyor!");
-            window.location.href = "giris.html";
-        } else {
-            document.getElementById('mainContent').style.display = 'block';
-            const aktifMusteri = JSON.parse(hamVeri);
-            
-            // Bilgileri Otomatik Doldur
-            document.getElementById('musteriAd').value = aktifMusteri.adSoyad;
-            document.getElementById('telefon').value = aktifMusteri.telefon;
-            document.getElementById('adres').value = aktifMusteri.adres;
-        }
-
+        // Firebase Ayarları
         const firebaseConfig = {
             apiKey: "AIzaSyD5cilsAyJrzPzwtgIBd1w7StfAkUBAO7E",
             authDomain: "adasineklik-f8c9f.firebaseapp.com",
@@ -110,11 +94,35 @@
         const db = getFirestore(app);
         const userPath = "adasineklik@54_com".replace(/\./g, '_'); 
 
+        // --- GÜVENLİK VE GİRİŞ KONTROLÜ ---
+        function checkLogin() {
+            const hamVeri = sessionStorage.getItem("girisYapanMusteri");
+            
+            if (!hamVeri || hamVeri === "undefined") {
+                window.location.replace("giris.html"); // Geri dönmeyi engellemek için replace kullanıyoruz
+                return;
+            }
+
+            try {
+                const aktifMusteri = JSON.parse(hamVeri);
+                document.getElementById('mainContent').style.display = 'block';
+                document.getElementById('musteriAd').value = aktifMusteri.adSoyad || "";
+                document.getElementById('telefon').value = aktifMusteri.telefon || "";
+                document.getElementById('adres').value = aktifMusteri.adres || "";
+            } catch (e) {
+                console.error("Veri okuma hatası:", e);
+                window.location.replace("giris.html");
+            }
+        }
+
+        // Sayfa yüklenir yüklenmez kontrol et
+        checkLogin();
+
         let satirSayaci = 0;
 
         window.oturumuKapat = () => {
-            sessionStorage.clear();
-            window.location.href = "giris.html";
+            sessionStorage.removeItem("girisYapanMusteri");
+            window.location.replace("giris.html");
         };
 
         window.yeniSatirEkle = () => {

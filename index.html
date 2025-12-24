@@ -13,7 +13,7 @@
         /* Mobil tablo düzenlemesi */
         @media (max-width: 768px) {
             .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-            table { min-width: 800px; }
+            table { min-width: 850px; }
         }
     </style>
 </head>
@@ -109,6 +109,7 @@
                         <option>Antrasit</option>
                         <option>Altın Meşe</option>
                         <option>Vizon</option>
+                        <option>Maun</option>
                     </select>
                 </td>
                 <td class="p-2 border"><input type="number" class="en" placeholder="En"></td>
@@ -174,7 +175,7 @@
                     durum: "Online Sipariş",
                     musteriAdiSoyadi: musteriAd,
                     telefon: tel,
-                    adres: adres, // Yeni eklenen alan
+                    adres: adres,
                     toplamTutar: 0.0,
                     fiyat: 0.0,
                     maliyet: 0.0,
@@ -200,9 +201,7 @@
             }
         };
 
-        // Açılışta bir satır ekle
         yeniSatirEkle();
     </script>
 </body>
 </html>
-

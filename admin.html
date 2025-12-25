@@ -15,6 +15,9 @@
         @media print { .no-print { display: none; } }
         .maliyet-tikla { cursor: pointer; transition: opacity 0.2s; }
         .maliyet-tikla:hover { opacity: 0.7; text-decoration: underline; }
+        .input-group label { display: block; font-size: 10px; font-weight: bold; color: #9ca3af; margin-bottom: 2px; text-transform: uppercase; }
+        .input-group input, .input-group select { width: 100%; border: 1px solid #e5e7eb; padding: 8px; border-radius: 8px; outline: none; font-size: 13px; }
+        .input-group input:focus { border-color: #3b82f6; }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -29,8 +32,11 @@
     </div>
 
     <div id="adminIcerik" class="max-w-7xl mx-auto p-4 md:p-8">
-        <div class="flex justify-between items-center mb-8 bg-white p-5 rounded-xl border shadow-sm">
-            <h1 class="text-xl font-black text-gray-800 uppercase tracking-tight">Sipariş Yönetimi</h1>
+        <div class="flex flex-col md:flex-row justify-between items-center mb-8 bg-white p-5 rounded-xl border shadow-sm gap-4">
+            <div class="flex items-center gap-4">
+                <h1 class="text-xl font-black text-gray-800 uppercase tracking-tight">Sipariş Yönetimi</h1>
+                <button onclick="depoModalAc()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 shadow-lg transition">📦 Birim Fiyat Listesi</button>
+            </div>
             <div class="flex gap-2">
                 <button onclick="verileriYukle()" class="text-sm bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-bold hover:bg-blue-100">🔄 Listeyi Yenile</button>
                 <button onclick="cikisYap()" class="text-sm bg-red-50 text-red-600 px-4 py-2 rounded-lg font-bold border border-red-100">Çıkış</button>
@@ -49,6 +55,53 @@
 
         <div id="adminSiparisListesi" class="space-y-3">
             <div class="text-center py-20 text-gray-400 font-medium">Veriler yükleniyor...</div>
+        </div>
+    </div>
+
+    <div id="depoModal" class="modal">
+        <div class="modal-content p-6 max-w-5xl shadow-2xl">
+            <div class="flex justify-between items-center border-b pb-4 mb-4">
+                <h2 class="text-xl font-bold text-gray-800 uppercase tracking-tighter">Birim Fiyat ve Malzeme Tanımı</h2>
+                <button onclick="modalKapat('depoModal')" class="text-3xl text-gray-400 hover:text-red-500 transition">&times;</button>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="bg-gray-50 p-4 rounded-xl border space-y-3 h-fit">
+                    <h3 class="font-bold text-sm text-blue-600 mb-2">YENİ MALZEME / GÜNCELLE</h3>
+                    <input type="hidden" id="depoId">
+                    <div class="input-group"><label>Malzeme Adı</label><input type="text" id="depoAd" placeholder="Örn: Kasa Profil"></div>
+                    <div class="input-group"><label>Seri / Model</label><input type="text" id="depoSeri" placeholder="Örn: Gold"></div>
+                    <div class="input-group"><label>Renk</label><input type="text" id="depoRenk" placeholder="Örn: Beyaz"></div>
+                    
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="input-group"><label>Birim Adet F.</label><input type="text" id="depoAdetF"></div>
+                        <div class="input-group"><label>Metre Fiyatı</label><input type="text" id="depoMetreF"></div>
+                        <div class="input-group"><label>m² Fiyatı</label><input type="text" id="depoMetreKareF"></div>
+                        <div class="input-group"><label>Kilo Fiyatı</label><input type="text" id="depoKiloF"></div>
+                    </div>
+                    
+                    <button onclick="malzemeKaydet()" class="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition mt-2">KAYDET / GÜNCELLE</button>
+                    <button onclick="formuTemizle()" class="w-full text-xs text-gray-400 font-bold py-1">Formu Temizle</button>
+                </div>
+
+                <div class="lg:col-span-2">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-xs text-left border-collapse">
+                            <thead class="bg-gray-100 text-gray-600">
+                                <tr>
+                                    <th class="p-2 border">Malzeme</th>
+                                    <th class="p-2 border text-center">Adet F.</th>
+                                    <th class="p-2 border text-center">Metre F.</th>
+                                    <th class="p-2 border text-center">m² F.</th>
+                                    <th class="p-2 border text-right">İşlem</th>
+                                </tr>
+                            </thead>
+                            <tbody id="depoListesiTablo" class="divide-y">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -111,7 +164,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyD5cilsAyJrzPzwtgIBd1w7StfAkUBAO7E",
@@ -143,6 +196,7 @@
         };
         let aktifSutunlar = Object.keys(SUTUN_TANIMLARI);
 
+        // --- GİRİŞ / ÇIKIŞ ---
         window.girisYap = () => {
             const u = document.getElementById('adminUser').value;
             const p = document.getElementById('adminPass').value;
@@ -177,15 +231,111 @@
             } catch (err) { console.error(err); }
         }
 
-        // --- GELİŞMİŞ MALİYET ANALİZİ ---
+        // --- DEPO (BİRİM FİYAT) YÖNETİMİ ---
+        window.depoModalAc = () => {
+            renderDepoTable();
+            document.getElementById('depoModal').classList.add('active');
+        };
+
+        function renderDepoTable() {
+            const tablo = document.getElementById('depoListesiTablo');
+            tablo.innerHTML = depoMaliyetleri.map((m, index) => `
+                <tr class="hover:bg-blue-50 transition">
+                    <td class="p-2 border font-bold">
+                        ${m.ad}<br>
+                        <span class="text-[9px] text-gray-400">${m.seri} / ${m.renk}</span>
+                    </td>
+                    <td class="p-2 border text-center">${m.adetFiyati || '0'}</td>
+                    <td class="p-2 border text-center">${m.metreFiyati || '0'}</td>
+                    <td class="p-2 border text-center">${m.metrekareFiyati || '0'}</td>
+                    <td class="p-2 border text-right space-x-1">
+                        <button onclick="malzemeDuzenle(${index})" class="text-blue-600 font-bold underline">Düzenle</button>
+                        <button onclick="malzemeSil(${index})" class="text-red-600 font-bold underline">Sil</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        window.malzemeKaydet = async () => {
+            const id = document.getElementById('depoId').value || Date.now().toString();
+            const ad = document.getElementById('depoAd').value.trim();
+            if(!ad) return alert("Malzeme adı gerekli!");
+
+            const yeniData = {
+                id: id,
+                ad: ad,
+                seri: document.getElementById('depoSeri').value.trim() || "Yok",
+                renk: document.getElementById('depoRenk').value.trim() || "Yok",
+                adet: "", // Kotlin uyumu için boş alanlar
+                adetFiyati: document.getElementById('depoAdetF').value.trim() || "0",
+                kilo: "",
+                kiloFiyati: document.getElementById('depoKiloF').value.trim() || "0",
+                metre: "",
+                metreFiyati: document.getElementById('depoMetreF').value.trim() || "0",
+                metrekare: "",
+                metrekareFiyati: document.getElementById('depoMetreKareF').value.trim() || "0",
+                olusturmaTarihi: Date.now()
+            };
+
+            const index = depoMaliyetleri.findIndex(m => m.id === id);
+            if(index !== -1) depoMaliyetleri[index] = yeniData;
+            else depoMaliyetleri.push(yeniData);
+
+            await bulutDepoKaydet();
+            formuTemizle();
+            renderDepoTable();
+            renderOrders(); // Ana sayfadaki maliyetleri de tazele
+        };
+
+        window.malzemeDuzenle = (index) => {
+            const m = depoMaliyetleri[index];
+            document.getElementById('depoId').value = m.id;
+            document.getElementById('depoAd').value = m.ad;
+            document.getElementById('depoSeri').value = m.seri;
+            document.getElementById('depoRenk').value = m.renk;
+            document.getElementById('depoAdetF').value = m.adetFiyati;
+            document.getElementById('depoMetreF').value = m.metreFiyati;
+            document.getElementById('depoMetreKareF').value = m.metrekareFiyati;
+            document.getElementById('depoKiloF').value = m.kiloFiyati;
+        };
+
+        window.malzemeSil = async (index) => {
+            if(confirm("Bu malzemeyi silmek istediğinize emin misiniz?")) {
+                depoMaliyetleri.splice(index, 1);
+                await bulutDepoKaydet();
+                renderDepoTable();
+                renderOrders();
+            }
+        };
+
+        async function bulutDepoKaydet() {
+            try {
+                await setDoc(doc(db, "Kullanicilar", userPath, "Veriler", "DepoMaliyetleri"), {
+                    json_data: JSON.stringify(depoMaliyetleri)
+                });
+            } catch (e) { alert("Kaydedilemedi: " + e.message); }
+        }
+
+        window.formuTemizle = () => {
+            document.getElementById('depoId').value = "";
+            document.getElementById('depoAd').value = "";
+            document.getElementById('depoSeri').value = "";
+            document.getElementById('depoRenk').value = "";
+            document.getElementById('depoAdetF').value = "";
+            document.getElementById('depoMetreF').value = "";
+            document.getElementById('depoMetreKareF').value = "";
+            document.getElementById('depoKiloF').value = "";
+        };
+
+        // --- MALİYET ANALİZİ ---
         function analizEtMaliyet(siparis) {
             let detaylar = [];
             let genelToplam = 0;
             const kullanim = {};
 
             const add = (ad, seri, renk, miktar, birim) => {
-                const key = `${ad}:${seri}:${renk}`;
-                if(!kullanim[key]) kullanim[key] = { miktar: 0, birim: birim };
+                const key = `${ad.toLowerCase()}:${seri.toLowerCase()}:${renk.toLowerCase()}`;
+                if(!kullanim[key]) kullanim[key] = { ad, seri, renk, miktar: 0, birim: birim };
                 kullanim[key].miktar += miktar;
             };
 
@@ -217,26 +367,23 @@
             });
 
             Object.keys(kullanim).forEach(key => {
-                const [ad, seri, renk] = key.split(":");
-                const veri = kullanim[key];
+                const v = kullanim[key];
                 const fiyatKaydi = depoMaliyetleri.find(m => 
-                    m.ad.toLowerCase() === ad.toLowerCase() && 
-                    (seri === "Yok" || m.seri.toLowerCase() === seri.toLowerCase())
+                    m.ad.toLowerCase() === v.ad.toLowerCase() && 
+                    (v.seri === "yok" || m.seri.toLowerCase() === v.seri.toLowerCase())
                 );
 
                 let birimFiyat = 0;
                 if (fiyatKaydi) {
-                    if (ad === "Tül") birimFiyat = parseFloat(fiyatKaydi.metrekareFiyati.replace(",", ".")) || 0;
-                    else if (ad === "Teker" || ad === "Köşe Takoz") birimFiyat = parseFloat(fiyatKaydi.adetFiyati.replace(",", ".")) || 0;
+                    const adLower = v.ad.toLowerCase();
+                    if (adLower.includes("tül")) birimFiyat = parseFloat(fiyatKaydi.metrekareFiyati.replace(",", ".")) || 0;
+                    else if (adLower.includes("teker") || adLower.includes("takoz")) birimFiyat = parseFloat(fiyatKaydi.adetFiyati.replace(",", ".")) || 0;
                     else birimFiyat = parseFloat(fiyatKaydi.metreFiyati.replace(",", ".")) || 0;
                 }
 
-                const satirMaliyet = veri.miktar * birimFiyat;
+                const satirMaliyet = v.miktar * birimFiyat;
                 genelToplam += satirMaliyet;
-                detaylar.push({
-                    ad: ad, seri: seri, renk: renk, miktar: veri.miktar, 
-                    birim: veri.birim, birimFiyat: birimFiyat, maliyet: satirMaliyet
-                });
+                detaylar.push({ ...v, birimFiyat, maliyet: satirMaliyet });
             });
 
             return { toplam: genelToplam, kalemler: detaylar };
@@ -245,17 +392,15 @@
         window.maliyetDialogAc = (kod) => {
             const sip = tumSiparisler.find(s => s.siparisKodu === kod);
             const analiz = analizEtMaliyet(sip);
-            
             const html = analiz.kalemler.map(k => `
                 <div class="flex justify-between items-center p-3 bg-white border rounded-lg shadow-sm">
                     <div>
-                        <p class="text-xs font-bold text-gray-700">${k.ad} (${k.seri} - ${k.renk})</p>
+                        <p class="text-xs font-bold text-gray-700 uppercase">${k.ad} <span class="text-blue-500">(${k.seri})</span></p>
                         <p class="text-[10px] text-gray-400">${k.miktar.toFixed(2)} ${k.birim} x ${k.birimFiyat.toFixed(2)} TL</p>
                     </div>
                     <div class="font-bold text-sm text-gray-800">${k.maliyet.toFixed(2)} TL</div>
                 </div>
             `).join('');
-
             document.getElementById('maliyetDetayIcerik').innerHTML = html;
             document.getElementById('maliyetDetayToplam').innerText = analiz.toplam.toFixed(2) + " TL";
             document.getElementById('maliyetDetayModal').classList.add('active');
@@ -291,7 +436,7 @@
             `}).join('');
         }
 
-        // --- DİĞER FONKSİYONLAR (AYNI KALDI) ---
+        // --- İMALAT VE DÜZEN FONKSİYONLARI ---
         window.duzenAc = (kod) => {
             seciliSiparisKodu = kod;
             const container = document.getElementById('sutunListesi');
@@ -329,7 +474,7 @@
             iframe.style.position = 'fixed'; iframe.style.right = '0'; iframe.style.bottom = '0';
             iframe.style.width = '0'; iframe.style.height = '0'; iframe.style.border = '0';
             document.body.appendChild(iframe);
-            let doc = iframe.contentWindow.document;
+            let docStr = iframe.contentWindow.document;
             let html = `<html><head><style>@page { size: A4 landscape; margin: 1cm; } body { font-family: sans-serif; font-size: 8pt; color: #333; } table { width: 100%; border-collapse: collapse; margin-bottom: 20px; table-layout: fixed; } th, td { border: 1px solid #ccc; padding: 4px; text-align: center; word-wrap: break-word; } .kesim-tablo th { background: #f9fafb; font-size: 7pt; font-weight: bold; line-height: 1; height: 25px; } .siparis-tablo th { background: #f3f4f6; font-size: 8pt; font-weight: bold; } .header { border-bottom: 2px solid #333; margin-bottom: 15px; padding-bottom: 5px; } .section-title { font-weight: bold; font-size: 10pt; margin-bottom: 8px; text-transform: uppercase; color: #555; }</style></head><body><div class="header"><h2 style="margin:0">ADA SİNEKLİK İMALAT FORMU</h2><p style="margin:5px 0">Kod: <b>${sip.siparisKodu}</b> | Müşteri: <b>${sip.musteriAdiSoyadi}</b> | Tarih: ${new Date().toLocaleDateString('tr-TR')}</p></div><table class="siparis-tablo"><thead><tr><th>No</th><th>Model / Seri</th><th>Renk</th><th>Yön</th><th>Tül Cinsi</th><th>Ölçü (ExB)</th><th>Adet</th></tr></thead><tbody>${sip.urunler.map((u, i) => `<tr><td>${i+1}</td><td>${u.model} ${u.seri}</td><td>${u.renk}</td><td>${u.yon}</td><td>${u.tulCinsi}</td><td>${u.en} x ${u.boy}</td><td>${u.adet}</td></tr>`).join('')}</tbody></table><table class="kesim-tablo"><thead><tr>`;
             aktifSutunlar.forEach(key => { html += `<th>${SUTUN_TANIMLARI[key]}</th>`; });
             html += `</tr></thead><tbody>`;
@@ -365,7 +510,7 @@
                 html += "<tr>"; aktifSutunlar.forEach(key => { html += `<td>${veriler[key]}</td>`; }); html += "</tr>";
             });
             html += `</tbody></table></body></html>`;
-            doc.open(); doc.write(html); doc.close();
+            docStr.open(); docStr.write(html); docStr.close();
             iframe.contentWindow.focus(); iframe.contentWindow.print();
             setTimeout(() => { document.body.removeChild(iframe); modalKapat('duzenModal'); }, 1000);
         };

@@ -3,107 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ada Sineklik - Full ERP & Finans Panel</title>
+    <title>Ada Sineklik - Entegre ERP Paneli</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .admin-row { background: white; border: 1px solid #e5e7eb; border-radius: 8px; transition: all 0.2s; }
         .admin-row:hover { border-color: #3b82f6; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); align-items: center; justify-content: center; z-index: 100; padding: 15px; }
         .modal.active { display: flex; }
-        .modal-content { background: white; width: 100%; max-width: 1000px; border-radius: 16px; max-height: 90vh; overflow-y: auto; position: relative; }
-        #adminIcerik { display: none; }
+        .modal-content { background: white; width: 100%; max-width: 1100px; border-radius: 16px; max-height: 90vh; overflow-y: auto; position: relative; }
         .input-group label { display: block; font-size: 10px; font-weight: bold; color: #9ca3af; margin-bottom: 2px; text-transform: uppercase; }
-        .input-group input, .input-group select, .input-group textarea { width: 100%; border: 1px solid #e5e7eb; padding: 8px; border-radius: 8px; outline: none; font-size: 13px; background: white; }
+        .input-group input, .input-group select, .input-group textarea { width: 100%; border: 1px solid #e5e7eb; padding: 8px; border-radius: 8px; outline: none; font-size: 13px; }
+        #adminIcerik { display: none; }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
 
-    <div id="loginForm" class="flex items-center justify-center min-h-screen p-4">
-        <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border">
-            <h2 class="text-2xl font-black text-center mb-6 text-gray-800 uppercase tracking-tighter">Ada Sineklik Giriş</h2>
-            <input type="password" id="adminPass" placeholder="Giriş Şifresi" class="w-full border p-3 rounded-xl mb-4 text-center text-2xl tracking-widest">
-            <button onclick="girisYap()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition">Giriş Yap</button>
+    <div id="loginForm" class="flex items-center justify-center min-h-screen">
+        <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border text-center">
+            <h2 class="text-2xl font-black mb-6 uppercase tracking-tighter">Ada Sineklik Giriş</h2>
+            <input type="password" id="adminPass" placeholder="Şifre" class="w-full border p-3 rounded-xl mb-4 text-center text-2xl tracking-widest outline-none focus:ring-2 focus:ring-blue-500">
+            <button onclick="girisYap()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition">Sistemi Aç</button>
         </div>
     </div>
 
     <div id="adminIcerik" class="max-w-7xl mx-auto p-4 md:p-8">
-        <div class="flex flex-col xl:flex-row justify-between items-center mb-8 bg-white p-5 rounded-xl border shadow-sm gap-4">
-            <div class="flex flex-wrap items-center gap-2">
-                <h1 class="text-xl font-black text-gray-800 uppercase tracking-tight mr-4">YÖNETİM PANELİ</h1>
-                <button onclick="depoModalAc()" class="bg-blue-600 text-white px-3 py-2 rounded-lg text-[10px] font-bold shadow-sm">💰 BİRİM FİYAT</button>
-                <button onclick="stokModalAc()" class="bg-amber-500 text-white px-3 py-2 rounded-lg text-[10px] font-bold shadow-sm">📦 STOK TAKİP</button>
-                <button onclick="ayarlarModalAc()" class="bg-purple-600 text-white px-3 py-2 rounded-lg text-[10px] font-bold shadow-sm">⚙️ ÜRÜN AYARLARI</button>
-                <button onclick="musteriModalAc()" class="bg-teal-600 text-white px-3 py-2 rounded-lg text-[10px] font-bold shadow-sm">👥 MÜŞTERİ</button>
-                <button onclick="odemeModalAc()" class="bg-emerald-600 text-white px-3 py-2 rounded-lg text-[10px] font-bold shadow-sm">💸 ÖDEMELER</button>
+        <div class="flex flex-wrap items-center justify-between mb-8 bg-white p-5 rounded-2xl border shadow-sm gap-4">
+            <div class="flex flex-wrap gap-2">
+                <button onclick="modalAc('depoModal')" class="bg-blue-600 text-white px-3 py-2 rounded-lg text-[10px] font-bold">💰 BİRİM FİYAT</button>
+                <button onclick="modalAc('stokModal')" class="bg-amber-500 text-white px-3 py-2 rounded-lg text-[10px] font-bold">📦 STOK TAKİP</button>
+                <button onclick="modalAc('ayarlarModal')" class="bg-purple-600 text-white px-3 py-2 rounded-lg text-[10px] font-bold">⚙️ ÜRÜN AYARLARI</button>
+                <button onclick="modalAc('musteriModal')" class="bg-teal-600 text-white px-3 py-2 rounded-lg text-[10px] font-bold">👥 MÜŞTERİLER</button>
+                <button onclick="modalAc('odemeModal')" class="bg-emerald-600 text-white px-3 py-2 rounded-lg text-[10px] font-bold">💸 ÖDEMELER</button>
             </div>
-            <div class="flex gap-2">
-                <button onclick="verileriYukle()" class="text-xs bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-bold">🔄 YENİLE</button>
-                <button onclick="cikisYap()" class="text-xs bg-red-50 text-red-600 px-4 py-2 rounded-lg font-bold border border-red-100">ÇIKIŞ</button>
-            </div>
+            <button onclick="cikisYap()" class="bg-red-50 text-red-600 px-4 py-2 rounded-lg font-bold text-xs border border-red-100">GÜVENLİ ÇIKIŞ</button>
         </div>
 
-        <div class="hidden md:grid grid-cols-12 gap-2 px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b mb-2">
-            <div class="col-span-2">Müşteri</div>
-            <div class="col-span-2">Kod</div>
-            <div class="col-span-2">Tarih</div>
-            <div class="col-span-2">Durum</div>
-            <div class="col-span-1 text-right">Tutar</div>
-            <div class="col-span-1 text-red-500 text-right">Maliyet</div>
-            <div class="col-span-2 text-right">İşlem</div>
+        <div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
+            <div class="grid grid-cols-12 gap-2 px-6 py-4 bg-gray-50 text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b">
+                <div class="col-span-3">Müşteri / Kod</div>
+                <div class="col-span-2">Tarih</div>
+                <div class="col-span-3">Durum</div>
+                <div class="col-span-2 text-right">Tutar / Maliyet</div>
+                <div class="col-span-2 text-right">İşlem</div>
+            </div>
+            <div id="adminSiparisListesi" class="divide-y"></div>
         </div>
-
-        <div id="adminSiparisListesi" class="space-y-3"></div>
     </div>
 
-    <div id="odemeModal" class="modal">
-        <div class="modal-content p-6 max-w-4xl">
-            <div class="flex justify-between items-center border-b pb-4 mb-4">
-                <h2 class="text-xl font-black text-emerald-600 uppercase">💸 Alınan Ödemeler</h2>
-                <button onclick="modalKapat('odemeModal')" class="text-3xl text-gray-400">&times;</button>
+    <div id="depoModal" class="modal">
+        <div class="modal-content p-6 max-w-2xl">
+            <div class="flex justify-between border-b pb-4 mb-4">
+                <h2 class="text-xl font-black text-blue-600 uppercase">Birim Fiyat (Maliyet) Yönetimi</h2>
+                <button onclick="modalKapat('depoModal')" class="text-2xl text-gray-400">&times;</button>
             </div>
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-100 space-y-3 h-fit">
-                    <h3 class="font-bold text-xs text-emerald-700 uppercase">Tahsilat Kaydı</h3>
-                    <div class="input-group">
-                        <label>Müşteri Seçin</label>
-                        <select id="odemeMusteriSelect"></select>
+            <div id="depoListesiTablo" class="space-y-2"></div>
+        </div>
+    </div>
+
+    <div id="stokModal" class="modal">
+        <div class="modal-content p-6">
+            <div class="flex justify-between border-b pb-4 mb-4">
+                <h2 class="text-xl font-black text-amber-600 uppercase">Stok & Hammadde Takibi</h2>
+                <button onclick="modalKapat('stokModal')" class="text-2xl text-gray-400">&times;</button>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <div class="bg-amber-50 p-4 rounded-xl space-y-3 h-fit">
+                    <div class="input-group"><label>Malzeme</label><select id="stokAdSelect"></select></div>
+                    <div class="input-group"><label>Seri</label><select id="stokSeriSelect"></select></div>
+                    <div class="input-group"><label>Renk</label><select id="stokRenkSelect"></select></div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="input-group"><label>Adet</label><input type="number" id="stokAdet" value="0"></div>
+                        <div class="input-group"><label>Metre</label><input type="number" id="stokMetre" value="0"></div>
                     </div>
-                    <div class="input-group">
-                        <label>Tutar (TL)</label>
-                        <input type="number" id="odemeTutari" placeholder="0.00">
-                    </div>
-                    <button onclick="odemeKaydet()" class="w-full bg-emerald-600 text-white py-3 rounded-lg font-bold uppercase text-xs">Ödemeyi Sisteme İşle</button>
+                    <button onclick="stokKaydet()" class="w-full bg-amber-600 text-white py-3 rounded-lg font-bold">STOK EKLE</button>
                 </div>
-                <div class="lg:col-span-2 overflow-x-auto">
-                    <table class="w-full text-[11px] text-left">
-                        <thead class="bg-gray-100">
-                            <tr>
-                                <th class="p-2">Müşteri</th>
-                                <th class="p-2 text-right">Toplam Tahsilat</th>
-                                <th class="p-2 text-right">Detay</th>
-                            </tr>
-                        </thead>
-                        <tbody id="odemeGruplariTablo" class="divide-y"></tbody>
+                <div class="lg:col-span-3 overflow-x-auto">
+                    <table class="w-full text-xs text-left">
+                        <thead class="bg-gray-100"><tr><th class="p-2">Malzeme</th><th class="p-2">Adet</th><th class="p-2">Metre</th><th class="p-2 text-right">İşlem</th></tr></thead>
+                        <tbody id="stokListesiTablo" class="divide-y"></tbody>
                     </table>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="odemeDetayModal" class="modal" style="z-index: 110; background: rgba(0,0,0,0.5);">
-        <div class="modal-content p-6 max-w-md">
-            <h3 id="odemeDetayBaslik" class="font-black text-gray-700 border-b pb-2 mb-4 uppercase"></h3>
-            <div id="odemeDetayListesi" class="space-y-2 max-h-60 overflow-y-auto mb-4"></div>
-            <button onclick="modalKapat('odemeDetayModal')" class="w-full bg-gray-200 py-2 rounded-lg font-bold">Kapat</button>
+    <div id="ayarlarModal" class="modal">
+        <div class="modal-content p-6 max-w-xl">
+            <div class="flex justify-between border-b pb-4 mb-4">
+                <h2 class="text-xl font-black text-purple-600 uppercase">Ürün Seçeneklerini Düzenle</h2>
+                <button onclick="modalKapat('ayarlarModal')" class="text-2xl text-gray-400">&times;</button>
+            </div>
+            <div class="input-group mb-4">
+                <label>Kategori Seçin</label>
+                <select id="ayarBaslikSelect" onchange="ayarIcerikGetir(this.value)">
+                    <option value="Model">Model</option><option value="Seri">Seri</option><option value="Renk">Renk</option><option value="Tül Cinsi">Tül Cinsi</option>
+                </select>
+            </div>
+            <div class="input-group mb-4">
+                <label>Seçenekler (Her satıra bir tane)</label>
+                <textarea id="ayarOzelliklerText" rows="8" class="font-mono text-sm"></textarea>
+            </div>
+            <button onclick="ayarlariKaydet()" class="w-full bg-purple-600 text-white py-4 rounded-xl font-bold">AYARLARI GÜNCELLE</button>
         </div>
     </div>
 
-    <div id="musteriModal" class="modal"><div class="modal-content p-6 max-w-5xl"><div id="musteriIcerik"></div></div></div>
-    <div id="ayarlarModal" class="modal"><div class="modal-content p-6 max-w-4xl"></div></div>
-    <div id="stokModal" class="modal"><div class="modal-content p-6"></div></div>
-    <div id="depoModal" class="modal"><div class="modal-content p-6"></div></div>
-    <div id="detayModal" class="modal"><div class="modal-content p-6"></div></div>
-    <div id="duzenModal" class="modal"><div class="modal-content p-6"></div></div>
+    <div id="musteriModal" class="modal">
+        <div class="modal-content p-6">
+            <div class="flex justify-between border-b pb-4 mb-4">
+                <h2 class="text-xl font-black text-teal-600 uppercase">Cari Müşteri Kayıtları</h2>
+                <button onclick="modalKapat('musteriModal')" class="text-2xl text-gray-400">&times;</button>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <div class="bg-teal-50 p-4 rounded-xl space-y-3">
+                    <div class="input-group"><label>Ad Soyad</label><input type="text" id="mAdSoyad"></div>
+                    <div class="input-group"><label>Telefon</label><input type="text" id="mTelefon"></div>
+                    <div class="input-group"><label>Adres</label><textarea id="mAdres"></textarea></div>
+                    <button onclick="musteriKaydet()" class="w-full bg-teal-600 text-white py-3 rounded-lg font-bold">MÜŞTERİ EKLE</button>
+                </div>
+                <div class="lg:col-span-3 overflow-x-auto">
+                    <table class="w-full text-xs">
+                        <thead class="bg-gray-100"><tr><th class="p-2">Müşteri</th><th class="p-2 text-right">Toplam Satış</th><th class="p-2 text-right">Bakiye</th><th class="p-2 text-right">İşlem</th></tr></thead>
+                        <tbody id="musteriListesiTablo" class="divide-y"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="odemeModal" class="modal">
+        <div class="modal-content p-6 max-w-3xl">
+            <div class="flex justify-between border-b pb-4 mb-4">
+                <h2 class="text-xl font-black text-emerald-600 uppercase">Tahsilat Kayıtları</h2>
+                <button onclick="modalKapat('odemeModal')" class="text-2xl text-gray-400">&times;</button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-emerald-50 p-4 rounded-xl space-y-3">
+                    <div class="input-group"><label>Müşteri</label><select id="odemeMusteriSelect"></select></div>
+                    <div class="input-group"><label>Tutar (TL)</label><input type="number" id="odemeTutari"></div>
+                    <button onclick="odemeKaydet()" class="w-full bg-emerald-600 text-white py-3 rounded-lg font-bold">ÖDEME AL</button>
+                </div>
+                <div class="md:col-span-2">
+                    <div id="odemeGruplariListesi" class="space-y-2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="detayModal" class="modal"><div class="modal-content p-6 max-w-2xl"><div id="detayIcerik"></div></div></div>
+    <div id="duzenModal" class="modal">
+        <div class="modal-content p-6 max-w-sm text-center">
+            <h3 class="font-bold mb-4 uppercase">İmalat Ölçü Formu</h3>
+            <div id="sutunListesi" class="grid grid-cols-2 gap-2 mb-6"></div>
+            <button onclick="imalatYazdir()" class="w-full bg-orange-600 text-white py-4 rounded-xl font-bold">YAZDIR (PDF)</button>
+        </div>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
@@ -122,150 +175,155 @@
         const db = getFirestore(app);
         const userPath = "adasineklik@54_com".replace(/\./g, '_');
 
-        let tumSiparisler = [], depoMaliyetleri = [], stokListesi = [], urunModelleri = [], musteriListesi = [], tumOdemeler = [];
+        // Global Veri Havuzu
+        let veri = {
+            siparisler: [],
+            maliyetler: [],
+            stok: [],
+            ayarlar: {},
+            musteriler: [],
+            odemeler: []
+        };
+        let seciliSiparisKodu = null;
 
-        // --- GİRİŞ KONTROL ---
+        // GİRİŞ/ÇIKIŞ
         window.girisYap = () => {
-            if (document.getElementById('adminPass').value === "1234") {
+            if(document.getElementById('adminPass').value === "1234") {
                 sessionStorage.setItem("adminOK", "true"); window.location.reload();
-            } else alert("Hatalı!");
+            } else alert("Hatalı Şifre!");
         };
         window.cikisYap = () => { sessionStorage.removeItem("adminOK"); window.location.reload(); };
-        if (sessionStorage.getItem("adminOK") === "true") {
+
+        if(sessionStorage.getItem("adminOK") === "true") {
             document.getElementById('loginForm').style.display = 'none';
             document.getElementById('adminIcerik').style.display = 'block';
-            verileriYukle();
+            baslat();
         }
 
-        async function verileriYukle() {
-            // ÖDEMELERİ CANLI DİNLE
-            onSnapshot(doc(db, "Kullanicilar", userPath, "Veriler", "Odemeler"), (snap) => {
-                if(snap.exists()){
-                    tumOdemeler = JSON.parse(snap.data().json_data || "[]");
-                    renderOdemeTable();
-                }
+        // VERİ SENKRONİZASYONU
+        async function baslat() {
+            // Canlı Dinlemeler
+            onSnapshot(doc(db, "Kullanicilar", userPath, "Veriler", "Siparisler"), (s) => { 
+                veri.siparisler = JSON.parse(s.data()?.json_data || "[]"); renderSiparisler(); 
+            });
+            onSnapshot(doc(db, "Kullanicilar", userPath, "Veriler", "Odemeler"), (s) => { 
+                veri.odemeler = JSON.parse(s.data()?.json_data || "[]"); renderOdemeler(); 
+            });
+            onSnapshot(doc(db, "Kullanicilar", userPath, "Veriler", "Musteriler"), (s) => { 
+                veri.musteriler = JSON.parse(s.data()?.json_data || "[]"); renderMusteriler(); 
             });
 
-            // SİPARİŞLERİ CANLI DİNLE
-            onSnapshot(doc(db, "Kullanicilar", userPath, "Veriler", "Siparisler"), (snap) => {
-                if(snap.exists()){
-                    tumSiparisler = JSON.parse(snap.data().json_data || "[]");
-                    renderOrders();
-                }
-            });
+            // Tek Seferlik Çekimler
+            const maliyetSnap = await getDoc(doc(db, "Kullanicilar", userPath, "Veriler", "DepoMaliyetleri"));
+            veri.maliyetler = JSON.parse(maliyetSnap.data()?.json_data || "[]");
 
-            // DİĞERLERİNİ TEK SEFERLİK ÇEK
-            const docs = ["Musteriler", "UrunModelleri", "DepoMaliyetleri", "StokListesi"];
-            const res = await Promise.all(docs.map(d => getDoc(doc(db, "Kullanicilar", userPath, "Veriler", d))));
-            musteriListesi = JSON.parse(res[0].data()?.json_data || "[]");
-            urunModelleri = res[1].data()?.liste || [];
-            depoMaliyetleri = JSON.parse(res[2].data()?.json_data || "[]");
-            stokListesi = JSON.parse(res[3].data()?.json_data || "[]");
+            const stokSnap = await getDoc(doc(db, "Kullanicilar", userPath, "Veriler", "StokListesi"));
+            veri.stok = JSON.parse(stokSnap.data()?.json_data || "[]");
 
-            renderOdemeTable();
+            const ayarSnap = await getDoc(doc(db, "Kullanicilar", userPath, "Veriler", "UrunModelleri"));
+            veri.ayarlar = ayarSnap.data() || { liste: [] };
         }
 
-        // --- ALINAN ÖDEMELER FONKSİYONLARI ---
-        window.odemeModalAc = () => {
-            const select = document.getElementById('odemeMusteriSelect');
-            select.innerHTML = musteriListesi.map(m => `<option value="${m.adSoyad}">${m.adSoyad}</option>`).join('');
-            renderOdemeTable();
-            document.getElementById('odemeModal').classList.add('active');
-        };
-
-        function renderOdemeTable() {
-            const tbody = document.getElementById('odemeGruplariTablo');
-            // Müşteri adına göre grupla
-            const gruplar = {};
-            tumOdemeler.forEach(o => {
-                if(!gruplar[o.musteriAdiSoyadi]) gruplar[o.musteriAdiSoyadi] = 0;
-                gruplar[o.musteriAdiSoyadi] += Number(o.tutar);
-            });
-
-            tbody.innerHTML = Object.entries(gruplar).map(([ad, toplam]) => `
-                <tr class="hover:bg-emerald-50">
-                    <td class="p-2 font-bold text-gray-700">${ad}</td>
-                    <td class="p-2 text-right font-black text-emerald-600">${toplam.toLocaleString()} TL</td>
-                    <td class="p-2 text-right">
-                        <button onclick="odemeDetayAc('${ad}')" class="text-blue-500 hover:underline">👁️ Geçmiş</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        window.odemeKaydet = async () => {
-            const tutar = document.getElementById('odemeTutari').value;
-            const musteri = document.getElementById('odemeMusteriSelect').value;
-            if(!tutar || tutar <= 0) return alert("Geçerli tutar girin!");
-
-            const yeniOdeme = {
-                id: Date.now().toString(),
-                musteriAdiSoyadi: musteri,
-                tutar: Number(tutar),
-                tarih: Date.now()
-            };
-
-            tumOdemeler.push(yeniOdeme);
-            await setDoc(doc(db, "Kullanicilar", userPath, "Veriler", "Odemeler"), { json_data: JSON.stringify(tumOdemeler) });
-            document.getElementById('odemeTutari').value = "";
-            alert("Ödeme kaydedildi.");
-        };
-
-        window.odemeDetayAc = (ad) => {
-            const liste = tumOdemeler.filter(o => o.musteriAdiSoyadi === ad).sort((a,b) => b.tarih - a.tarih);
-            document.getElementById('odemeDetayBaslik').innerText = ad;
-            document.getElementById('odemeDetayListesi').innerHTML = liste.map(o => `
-                <div class="flex justify-between items-center p-2 bg-gray-50 rounded border text-xs">
-                    <span><b>${new Date(o.tarih).toLocaleDateString()}</b> - ${o.tutar} TL</span>
-                    <button onclick="odemeSil('${o.id}')" class="text-red-500 font-bold">Sil</button>
+        // --- SİPARİŞ MODÜLÜ ---
+        function renderSiparisler() {
+            const list = document.getElementById('adminSiparisListesi');
+            list.innerHTML = veri.siparisler.slice().reverse().map(s => `
+                <div class="admin-row p-4 grid grid-cols-12 gap-2 items-center text-xs">
+                    <div class="col-span-3 font-bold text-gray-700">${s.musteriAdiSoyadi}<br><span class="font-mono text-blue-500 text-[10px]">${s.siparisKodu}</span></div>
+                    <div class="col-span-2 text-gray-400">${new Date(s.olusturmaTarihi).toLocaleDateString()}</div>
+                    <div class="col-span-3"><span class="px-2 py-1 rounded-full bg-blue-50 text-blue-600 font-bold text-[9px] uppercase">${s.durum}</span></div>
+                    <div class="col-span-2 text-right font-bold">
+                        ${Number(s.toplamTutar).toLocaleString()} TL<br>
+                        <span class="text-red-400 text-[10px]">${hesaplaMaliyet(s).toFixed(0)} TL</span>
+                    </div>
+                    <div class="col-span-2 flex gap-1 justify-end">
+                        <button onclick="imalatDuzenAc('${s.siparisKodu}')" class="bg-orange-100 text-orange-600 p-2 rounded-lg">⚙️</button>
+                        <button onclick="detayAc('${s.siparisKodu}')" class="bg-gray-800 text-white px-3 py-2 rounded-lg text-[10px]">LİSTE</button>
+                    </div>
                 </div>
             `).join('');
-            document.getElementById('odemeDetayModal').classList.add('active');
+        }
+
+        function hesaplaMaliyet(sip) {
+            let m = 0;
+            sip.urunler.forEach(u => {
+                const en = parseFloat(u.en), boy = parseFloat(u.boy);
+                const kasa = veri.maliyetler.find(x => x.ad.includes("Kasa") && x.seri === u.seri);
+                if(kasa) m += (((en*2)+(boy*2))/100) * parseFloat(kasa.metreFiyati);
+            });
+            return m;
+        }
+
+        // --- MÜŞTERİ & ÖDEME ---
+        window.musteriKaydet = async () => {
+            const m = { adSoyad: document.getElementById('mAdSoyad').value, telefon: document.getElementById('mTelefon').value, adres: document.getElementById('mAdres').value };
+            if(!m.adSoyad) return;
+            veri.musteriler.push(m);
+            await setDoc(doc(db, "Kullanicilar", userPath, "Veriler", "Musteriler"), { json_data: JSON.stringify(veri.musteriler) });
         };
 
-        window.odemeSil = async (id) => {
-            if(prompt("Silmek için şifre girin:") === "1234") {
-                const yeniListe = tumOdemeler.filter(o => o.id !== id);
-                await setDoc(doc(db, "Kullanicilar", userPath, "Veriler", "Odemeler"), { json_data: JSON.stringify(yeniListe) });
-                modalKapat('odemeDetayModal');
-            } else {
-                alert("Şifre yanlış!");
-            }
-        };
-
-        // --- SİPARİŞ RENDER (Optimize edilmiş) ---
-        function renderOrders() {
-            const container = document.getElementById('adminSiparisListesi');
-            container.innerHTML = [...tumSiparisler].reverse().map(sip => {
-                const mlt = analizEtMaliyet(sip);
-                return `
-                <div class="admin-row p-4 grid grid-cols-2 md:grid-cols-12 gap-2 items-center text-xs">
-                    <div class="md:col-span-2 font-bold">${sip.musteriAdiSoyadi}</div>
-                    <div class="md:col-span-2 font-mono text-blue-600">${sip.siparisKodu}</div>
-                    <div class="md:col-span-2 text-gray-400">${new Date(sip.olusturmaTarihi).toLocaleDateString()}</div>
-                    <div class="md:col-span-2"><span class="bg-blue-50 px-2 py-1 rounded text-[9px] font-bold">${sip.durum}</span></div>
-                    <div class="md:col-span-1 text-right font-black">${Number(sip.toplamTutar).toLocaleString()} TL</div>
-                    <div class="md:col-span-1 text-right text-red-500">${mlt.toFixed(0)} TL</div>
-                    <div class="md:col-span-2 text-right">
-                        <button onclick="detayGoster('${sip.siparisKodu}')" class="bg-gray-800 text-white px-2 py-1 rounded">DETAY</button>
-                    </div>
-                </div>`;
+        function renderMusteriler() {
+            const t = document.getElementById('musteriListesiTablo');
+            t.innerHTML = veri.musteriler.map(m => {
+                const satis = veri.siparisler.filter(s => s.musteriAdiSoyadi === m.adSoyad).reduce((a,b)=> a+Number(b.toplamTutar), 0);
+                const tahsilat = veri.odemeler.filter(o => o.musteriAdiSoyadi === m.adSoyad).reduce((a,b)=> a+Number(b.tutar), 0);
+                return `<tr><td class="p-2"><b>${m.adSoyad}</b></td><td class="p-2 text-right">${satis} TL</td><td class="p-2 text-right font-bold ${satis-tahsilat > 0 ? 'text-red-500' : 'text-green-500'}">${satis-tahsilat} TL</td><td class="p-2 text-right"><button onclick="silMusteri('${m.adSoyad}')">🗑️</button></td></tr>`;
             }).join('');
         }
 
-        function analizEtMaliyet(sip) {
-            let t = 0;
-            sip.urunler.forEach(u => {
-                const en = parseFloat(u.en), boy = parseFloat(u.boy), adet = parseFloat(u.adet);
-                const kasaM = depoMaliyetleri.find(m => m.ad.includes("Kasa") && m.seri === u.seri);
-                if(kasaM) t += (((en*2)+(boy*2))/100) * (parseFloat(kasaM.metreFiyati) || 0) * adet;
-            });
-            return t;
-        }
+        window.odemeKaydet = async () => {
+            const o = { id: Date.now().toString(), musteriAdiSoyadi: document.getElementById('odemeMusteriSelect').value, tutar: document.getElementById('odemeTutari').value, tarih: Date.now() };
+            if(!o.tutar) return;
+            veri.odemeler.push(o);
+            await setDoc(doc(db, "Kullanicilar", userPath, "Veriler", "Odemeler"), { json_data: JSON.stringify(veri.odemeler) });
+        };
 
+        // --- ÜRÜN AYARLARI ---
+        window.ayarIcerikGetir = (baslik) => {
+            const text = document.getElementById('ayarOzelliklerText');
+            // Basite indirgenmiş filtreleme mantığı
+            const items = veri.ayarlar.liste.filter(i => i.startsWith(baslik + ":")).map(i => i.replace(baslik + ":", ""));
+            text.value = items.join("\n");
+        };
+
+        window.ayarlariKaydet = async () => {
+            const baslik = document.getElementById('ayarBaslikSelect').value;
+            const items = document.getElementById('ayarOzelliklerText').value.split("\n").filter(x => x.trim()).map(x => baslik + ":" + x.trim());
+            const yeniListe = veri.ayarlar.liste.filter(i => !i.startsWith(baslik + ":")).concat(items);
+            await setDoc(doc(db, "Kullanicilar", userPath, "Veriler", "UrunModelleri"), { liste: yeniListe });
+            alert("Kaydedildi!");
+        };
+
+        // --- GENEL MODAL KONTROLLERİ ---
+        window.modalAc = (id) => {
+            document.getElementById(id).classList.add('active');
+            if(id === 'odemeModal') {
+                document.getElementById('odemeMusteriSelect').innerHTML = veri.musteriler.map(m => `<option>${m.adSoyad}</option>`).join('');
+            }
+        };
         window.modalKapat = (id) => document.getElementById(id).classList.remove('active');
-        window.verileriYukle = verileriYukle;
-        // Diğer modal açma fonksiyonları...
+
+        // --- İMALAT YAZDIRMA ---
+        window.imalatDuzenAc = (k) => {
+            seciliSiparisKodu = k;
+            const sutunlar = { sira: "No", kasaEn: "Kasa EN", kasaBoy: "Kasa BOY", adet: "Adet" };
+            document.getElementById('sutunListesi').innerHTML = Object.entries(sutunlar).map(([k,v]) => `<label class="text-[10px]"><input type="checkbox" checked value="${k}"> ${v}</label>`).join('');
+            modalAc('duzenModal');
+        };
+
+        window.imalatYazdir = () => {
+            const sip = veri.siparisler.find(s => s.siparisKodu === seciliSiparisKodu);
+            let h = `<html><body onload="window.print()"><h2>ADA SİNEKLİK İMALAT: ${sip.musteriAdiSoyadi}</h2><table border="1" style="width:100%; border-collapse:collapse; text-align:center;">`;
+            h += `<tr><th>No</th><th>Model</th><th>EN</th><th>BOY</th><th>ADET</th></tr>`;
+            sip.urunler.forEach((u,i) => {
+                h += `<tr><td>${i+1}</td><td>${u.model}</td><td>${u.en}</td><td>${u.boy}</td><td>${u.adet}</td></tr>`;
+            });
+            h += `</table></body></html>`;
+            const win = window.open("", "_blank");
+            win.document.write(h);
+            win.document.close();
+        };
+
     </script>
 </body>
 </html>

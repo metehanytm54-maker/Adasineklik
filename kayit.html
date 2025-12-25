@@ -13,6 +13,7 @@
         button { width: 100%; padding: 14px; background: #2e7d32; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 15px; transition: 0.3s; }
         button:hover { background: #1b5e20; }
         .footer { text-align: center; font-size: 12px; color: #888; margin-top: 20px; }
+        .error-hint { font-size: 11px; color: #d32f2f; margin-top: -5px; margin-bottom: 5px; display: none; }
     </style>
 </head>
 <body>
@@ -20,10 +21,14 @@
 <div class="card">
     <h2>Müşteri Kayıt Portalı</h2>
     <input type="text" id="adSoyad" placeholder="Ad Soyad (Zorunlu)">
-    <input type="tel" id="telefon" placeholder="Telefon (05xx)">
+    
+    <input type="tel" id="telefon" placeholder="Telefon (05xx xxx xx xx)" maxlength="11">
+    <div id="telHata" class="error-hint">Lütfen geçerli bir telefon girin (05xx...).</div>
+    
     <input type="email" id="email" placeholder="E-posta Adresi">
     <textarea id="adres" placeholder="Adres Bilgisi" rows="3"></textarea>
     <input type="password" id="sifre" placeholder="Şifre Belirle">
+    
     <button id="btnKaydet">Kayıt Ol</button>
     <div class="footer">© 2025 Ada Sineklik Sistemi</div>
 </div>
@@ -44,18 +49,34 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-
     const userPath = "adasineklik@54_com".replace(/\./g, '_'); 
 
     document.getElementById('btnKaydet').addEventListener('click', async () => {
-        const ad = document.getElementById('adSoyad').value;
-        const tel = document.getElementById('telefon').value;
-        const mail = document.getElementById('email').value;
-        const adres = document.getElementById('adres').value;
-        const sifre = document.getElementById('sifre').value; // Şifre kutusundan veri al
+        const ad = document.getElementById('adSoyad').value.trim();
+        const telRaw = document.getElementById('telefon').value.replace(/\D/g,''); // Sadece rakamlar
+        const mail = document.getElementById('email').value.trim();
+        const adres = document.getElementById('adres').value.trim();
+        const sifre = document.getElementById('sifre').value;
 
+        // 1. AD SOYAD KONTROLÜ
         if (!ad) {
-            alert("Lütfen en az Ad Soyad bilgisini doldurun.");
+            alert("Lütfen Ad Soyad bilgisini doldurun.");
+            return;
+        }
+
+        // 2. TELEFON FORMAT KONTROLÜ (05 ile başlamalı ve 11 haneli olmalı)
+        const telRegex = /^05\d{9}$/;
+        if (!telRegex.test(telRaw)) {
+            document.getElementById('telHata').style.display = 'block';
+            alert("Lütfen geçerli bir telefon numarası giriniz (Örn: 05XXXXXXXXX)");
+            return;
+        } else {
+            document.getElementById('telHata').style.display = 'none';
+        }
+
+        // 3. ŞİFRE KONTROLÜ
+        if (sifre.length < 4) {
+            alert("Lütfen en az 4 haneli bir şifre belirleyin.");
             return;
         }
 
@@ -65,16 +86,23 @@
 
             let musteriListesi = [];
             if (docSnap.exists()) {
-                const data = docSnap.data();
-                musteriListesi = JSON.parse(data.json_data || "[]");
+                musteriListesi = JSON.parse(docSnap.data().json_data || "[]");
             }
 
+            // 4. MÜKERRER KAYIT KONTROLÜ (Aynı telefon var mı?)
+            const varMi = musteriListesi.find(m => m.telefon === telRaw);
+            if (varMi) {
+                alert("Bu telefon numarası ile daha önce kayıt yapılmış. Lütfen giriş yapın.");
+                return;
+            }
+
+            // 5. YENİ MÜŞTERİ NESNESİ
             const yeniMusteri = {
-                adSoyad: ad.trim(),
-                telefon: tel.replace(/\D/g,''),
-                email: mail.trim(),
-                adres: adres.trim(),
-                not: sifre, // Kullanıcının belirlediği şifreyi NOT alanına yazıyoruz
+                adSoyad: ad,
+                telefon: telRaw,
+                email: mail,
+                adres: adres,
+                not: sifre, 
                 borcMiktari: 0.0,
                 toplamSatisTutari: 0.0,
                 eklenmeTarihi: Date.now()
@@ -86,12 +114,12 @@
                 json_data: JSON.stringify(musteriListesi)
             });
 
-            alert("Kaydınız başarıyla oluşturuldu! Uygulama listesine eklendi.");
-            window.location.reload();
+            alert("Kaydınız başarıyla oluşturuldu!");
+            window.location.href = "siparisdurumu.html"; // Kayıt sonrası yönlendirme yapabilirsin
 
         } catch (error) {
             console.error("Hata oluştu:", error);
-            alert("Bir hata oluştu. Lütfen tekrar deneyin.");
+            alert("Sistem şu an meşgul, lütfen az sonra tekrar deneyin.");
         }
     });
 </script>

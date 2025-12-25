@@ -3,74 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ada Sineklik - Admin Yönetimi</title>
+    <title>Ada Sineklik - Admin Paneli</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .admin-card { background: white; border-radius: 12px; border: 1px solid #e5e7eb; overflow: hidden; margin-bottom: 1.5rem; }
-        .table-header { background-color: #1f2937; color: white; font-size: 11px; text-transform: uppercase; }
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; z-index: 50; }
+        .admin-row { background: white; border: 1px solid #e5e7eb; border-radius: 8px; transition: all 0.2s; }
+        .admin-row:hover { border-color: #3b82f6; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); align-items: center; justify-content: center; z-index: 100; padding: 15px; }
         .modal.active { display: flex; }
-        #adminIcerik { display: none; } /* Giriş yapana kadar gizli */
+        .modal-content { background: white; width: 100%; max-width: 800px; border-radius: 16px; max-height: 90vh; overflow-y: auto; position: relative; }
+        #adminIcerik { display: none; }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-gray-50 min-h-screen">
 
     <div id="loginForm" class="flex items-center justify-center min-h-screen p-4">
         <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border">
-            <div class="text-center mb-8">
-                <h2 class="text-3xl font-black text-gray-800">Admin Girişi</h2>
-                <p class="text-gray-500 text-sm mt-2">Yönetim paneline erişmek için bilgilerinizi girin</p>
-            </div>
-            <div class="space-y-4">
-                <input type="text" id="adminUser" placeholder="Kullanıcı Adı" class="w-full border p-3 rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
-                <input type="password" id="adminPass" placeholder="Şifre" class="w-full border p-3 rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
-                <button onclick="girisYap()" class="w-full bg-gray-900 text-white py-3 rounded-xl font-bold hover:bg-black transition">Giriş Yap</button>
-            </div>
-            <p id="hataMesaji" class="text-red-500 text-center mt-4 text-sm hidden">Hatalı kullanıcı adı veya şifre!</p>
+            <h2 class="text-2xl font-black text-center mb-6 text-gray-800">Yönetici Girişi</h2>
+            <input type="text" id="adminUser" placeholder="Kullanıcı Adı" class="w-full border p-3 rounded-xl mb-3 outline-none focus:ring-2 focus:ring-blue-500">
+            <input type="password" id="adminPass" placeholder="Şifre" class="w-full border p-3 rounded-xl mb-4 outline-none focus:ring-2 focus:ring-blue-500">
+            <button onclick="girisYap()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold">Giriş Yap</button>
         </div>
     </div>
 
-    <div id="adminIcerik" class="p-4 md:p-8">
-        <div class="max-w-6xl mx-auto">
-            <div class="flex flex-col md:flex-row justify-between items-center mb-8 bg-white p-6 rounded-2xl shadow-sm border">
-                <div>
-                    <h1 class="text-2xl font-black text-gray-800 tracking-tight">Admin Sipariş Yönetimi</h1>
-                    <p class="text-sm text-gray-500">Tüm müşterilerin siparişlerini yönetin</p>
-                </div>
-                <div class="mt-4 md:mt-0 flex gap-3">
-                    <button onclick="verileriYukle()" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700 transition">Yenile</button>
-                    <button onclick="cikisYap()" class="bg-red-50 text-red-600 px-4 py-2 rounded-lg font-bold border border-red-100">Çıkış</button>
-                </div>
+    <div id="adminIcerik" class="max-w-6xl mx-auto p-4 md:p-8">
+        <div class="flex justify-between items-center mb-8 bg-white p-5 rounded-xl border">
+            <h1 class="text-xl font-black text-gray-800 uppercase tracking-tight">Sipariş Yönetimi</h1>
+            <div class="flex gap-2">
+                <button onclick="verileriYukle()" class="text-sm bg-gray-100 px-4 py-2 rounded-lg font-bold">🔄 Yenile</button>
+                <button onclick="cikisYap()" class="text-sm bg-red-50 text-red-600 px-4 py-2 rounded-lg font-bold">Çıkış</button>
             </div>
-
-            <div id="adminSiparisListesi" class="space-y-4">
-                </div>
         </div>
+
+        <div class="hidden md:grid grid-cols-6 gap-4 px-6 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-widest">
+            <div class="col-span-1">Müşteri</div>
+            <div>Sipariş Kodu</div>
+            <div>Tarih</div>
+            <div>Durum</div>
+            <div>Fiyat</div>
+            <div class="text-right">İşlem</div>
+        </div>
+
+        <div id="adminSiparisListesi" class="space-y-3 mt-2">
+            </div>
     </div>
 
-    <div id="editModal" class="modal">
-        <div class="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl mx-4">
-            <h2 class="text-xl font-bold mb-6 text-gray-800 border-b pb-2">Siparişi Güncelle</h2>
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Satış Tutarı (TL)</label>
-                    <input type="number" id="modalFiyat" class="w-full border p-3 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Sipariş Durumu</label>
-                    <select id="modalDurum" class="w-full border p-3 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
-                        <option>Online Sipariş</option>
-                        <option>Hazırlanıyor</option>
-                        <option>Ölçü Alındı</option>
-                        <option>Montaj Bekliyor</option>
-                        <option>Tamamlandı</option>
-                        <option>İptal Edildi</option>
-                    </select>
-                </div>
+    <div id="detayModal" class="modal">
+        <div class="modal-content p-6 shadow-2xl">
+            <div class="flex justify-between items-center border-b pb-4 mb-4">
+                <h2 id="detayBaslik" class="text-xl font-black text-gray-800">Sipariş Detayı</h2>
+                <button onclick="modalKapat('detayModal')" class="text-2xl text-gray-400 hover:text-red-500">&times;</button>
             </div>
-            <div class="flex gap-3 mt-8">
-                <button onclick="modalKapat()" class="flex-1 bg-gray-100 py-3 rounded-xl font-bold">Vazgeç</button>
-                <button onclick="siparisGuncelle()" class="flex-1 bg-green-600 text-white py-3 rounded-xl font-bold hover:bg-green-700">Kaydet</button>
+            
+            <div id="detayIcerik">
+                </div>
+
+            <div class="mt-8 bg-gray-50 p-6 rounded-xl border">
+                <h3 class="font-bold text-gray-700 mb-4">Fiyat ve Durum Güncelle</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-xs font-bold text-gray-400 block mb-1">SATIŞ TUTARI (TL)</label>
+                        <input type="number" id="modalFiyat" class="w-full border p-3 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 font-bold">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-400 block mb-1">SİPARİŞ DURUMU</label>
+                        <select id="modalDurum" class="w-full border p-3 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 font-bold">
+                            <option>Online Sipariş</option>
+                            <option>Hazırlanıyor</option>
+                            <option>Ölçü Alındı</option>
+                            <option>Montaj Bekliyor</option>
+                            <option>Tamamlandı</option>
+                            <option>İptal Edildi</option>
+                        </select>
+                    </div>
+                </div>
+                <button onclick="siparisGuncelle()" class="w-full mt-4 bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 shadow-lg">Değişiklikleri Kaydet</button>
             </div>
         </div>
     </div>
@@ -79,7 +85,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
-        // FIREBASE AYARLARI
         const firebaseConfig = {
             apiKey: "AIzaSyD5cilsAyJrzPzwtgIBd1w7StfAkUBAO7E",
             authDomain: "adasineklik-f8c9f.firebaseapp.com",
@@ -93,45 +98,26 @@
         const db = getFirestore(app);
         const userPath = "adasineklik@54_com".replace(/\./g, '_');
 
-        // ADMİN BİLGİLERİ (Buradan değiştirebilirsiniz)
         const ADMIN_USER = "admin";
         const ADMIN_PASS = "12345";
-
         let tumSiparisler = [];
         let seciliSiparisKodu = null;
 
-        // GİRİŞ FONKSİYONU
         window.girisYap = () => {
-            const user = document.getElementById('adminUser').value;
-            const pass = document.getElementById('adminPass').value;
-            const hata = document.getElementById('hataMesaji');
-
-            if (user === ADMIN_USER && pass === ADMIN_PASS) {
+            if (document.getElementById('adminUser').value === ADMIN_USER && document.getElementById('adminPass').value === ADMIN_PASS) {
                 sessionStorage.setItem("adminLoggedIn", "true");
-                panelGoster();
-                verileriYukle();
-            } else {
-                hata.classList.remove('hidden');
-            }
+                location.reload();
+            } else { alert("Hatalı Giriş!"); }
         };
 
-        window.cikisYap = () => {
-            sessionStorage.removeItem("adminLoggedIn");
-            location.reload();
-        };
+        window.cikisYap = () => { sessionStorage.removeItem("adminLoggedIn"); location.reload(); };
 
-        function panelGoster() {
+        if (sessionStorage.getItem("adminLoggedIn") === "true") {
             document.getElementById('loginForm').style.display = 'none';
             document.getElementById('adminIcerik').style.display = 'block';
-        }
-
-        // OTURUM KONTROLÜ
-        if (sessionStorage.getItem("adminLoggedIn") === "true") {
-            panelGoster();
             verileriYukle();
         }
 
-        // VERİ YÜKLEME VE GÜNCELLEME (Önceki kodla aynı mantık)
         window.verileriYukle = async () => {
             const container = document.getElementById('adminSiparisListesi');
             try {
@@ -139,54 +125,62 @@
                 if (snap.exists()) {
                     tumSiparisler = JSON.parse(snap.data().json_data || "[]");
                     container.innerHTML = tumSiparisler.map(sip => `
-                        <div class="admin-card">
-                            <div class="p-4 bg-gray-50 flex flex-wrap justify-between items-center border-b gap-4">
-                                <div>
-                                    <h3 class="font-bold text-gray-800 text-lg">${sip.musteriAdiSoyadi}</h3>
-                                    <p class="text-xs text-gray-500 font-medium">${sip.telefon} | Kod: ${sip.siparisKodu}</p>
-                                </div>
-                                <div class="flex items-center gap-4">
-                                    <div class="text-right">
-                                        <span class="text-xs font-bold text-gray-400 block uppercase">Durum</span>
-                                        <span class="font-bold text-blue-600">${sip.durum}</span>
-                                    </div>
-                                    <div class="text-right pr-4">
-                                        <span class="text-xs font-bold text-gray-400 block uppercase">Tutar</span>
-                                        <span class="font-black text-gray-800 text-lg">${Number(sip.toplamTutar).toLocaleString('tr-TR')} TL</span>
-                                    </div>
-                                    <button onclick="modalAc('${sip.siparisKodu}')" class="bg-gray-800 text-white px-4 py-2 rounded-lg font-bold text-sm">Düzenle</button>
-                                </div>
+                        <div class="admin-row p-4 grid grid-cols-2 md:grid-cols-6 gap-4 items-center">
+                            <div class="col-span-1">
+                                <p class="text-sm font-bold text-gray-800">${sip.musteriAdiSoyadi}</p>
+                                <p class="text-[10px] text-gray-400">${sip.telefon}</p>
                             </div>
-                            <table class="w-full text-left text-sm">
-                                <thead class="table-header">
-                                    <tr><th class="px-4 py-2">Ürün</th><th class="px-4 py-2 text-center">Ölçü</th><th class="px-4 py-2 text-center">Adet</th></tr>
-                                </thead>
-                                <tbody class="divide-y">
-                                    ${sip.urunler.map(u => `
-                                        <tr>
-                                            <td class="px-4 py-3 font-medium">${u.model} (${u.seri})<br><span class="text-[11px] text-gray-400">${u.renk} | ${u.yon}</span></td>
-                                            <td class="px-4 py-3 text-center font-bold">${u.en}x${u.boy}</td>
-                                            <td class="px-4 py-3 text-center font-bold">${u.adet} Ad.</td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-                            <div class="p-3 bg-white text-[11px] text-gray-400 italic"><b>Adres:</b> ${sip.adres || 'Belirtilmedi'}</div>
+                            <div class="text-xs font-mono font-bold text-blue-600">${sip.siparisKodu}</div>
+                            <div class="text-xs text-gray-500">${new Date(sip.olusturmaTarihi).toLocaleDateString('tr-TR')}</div>
+                            <div>
+                                <span class="px-2 py-1 rounded-md text-[10px] font-bold ${sip.durum === 'Tamamlandı' ? 'bg-green-100 text-green-700' : 'bg-blue-50 text-blue-600'}">
+                                    ${sip.durum}
+                                </span>
+                            </div>
+                            <div class="font-black text-gray-700">${Number(sip.toplamTutar).toLocaleString('tr-TR')} TL</div>
+                            <div class="text-right">
+                                <button onclick="detayGoster('${sip.siparisKodu}')" class="bg-gray-800 text-white px-3 py-1.5 rounded-md text-xs font-bold hover:bg-black transition">
+                                    Liste Görüntüle
+                                </button>
+                            </div>
                         </div>
-                    `).reverse().join(''); // En yeni sipariş en üstte
+                    `).reverse().join('');
                 }
             } catch (err) { console.error(err); }
         };
 
-        window.modalAc = (kod) => {
+        window.detayGoster = (kod) => {
             seciliSiparisKodu = kod;
-            const siparis = tumSiparisler.find(s => s.siparisKodu === kod);
-            document.getElementById('modalFiyat').value = siparis.toplamTutar;
-            document.getElementById('modalDurum').value = siparis.durum;
-            document.getElementById('editModal').classList.add('active');
+            const sip = tumSiparisler.find(s => s.siparisKodu === kod);
+            document.getElementById('detayBaslik').innerText = `${sip.musteriAdiSoyadi} - ${sip.siparisKodu}`;
+            document.getElementById('modalFiyat').value = sip.toplamTutar;
+            document.getElementById('modalDurum').value = sip.durum;
+
+            const urunHtml = `
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-gray-800 text-white">
+                        <tr><th class="p-3">Ürün Detayı</th><th class="p-3 text-center">Ölçü</th><th class="p-3 text-center">Adet</th></tr>
+                    </thead>
+                    <tbody class="divide-y">
+                        ${sip.urunler.map(u => `
+                            <tr>
+                                <td class="p-3">
+                                    <div class="font-bold text-gray-800">${u.model} (${u.seri})</div>
+                                    <div class="text-xs text-gray-500">${u.renk} | ${u.yon} | ${u.tulCinsi}</div>
+                                </td>
+                                <td class="p-3 text-center font-bold text-gray-600">${u.en}x${u.boy}</td>
+                                <td class="p-3 text-center font-bold">${u.adet} Ad.</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                <div class="mt-4 p-3 bg-blue-50 text-xs text-blue-800 rounded-lg"><b>Adres:</b> ${sip.adres || 'Belirtilmedi'}</div>
+            `;
+            document.getElementById('detayIcerik').innerHTML = urunHtml;
+            document.getElementById('detayModal').classList.add('active');
         };
 
-        window.modalKapat = () => document.getElementById('editModal').classList.remove('active');
+        window.modalKapat = (id) => document.getElementById(id).classList.remove('active');
 
         window.siparisGuncelle = async () => {
             const yeniFiyat = parseFloat(document.getElementById('modalFiyat').value) || 0;
@@ -200,9 +194,10 @@
                     await setDoc(doc(db, "Kullanicilar", userPath, "Veriler", "Siparisler"), {
                         json_data: JSON.stringify(tumSiparisler)
                     });
-                    modalKapat();
+                    modalKapat('detayModal');
                     verileriYukle();
-                } catch (err) { alert("Hata!"); }
+                    alert("Başarıyla güncellendi.");
+                } catch (err) { alert("Hata oluştu!"); }
             }
         };
     </script>

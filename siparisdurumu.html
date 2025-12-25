@@ -11,8 +11,8 @@
         .siparis-row:hover { border-color: #3b82f6; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); align-items: center; justify-content: center; z-index: 100; padding: 15px; }
         .modal.active { display: flex; }
-        .modal-content { background: white; width: 100%; max-width: 600px; border-radius: 20px; max-height: 85vh; overflow-y: auto; position: relative; animation: slideUp 0.3s ease-out; }
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .modal-content { background: white; width: 100%; max-width: 650px; border-radius: 20px; max-height: 85vh; overflow-y: auto; position: relative; }
+        .table-header-text { font-size: 11px; font-weight: 800; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen p-4 md:p-8">
@@ -20,13 +20,11 @@
     <div class="max-w-5xl mx-auto">
         <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
             <div class="flex items-center gap-4">
-                <button onclick="window.location.href='index.html'" class="p-2 hover:bg-gray-100 rounded-full transition">
-                    <span class="text-blue-600 text-2xl">←</span>
-                </button>
-                <h1 class="text-2xl font-black text-gray-800 uppercase tracking-tighter">Hesap Özeti</h1>
+                <button onclick="window.location.href='index.html'" class="p-2 hover:bg-gray-100 rounded-full transition text-blue-600 font-bold">← Geri</button>
+                <h1 class="text-2xl font-black text-gray-800 uppercase">Hesap Özeti</h1>
             </div>
-            <button onclick="odemeleriGoster()" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition flex items-center justify-center gap-2">
-                <span>💳</span> Ödemelerim
+            <button onclick="odemeleriGoster()" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700 shadow-lg transition flex items-center gap-2">
+                💳 Ödemelerim
             </button>
         </div>
 
@@ -34,49 +32,56 @@
             <div class="summary-card flex justify-between items-center shadow-sm">
                 <div>
                     <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Toplam Harcama</p>
-                    <p id="toplamHarcama" class="text-3xl font-black text-gray-800 tracking-tight">0,00 TL</p>
+                    <p id="toplamHarcama" class="text-3xl font-black text-gray-800">0,00 TL</p>
                 </div>
-                <div class="bg-blue-50 p-4 rounded-2xl text-3xl">💰</div>
+                <div class="bg-blue-50 p-4 rounded-2xl text-2xl">💰</div>
             </div>
             <div class="summary-card flex justify-between items-center border-orange-200 bg-orange-50/40 shadow-sm">
                 <div>
                     <p class="text-xs font-bold text-orange-400 uppercase tracking-wider">Kalan Cari Borç</p>
-                    <p id="cariBorc" class="text-3xl font-black text-orange-600 tracking-tight">0,00 TL</p>
+                    <p id="cariBorc" class="text-3xl font-black text-orange-600">0,00 TL</p>
                 </div>
-                <div class="bg-orange-100 p-4 rounded-2xl text-3xl">⏳</div>
+                <div class="bg-orange-100 p-4 rounded-2xl text-2xl">⏳</div>
             </div>
         </div>
 
-        <h2 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4 ml-1">Sipariş Geçmişi</h2>
+        <div class="mb-4 ml-1">
+            <h2 class="text-sm font-black text-gray-800 uppercase tracking-widest">Sipariş Geçmişi</h2>
+        </div>
+
+        <div class="hidden md:grid grid-cols-5 gap-4 px-6 py-3 border-b mb-2 table-header-text">
+            <div>Tarih</div>
+            <div>Sipariş Kodu</div>
+            <div>Durum</div>
+            <div>Tutar</div>
+            <div class="text-right">Detay</div>
+        </div>
+
         <div id="anaIcerik" class="space-y-3">
-            <div class="text-center py-20 text-gray-400 font-medium italic">Yükleniyor...</div>
+            <div class="text-center py-20 text-gray-400 font-medium italic">Veriler yükleniyor...</div>
         </div>
     </div>
 
     <div id="detayModal" class="modal">
         <div class="modal-content p-6 shadow-2xl">
             <div class="flex justify-between items-center border-b pb-4 mb-4">
-                <h2 class="text-xl font-black text-gray-800">Sipariş Listesi</h2>
+                <h2 class="text-xl font-black text-gray-800">Ürün Listesi</h2>
                 <button onclick="modalKapat('detayModal')" class="text-3xl text-gray-300 hover:text-red-500">&times;</button>
             </div>
-            <div id="modalIcerik"></div>
+            <div id="modalIcerik" class="overflow-x-auto"></div>
+            <div class="mt-6 pt-4 border-t text-right">
+                <button onclick="modalKapat('detayModal')" class="bg-gray-800 text-white px-6 py-2 rounded-lg font-bold">Kapat</button>
+            </div>
         </div>
     </div>
 
     <div id="odemeModal" class="modal">
         <div class="modal-content p-8 shadow-2xl">
             <div class="flex justify-between items-center border-b pb-5 mb-6">
-                <div>
-                    <h2 class="text-2xl font-black text-gray-800 italic">Ödeme Hareketleri</h2>
-                    <p class="text-xs text-gray-400 font-bold uppercase mt-1">Yapılan tüm tahsilatlar</p>
-                </div>
+                <h2 class="text-2xl font-black text-gray-800 italic">Ödeme Hareketleri</h2>
                 <button onclick="modalKapat('odemeModal')" class="text-3xl text-gray-300 hover:text-red-500">&times;</button>
             </div>
-            <div id="odemeIcerik" class="space-y-4">
-                </div>
-            <div class="mt-8 pt-6 border-t text-center">
-                <button onclick="modalKapat('odemeModal')" class="w-full bg-gray-900 text-white py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-black transition">Pencereyi Kapat</button>
-            </div>
+            <div id="odemeIcerik" class="space-y-4"></div>
         </div>
     </div>
 
@@ -125,19 +130,19 @@
                 document.getElementById('cariBorc').innerText = (tHarcama - tOdenen).toLocaleString('tr-TR') + " TL";
 
                 container.innerHTML = [...musteriSiparisleri].reverse().map(sip => `
-                    <div class="siparis-row p-4 flex justify-between items-center flex-wrap gap-4">
+                    <div class="siparis-row p-4 grid grid-cols-2 md:grid-cols-5 gap-3 items-center">
+                        <div class="text-sm font-bold text-gray-700">${new Date(sip.olusturmaTarihi).toLocaleDateString('tr-TR')}</div>
+                        <div class="text-xs font-mono font-bold text-blue-600 uppercase">${sip.siparisKodu}</div>
                         <div>
-                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">${new Date(sip.olusturmaTarihi).toLocaleDateString('tr-TR')}</p>
-                            <p class="text-xs font-black text-blue-600 uppercase mt-1">${sip.siparisKodu}</p>
-                        </div>
-                        <div class="text-center">
-                            <span class="px-3 py-1 rounded-lg text-[10px] font-black uppercase ${sip.durum === 'Tamamlandı' ? 'bg-green-100 text-green-700' : 'bg-blue-50 text-blue-600'}">
+                            <span class="px-2 py-1 rounded-md text-[10px] font-black uppercase ${sip.durum === 'Tamamlandı' ? 'bg-green-100 text-green-700' : 'bg-blue-50 text-blue-600'}">
                                 ${sip.durum}
                             </span>
                         </div>
+                        <div class="font-black text-gray-800">${(Number(sip.toplamTutar) || 0).toLocaleString('tr-TR')} TL</div>
                         <div class="text-right">
-                            <p class="text-lg font-black text-gray-800 leading-none">${(Number(sip.toplamTutar) || 0).toLocaleString('tr-TR')} TL</p>
-                            <button onclick="detayAc('${sip.siparisKodu}')" class="text-blue-500 text-[10px] font-bold uppercase mt-1 hover:underline">Liste Görüntüle</button>
+                            <button onclick="detayAc('${sip.siparisKodu}')" class="bg-gray-800 text-white px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase hover:bg-black">
+                                Liste Görüntüle
+                            </button>
                         </div>
                     </div>
                 `).join('');
@@ -146,43 +151,32 @@
 
         window.odemeleriGoster = () => {
             const container = document.getElementById('odemeIcerik');
-            if (musterininOdemeleri.length === 0) {
-                container.innerHTML = '<p class="text-center text-gray-400 py-6">Henüz yapılmış bir ödeme kaydı bulunamadı.</p>';
-            } else {
-                container.innerHTML = [...musterininOdemeleri].sort((a,b) => b.tarih - a.tarih).map(o => `
-                    <div class="flex justify-between items-center p-4 bg-blue-50/50 rounded-2xl border border-blue-100">
-                        <div class="flex items-center gap-4">
-                            <div class="bg-white p-2 rounded-xl shadow-sm">🗓️</div>
-                            <div>
-                                <p class="text-xs font-black text-gray-400 uppercase tracking-widest">${new Date(o.tarih).toLocaleDateString('tr-TR')}</p>
-                                <p class="text-sm font-bold text-blue-800">Tahsil Edildi</p>
-                            </div>
+            container.innerHTML = musterininOdemeleri.length === 0 ? '<p class="text-center text-gray-400">Kayıt yok.</p>' : 
+                [...musterininOdemeleri].reverse().map(o => `
+                    <div class="flex justify-between items-center p-4 bg-blue-50/50 rounded-xl border border-blue-100">
+                        <div>
+                            <p class="text-[10px] font-bold text-gray-400 uppercase">${new Date(o.tarih).toLocaleDateString('tr-TR')}</p>
+                            <p class="text-sm font-bold text-blue-800">Tahsilat</p>
                         </div>
-                        <div class="text-right">
-                            <p class="text-xl font-black text-blue-600">+ ${Number(o.tutar).toLocaleString('tr-TR')} TL</p>
-                        </div>
+                        <p class="text-lg font-black text-blue-600">+ ${Number(o.tutar).toLocaleString('tr-TR')} TL</p>
                     </div>
                 `).join('');
-            }
             document.getElementById('odemeModal').classList.add('active');
         };
 
         window.detayAc = (kod) => {
             const sip = musteriSiparisleri.find(s => s.siparisKodu === kod);
             document.getElementById('modalIcerik').innerHTML = `
-                <table class="w-full text-left text-sm border-collapse">
-                    <thead class="bg-gray-100 text-[10px] uppercase font-black text-gray-400">
+                <table class="w-full text-left text-sm border-collapse min-w-[500px]">
+                    <thead class="bg-gray-800 text-white">
                         <tr><th class="p-3">Ürün</th><th class="p-3 text-center">Ölçü</th><th class="p-3 text-center">Adet</th></tr>
                     </thead>
-                    <tbody class="divide-y">
+                    <tbody class="divide-y border">
                         ${sip.urunler.map(u => `
                             <tr>
-                                <td class="p-4">
-                                    <p class="font-bold text-gray-800">${u.model} (${u.seri})</p>
-                                    <p class="text-[10px] text-gray-400 uppercase font-bold mt-1">${u.renk} | ${u.yon}</p>
-                                </td>
-                                <td class="p-4 text-center font-black text-gray-600">${u.en}x${u.boy}</td>
-                                <td class="p-4 text-center font-black text-gray-900">${u.adet}</td>
+                                <td class="p-3"><p class="font-bold">${u.model}</p><p class="text-[10px] text-gray-400">${u.renk} | ${u.yon}</p></td>
+                                <td class="p-3 text-center font-bold text-gray-600">${u.en}x${u.boy}</td>
+                                <td class="p-3 text-center font-bold">${u.adet} Ad.</td>
                             </tr>
                         `).join('')}
                     </tbody>

@@ -65,12 +65,12 @@
     <div id="detayModal" class="modal">
         <div class="modal-content p-6 shadow-2xl">
             <div class="flex justify-between items-center border-b pb-4 mb-4">
-                <h2 class="text-xl font-black text-gray-800">Ürün Listesi</h2>
+                <h2 class="text-xl font-black text-gray-800">Sipariş Detayı</h2>
                 <button onclick="modalKapat('detayModal')" class="text-3xl text-gray-300 hover:text-red-500">&times;</button>
             </div>
             <div id="modalIcerik" class="overflow-x-auto"></div>
             <div class="mt-6 pt-4 border-t text-right">
-                <button onclick="modalKapat('detayModal')" class="bg-gray-800 text-white px-6 py-2 rounded-lg font-bold">Kapat</button>
+                <button onclick="modalKapat('detayModal')" class="bg-gray-800 text-white px-6 py-2 rounded-lg font-bold">Pencereyi Kapat</button>
             </div>
         </div>
     </div>
@@ -108,7 +108,10 @@
         async function verileriYukle() {
             const container = document.getElementById('anaIcerik');
             const hamVeri = sessionStorage.getItem("girisYapanMusteri");
-            if (!hamVeri) return;
+            if (!hamVeri) {
+                container.innerHTML = "Lütfen giriş yapın.";
+                return;
+            }
 
             const aktifMusteri = JSON.parse(hamVeri);
             try {
@@ -120,6 +123,7 @@
                 const tumSiparisler = JSON.parse(sipSnap.data().json_data || "[]");
                 const tumOdemeler = JSON.parse(odeSnap.data().json_data || "[]");
 
+                // GÜVENLİK: Sadece aktif kullanıcıya ait veriler filtreleniyor
                 musteriSiparisleri = tumSiparisler.filter(s => s.telefon === aktifMusteri.telefon);
                 musterininOdemeleri = tumOdemeler.filter(o => o.musteriAdiSoyadi === aktifMusteri.adSoyad);
 
@@ -140,23 +144,26 @@
                         </div>
                         <div class="font-black text-gray-800">${(Number(sip.toplamTutar) || 0).toLocaleString('tr-TR')} TL</div>
                         <div class="text-right">
-                            <button onclick="detayAc('${sip.siparisKodu}')" class="bg-gray-800 text-white px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase hover:bg-black">
+                            <button onclick="detayAc('${sip.siparisKodu}')" class="bg-gray-800 text-white px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase hover:bg-black transition">
                                 Liste Görüntüle
                             </button>
                         </div>
                     </div>
                 `).join('');
-            } catch (err) { container.innerHTML = "Hata oluştu."; }
+            } catch (err) { 
+                console.error(err);
+                container.innerHTML = "Veriler yüklenirken bir hata oluştu."; 
+            }
         }
 
         window.odemeleriGoster = () => {
             const container = document.getElementById('odemeIcerik');
-            container.innerHTML = musterininOdemeleri.length === 0 ? '<p class="text-center text-gray-400">Kayıt yok.</p>' : 
+            container.innerHTML = musterininOdemeleri.length === 0 ? '<p class="text-center text-gray-400">Kayıtlı ödemeniz bulunmuyor.</p>' : 
                 [...musterininOdemeleri].reverse().map(o => `
                     <div class="flex justify-between items-center p-4 bg-blue-50/50 rounded-xl border border-blue-100">
                         <div>
                             <p class="text-[10px] font-bold text-gray-400 uppercase">${new Date(o.tarih).toLocaleDateString('tr-TR')}</p>
-                            <p class="text-sm font-bold text-blue-800">Tahsilat</p>
+                            <p class="text-sm font-bold text-blue-800">Tahsilat İşlemi</p>
                         </div>
                         <p class="text-lg font-black text-blue-600">+ ${Number(o.tutar).toLocaleString('tr-TR')} TL</p>
                     </div>
@@ -165,57 +172,41 @@
         };
 
         window.detayAc = (kod) => {
-    const sip = musteriSiparisleri.find(s => s.siparisKodu === kod);
-    if (!sip) return;
+            const sip = musteriSiparisleri.find(s => s.siparisKodu === kod);
+            if (!sip) return;
 
-    document.getElementById('modalIcerik').innerHTML = `
-        <table class="w-full text-left text-sm border-collapse min-w-[500px]">
-            <thead class="bg-[#2C2C2C] text-white">
-                <tr>
-                    <th class="p-4 font-semibold">Ürün Bilgileri (Detaylı)</th>
-                    <th class="p-4 text-center font-semibold">Ölçü</th>
-                    <th class="p-4 text-center font-semibold">Adet</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y border-x border-b border-gray-100">
-                ${sip.urunler.map(u => `
-                    <tr class="hover:bg-gray-50 transition">
-                        <td class="p-4">
-                            <div class="font-bold text-gray-900 text-base mb-1">
-                                ${u.model} ${u.seri ? `(${u.seri})` : ''}
-                            </div>
-                            <div class="text-[12px] text-gray-500 font-medium">
-                                Renk: ${u.renk} | Tül: ${u.tulCinsi} | Yön: ${u.yon}
-                            </div>
-                        </td>
-                        <td class="p-4 text-center font-bold text-gray-700 text-base">
-                            ${u.en} x ${u.boy}
-                        </td>
-                        <td class="p-4 text-center font-bold text-gray-900 text-base">
-                            ${u.adet} Ad.
-                        </td>
-                    </tr>
-                `).join('')}
-            </tbody>
-        </table>
-        
-        <div class="mt-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gray-50 p-4 rounded-xl border border-dashed border-gray-300">
-            <div>
-                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Teslimat Adresi</p>
-                <p class="text-xs text-gray-600 mt-1">${sip.adres || 'Belirtilmemiş'}</p>
-            </div>
-            <div class="text-right whitespace-nowrap">
-                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Sipariş Tutarı</p>
-                <p class="text-xl font-black text-gray-900">${Number(sip.toplamTutar).toLocaleString('tr-TR')} TL</p>
-            </div>
-        </div>
-    `;
-    document.getElementById('detayModal').classList.add('active');
-};
+            document.getElementById('modalIcerik').innerHTML = `
+                <table class="w-full text-left text-sm border-collapse min-w-[500px]">
+                    <thead class="bg-[#2C2C2C] text-white">
+                        <tr>
+                            <th class="p-4 font-semibold uppercase text-xs tracking-wider">Ürün Bilgileri (Detaylı)</th>
+                            <th class="p-4 text-center font-semibold uppercase text-xs tracking-wider">Ölçü</th>
+                            <th class="p-4 text-center font-semibold uppercase text-xs tracking-wider">Adet</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y border-x border-b border-gray-100">
+                        ${sip.urunler.map(u => `
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="p-4">
+                                    <div class="font-bold text-gray-900 text-sm mb-0.5">${u.model} ${u.seri ? `(${u.seri})` : ''}</div>
+                                    <div class="text-[11px] text-gray-500 font-medium italic">
+                                        Renk: ${u.renk} | Tül: ${u.tulCinsi || 'Standart'} | Yön: ${u.yon}
+                                    </div>
+                                </td>
+                                <td class="p-4 text-center font-bold text-gray-700">${u.en} x ${u.boy}</td>
+                                <td class="p-4 text-center font-bold text-gray-900">${u.adet} Ad.</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            document.getElementById('detayModal').classList.add('active');
+        };
 
         window.modalKapat = (id) => document.getElementById(id).classList.remove('active');
+        
+        // Başlat
         verileriYukle();
     </script>
 </body>
 </html>
-

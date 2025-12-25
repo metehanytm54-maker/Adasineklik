@@ -76,30 +76,45 @@
             </div>
             <div class="space-y-4">
                 <div>
-                    <label class="text-[10px] font-bold text-gray-400 uppercase">Ad Soyad (Değiştirilemez)</label>
+                    <label class="text-[10px] font-bold text-gray-400 uppercase">Ad Soyad</label>
                     <input type="text" id="profAd" disabled class="w-full p-3 border rounded-xl mt-1">
                 </div>
                 <div>
-                    <label class="text-[10px] font-bold text-gray-400 uppercase">Telefon (Değiştirilemez)</label>
+                    <label class="text-[10px] font-bold text-gray-400 uppercase">Telefon</label>
                     <input type="text" id="profTel" disabled class="w-full p-3 border rounded-xl mt-1">
                 </div>
                 <div>
                     <label class="text-[10px] font-bold text-blue-600 uppercase">Teslimat Adresi</label>
-                    <textarea id="profAdres" rows="3" class="w-full p-3 border-2 border-blue-100 rounded-xl mt-1 focus:border-blue-500 outline-none"></textarea>
+                    <textarea id="profAdres" rows="3" class="w-full p-3 border-2 border-blue-100 rounded-xl mt-1 outline-none"></textarea>
                 </div>
                 <div>
                     <label class="text-[10px] font-bold text-blue-600 uppercase">Giriş Şifresi</label>
-                    <input type="text" id="profSifre" class="w-full p-3 border-2 border-blue-100 rounded-xl mt-1 focus:border-blue-500 outline-none">
+                    <input type="text" id="profSifre" class="w-full p-3 border-2 border-blue-100 rounded-xl mt-1 outline-none">
                 </div>
-                <button onclick="profilKaydet()" id="btnProfilKaydet" class="w-full bg-blue-600 text-white py-4 rounded-xl font-black uppercase tracking-widest hover:bg-blue-700 transition">
-                    Değişiklikleri Kaydet
-                </button>
+                <button onclick="profilKaydet()" id="btnProfilKaydet" class="w-full bg-blue-600 text-white py-4 rounded-xl font-black uppercase tracking-widest">Değişiklikleri Kaydet</button>
             </div>
         </div>
     </div>
 
-    <div id="detayModal" class="modal"><div class="modal-content p-6 shadow-2xl"><div id="modalIcerik"></div></div></div>
-    <div id="odemeModal" class="modal"><div class="modal-content p-8 shadow-2xl"><div id="odemeIcerik"></div></div></div>
+    <div id="detayModal" class="modal">
+        <div class="modal-content p-6 shadow-2xl">
+            <div class="flex justify-between items-center border-b pb-4 mb-4">
+                <h2 class="text-xl font-black text-gray-800">Ürün Bilgileri</h2>
+                <button onclick="modalKapat('detayModal')" class="text-3xl text-gray-300 hover:text-red-500">&times;</button>
+            </div>
+            <div id="modalIcerik" class="overflow-x-auto"></div>
+        </div>
+    </div>
+
+    <div id="odemeModal" class="modal">
+        <div class="modal-content p-8 shadow-2xl">
+            <div class="flex justify-between items-center border-b pb-5 mb-6">
+                <h2 class="text-2xl font-black text-gray-800 italic">Ödeme Hareketleri</h2>
+                <button onclick="modalKapat('odemeModal')" class="text-3xl text-gray-300 hover:text-red-500">&times;</button>
+            </div>
+            <div id="odemeIcerik" class="space-y-4"></div>
+        </div>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
@@ -149,9 +164,9 @@
                 musteriSiparisleri = tumSiparisler.filter(s => String(s.telefon).replace(/\D/g, '') === girisTelefon);
                 musterininOdemeleri = tumOdemeler.filter(o => (o.musteriAdiSoyadi || o.musteriAdi) === arananIsim);
 
-                // Finansal özet ve tablo çizimi...
                 const tHarcama = musteriSiparisleri.reduce((sum, s) => sum + (Number(s.toplamTutar) || 0), 0);
                 const tOdenen = musterininOdemeleri.reduce((sum, o) => sum + (Number(o.tutar) || 0), 0);
+                
                 document.getElementById('toplamHarcama').innerText = tHarcama.toLocaleString('tr-TR') + " TL";
                 document.getElementById('cariBorc').innerText = (tHarcama - tOdenen).toLocaleString('tr-TR') + " TL";
 
@@ -162,7 +177,7 @@
                             <div class="text-xs font-mono font-bold text-blue-600">${sip.siparisKodu}</div>
                             <div><span class="px-2 py-1 rounded-md text-[10px] font-black uppercase ${sip.durum === 'Tamamlandı' ? 'bg-green-100 text-green-700' : 'bg-blue-50 text-blue-600'}">${sip.durum}</span></div>
                             <div class="font-black text-gray-800">${(Number(sip.toplamTutar) || 0).toLocaleString('tr-TR')} TL</div>
-                            <div class="text-right"><button onclick="detayAc('${sip.siparisKodu}')" class="bg-gray-800 text-white px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase hover:bg-black transition">Detay</button></div>
+                            <div class="text-right"><button onclick="detayAc('${sip.siparisKodu}')" class="bg-gray-800 text-white px-4 py-1.5 rounded-lg text-[10px] font-bold hover:bg-black transition">Detay</button></div>
                         </div>
                     `).join('');
 
@@ -182,36 +197,40 @@
             const yeniAdres = document.getElementById('profAdres').value.trim();
             const yeniSifre = document.getElementById('profSifre').value.trim();
             const btn = document.getElementById('btnProfilKaydet');
-
             if (yeniSifre.length < 4) return alert("Şifre en az 4 karakter olmalıdır.");
-
-            btn.innerText = "GÜNCELLENİYOR...";
+            btn.innerText = "YÜKLENİYOR...";
             btn.disabled = true;
 
             try {
-                // Listeyi bul ve güncelle
-                const index = allMusteriler.findIndex(m => m.telefon === currentMusteriObj.telefon);
+                const index = allMusteriler.findIndex(m => String(m.telefon).replace(/\D/g, '') === String(currentMusteriObj.telefon).replace(/\D/g, ''));
                 if (index !== -1) {
                     allMusteriler[index].adres = yeniAdres;
                     allMusteriler[index].not = yeniSifre;
-
-                    await setDoc(doc(db, "Kullanicilar", userPath, "Veriler", "Musteriler"), {
-                        json_data: JSON.stringify(allMusteriler)
-                    });
-
-                    alert("Bilgileriniz başarıyla güncellendi.");
+                    await setDoc(doc(db, "Kullanicilar", userPath, "Veriler", "Musteriler"), { json_data: JSON.stringify(allMusteriler) });
+                    alert("Güncellendi!");
                     location.reload();
                 }
-            } catch (error) {
-                alert("Hata oluştu, tekrar deneyin.");
-                btn.innerText = "KAYDET";
-                btn.disabled = false;
-            }
+            } catch (error) { alert("Hata!"); btn.innerText = "KAYDET"; btn.disabled = false; }
         };
 
-        // Diğer modal fonksiyonları (detayAc, odemeleriGoster, modalKapat) aynen korunur...
-        window.detayAc = (kod) => { /* Önceki kodunuzla aynı */ };
-        window.odemeleriGoster = () => { /* Önceki kodunuzla aynı */ };
+        window.detayAc = (kod) => {
+            const sip = musteriSiparisleri.find(s => s.siparisKodu === kod);
+            if (!sip) return;
+            document.getElementById('modalIcerik').innerHTML = `
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-800 text-white"><tr><th class="p-3">Ürün</th><th class="p-3 text-center">Ölçü</th><th class="p-3 text-center">Adet</th></tr></thead>
+                    <tbody class="divide-y">${sip.urunler.map(u => `<tr><td class="p-3 font-bold">${u.model}</td><td class="p-3 text-center">${u.en}x${u.boy}</td><td class="p-3 text-center">${u.adet}</td></tr>`).join('')}</tbody>
+                </table>`;
+            document.getElementById('detayModal').classList.add('active');
+        };
+
+        window.odemeleriGoster = () => {
+            const container = document.getElementById('odemeIcerik');
+            container.innerHTML = musterininOdemeleri.length === 0 ? '<p class="text-center py-10">Ödeme yok.</p>' : 
+                musterininOdemeleri.map(o => `<div class="p-4 bg-blue-50 border rounded-xl flex justify-between"><span>${o.tarih}</span><b>${o.tutar} TL</b></div>`).join('');
+            document.getElementById('odemeModal').classList.add('active');
+        };
+
         window.modalKapat = (id) => document.getElementById(id).classList.remove('active');
         
         verileriYukle();

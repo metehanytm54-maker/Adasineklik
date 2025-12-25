@@ -80,6 +80,19 @@
         </div>
     </div>
 
+    <div id="duzenModal" class="modal">
+        <div class="modal-content p-6 max-w-md">
+            <h3 class="text-lg font-black text-gray-800 mb-4 border-b pb-2 uppercase tracking-tighter">İmalat Listesi Düzeni</h3>
+            <p class="text-xs text-gray-400 mb-4">PDF'de görünmesini istediğiniz sütunları seçin:</p>
+            <div id="sutunListesi" class="grid grid-cols-2 gap-2 mb-6">
+                </div>
+            <div class="flex gap-2">
+                <button onclick="imalatListesiHazirla()" class="flex-1 bg-orange-600 text-white py-3 rounded-xl font-bold hover:bg-orange-700 transition">📄 PDF Oluştur</button>
+                <button onclick="modalKapat('duzenModal')" class="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-bold">Vazgeç</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
@@ -103,7 +116,30 @@
         let tumEndeksler = [];
         let seciliSiparisKodu = null;
 
-        // GİRİŞ VE ÇIKIŞ FONKSİYONLARI
+        // Yazdırma Sütun Tanımları
+        const SUTUN_TANIMLARI = {
+            sira: "S. No",
+            kasaEn: "Kasa EN",
+            enAdet: "EN Adet",
+            kasaBoy: "Kasa BOY",
+            boyAdet: "BOY Adet",
+            kanatBoy: "Kanat BOY",
+            kanatAdet: "Kanat Adet",
+            tulBoy: "Tül BOY",
+            tulAdet: "Tül Adet",
+            tulTP: "Tül TP",
+            ipAralik: "İp Aralık",
+            ipBoy: "İp BOY",
+            ipAdet: "İp Adet",
+            seritBoy: "Şerit BOY",
+            seritAdet: "Şerit Adet",
+            fitilBoy: "Fitil BOY",
+            fitilAdet: "Fitil Adet",
+            tekerlek: "Tekerlek",
+            takoz: "Köşe Takoz"
+        };
+        let aktifSutunlar = Object.keys(SUTUN_TANIMLARI);
+
         window.girisYap = () => {
             const u = document.getElementById('adminUser').value;
             const p = document.getElementById('adminPass').value;
@@ -123,16 +159,14 @@
         async function verileriYukle() {
             const container = document.getElementById('adminSiparisListesi');
             try {
-                // Siparişleri ve Endeksleri eş zamanlı çek
                 const [sipSnap, endexSnap] = await Promise.all([
                     getDoc(doc(db, "Kullanicilar", userPath, "Veriler", "Siparisler")),
-                    getDoc(doc(db, "Kullanicilar", userPath, "Veriler", "Musteriler")) // Not: APK'da endeksler genellikle bu yapıdadır, gerekirse yolu güncelleyin.
+                    getDoc(doc(db, "Kullanicilar", userPath, "Veriler", "KesimEndeksleri"))
                 ]);
 
-                // Endeksleri yükle (Kotlin'deki endeksleriYukle karşılığı)
-                // Eğer endeksler farklı bir dokümandaysa buradaki yolu güncelleyebilirsiniz.
-                const endeksData = await getDoc(doc(db, "Kullanicilar", userPath, "Veriler", "KesimEndeksleri"));
-                tumEndeksler = JSON.parse(endeksData.data()?.json_data || "[]");
+                if (endexSnap.exists()) {
+                    tumEndeksler = JSON.parse(endexSnap.data().json_data || "[]");
+                }
 
                 if (sipSnap.exists()) {
                     tumSiparisler = JSON.parse(sipSnap.data().json_data || "[]");
@@ -163,10 +197,10 @@
                     </div>
                     <div class="font-black text-gray-700 text-sm">${(Number(sip.toplamTutar) || 0).toLocaleString('tr-TR')} TL</div>
                     <div class="text-right flex flex-col md:flex-row gap-2 justify-end">
-                        <button onclick="imalatListesiYazdir('${sip.siparisKodu}')" class="bg-orange-600 text-white px-3 py-2 rounded-lg text-[10px] font-bold hover:bg-orange-700 transition">
+                        <button onclick="duzenAc('${sip.siparisKodu}')" class="bg-orange-600 text-white px-3 py-2 rounded-lg text-[10px] font-bold hover:bg-orange-700 transition">
                             ⚙️ İmalat Listesi
                         </button>
-                        <button onclick="detayGoster('${sip.siparisKodu}')" class="bg-gray-900 text-white px-3 py-2 rounded-lg text-[10px] font-bold hover:bg-black transition text-nowrap">
+                        <button onclick="detayGoster('${sip.siparisKodu}')" class="bg-gray-900 text-white px-3 py-2 rounded-lg text-[10px] font-bold hover:bg-black transition">
                             Liste Görüntüle
                         </button>
                     </div>
@@ -174,106 +208,104 @@
             `).join('');
         }
 
-        // --- HESAPLAMA MANTIĞI (Kotlin'den Port Edildi) ---
-        const uygulaFormul = (temelDeger, endeksSatiri) => {
-            if (!endeksSatiri) return temelDeger;
-            const d = parseFloat(endeksSatiri.deger) || 0;
-            switch (endeksSatiri.operator) {
-                case "CIKAR": return temelDeger - d;
-                case "EKLE": return temelDeger + d;
-                case "CARP": return temelDeger * d;
-                case "BOL": return d !== 0 ? temelDeger / d : 0;
+        // DÜZEN OLUŞTURMA MANTIĞI
+        window.duzenAc = (kod) => {
+            seciliSiparisKodu = kod;
+            const container = document.getElementById('sutunListesi');
+            container.innerHTML = Object.entries(SUTUN_TANIMLARI).map(([key, label]) => `
+                <label class="flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-blue-50 transition">
+                    <input type="checkbox" value="${key}" ${aktifSutunlar.includes(key) ? 'checked' : ''} class="w-4 h-4 rounded" onchange="sutunTetikle(this)">
+                    <span class="text-[11px] font-bold text-gray-700">${label}</span>
+                </label>
+            `).join('');
+            document.getElementById('duzenModal').classList.add('active');
+        };
+
+        window.sutunTetikle = (el) => {
+            if(el.checked) { if(!aktifSutunlar.includes(el.value)) aktifSutunlar.push(el.value); }
+            else { aktifSutunlar = aktifSutunlar.filter(i => i !== el.value); }
+        };
+
+        // HESAPLAMA MOTORU
+        const hesapla = (deger, form) => {
+            if (!form) return deger;
+            const d = parseFloat(form.deger) || 0;
+            switch (form.operator) {
+                case "CIKAR": return deger - d;
+                case "EKLE": return deger + d;
+                case "CARP": return deger * d;
+                case "BOL": return d !== 0 ? deger / d : 0;
                 case "SABIT": return d;
-                default: return temelDeger;
+                default: return deger;
             }
         };
 
-        window.imalatListesiYazdir = (kod) => {
-            const sip = tumSiparisler.find(s => s.siparisKodu === kod);
-            if (!sip) return;
+        window.imalatListesiHazirla = () => {
+            const sip = tumSiparisler.find(s => s.siparisKodu === seciliSiparisKodu);
+            if(!sip) return;
 
-            let printHtml = `
-            <html>
-            <head>
-                <style>
-                    @page { size: A4 landscape; margin: 1cm; }
-                    body { font-family: Arial, sans-serif; font-size: 10pt; }
-                    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-                    th, td { border: 1px solid #000; padding: 4px; text-align: center; font-size: 8pt; }
-                    th { background-color: #f2f2f2; font-weight: bold; }
-                    h2 { border-bottom: 2px solid #000; padding-bottom: 5px; }
-                </style>
-            </head>
-            <body>
-                <h2>İMALAT KESİM LİSTESİ - ${sip.siparisKodu}</h2>
-                <p><b>Müşteri:</b> ${sip.musteriAdiSoyadi} | <b>Tarih:</b> ${new Date().toLocaleDateString('tr-TR')}</p>
-                
-                <table>
-                    <thead>
-                        <tr>
-                            <th>S.No</th><th>Kasa EN</th><th>Ad.</th><th>Kasa BOY</th><th>Ad.</th><th>Kanat BOY</th><th>Ad.</th>
-                            <th>Tül BOY</th><th>Ad.</th><th>Tül TP</th><th>İp Aralık</th><th>İp BOY</th><th>Ad.</th>
-                        </tr>
-                    </thead>
-                    <tbody>`;
+            let printHtml = `<html><head><style>
+                @page { size: A4 landscape; margin: 1cm; }
+                body { font-family: sans-serif; font-size: 9pt; }
+                table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+                th, td { border: 1px solid #000; padding: 4px; text-align: center; overflow: hidden; }
+                th { background: #f0f0f0; font-weight: bold; font-size: 8pt; }
+                h2 { border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 10px; }
+            </style></head><body>
+            <h2>İMALAT KESİM LİSTESİ - ${sip.siparisKodu}</h2>
+            <p>Müşteri: ${sip.musteriAdiSoyadi} | Tarih: ${new Date().toLocaleDateString('tr-TR')}</p>
+            <table><thead><tr>`;
 
-            sip.urunler.forEach((u, index) => {
+            // Seçili başlıkları ekle
+            aktifSutunlar.forEach(key => { printHtml += `<th>${SUTUN_TANIMLARI[key]}</th>`; });
+            printHtml += `</tr></thead><tbody>`;
+
+            sip.urunler.forEach((u, i) => {
                 const en = parseFloat(u.en) || 0;
                 const boy = parseFloat(u.boy) || 0;
                 const adet = parseInt(u.adet) || 1;
+                const e = tumEndeksler.find(ed => ed.yon === u.yon && ed.seri === u.seri && ed.model === u.model) || 
+                          tumEndeksler.find(ed => ed.seri === u.seri) || {};
 
-                // Endeks Bulma (Kotlin'deki endeksBul mantığı)
-                const endeks = tumEndeksler.find(e => e.yon === u.yon && e.seri === u.seri && e.model === u.model) || 
-                              tumEndeksler.find(e => e.seri === u.seri) || {};
+                const tulBoy = hesapla(boy, e.tulFormulu);
+                const ipBase = tulBoy <= 150 ? 2 : (tulBoy <= 230 ? 3 : 4);
+                const payda = tulBoy <= 150 ? 3 : (tulBoy <= 230 ? 5 : 7);
 
-                // Hesaplamalar
-                const kasaEn = uygulaFormul(en, endeks.enFormulu).toFixed(1);
-                const kasaBoy = uygulaFormul(boy, endeks.boyFormulu).toFixed(1);
-                
-                const kanatKaynak = endeks.kanatFormulu?.kaynakBoyut === "EN" ? en : boy;
-                const kanatBoy = uygulaFormul(kanatKaynak, endeks.kanatFormulu).toFixed(1);
-                
-                const tulBoy = uygulaFormul(boy, endeks.tulFormulu);
-                const fitilBoy = uygulaFormul(boy, endeks.fitilBoyFormulu).toFixed(1);
+                const veriler = {
+                    sira: i + 1,
+                    kasaEn: hesapla(en, e.enFormulu).toFixed(1),
+                    enAdet: (hesapla(1, e.enAdet) * adet).toFixed(0),
+                    kasaBoy: hesapla(boy, e.boyFormulu).toFixed(1),
+                    boyAdet: (hesapla(1, e.boyAdet) * adet).toFixed(0),
+                    kanatBoy: hesapla(e.kanatFormulu?.kaynakBoyut === "EN" ? en : boy, e.kanatFormulu).toFixed(1),
+                    kanatAdet: (hesapla(1, e.kanatAdet) * adet).toFixed(0),
+                    tulBoy: tulBoy.toFixed(1),
+                    tulAdet: (hesapla(1, e.tulAdet) * adet).toFixed(0),
+                    tulTP: hesapla(en * (parseFloat(e.tulKalinligi) || 1), e.tulTpFormulu).toFixed(1),
+                    ipAralik: ((tulBoy - 10) / payda).toFixed(1),
+                    ipBoy: hesapla(en + boy + en + boy + 100, e.ipAralikFormulu).toFixed(0),
+                    ipAdet: (hesapla(ipBase, e.ipAdetFormulu) * adet).toFixed(0),
+                    seritBoy: hesapla(boy, e.seritBoyFormulu).toFixed(1),
+                    seritAdet: (hesapla(1, e.seritAdetFormulu) * adet).toFixed(0),
+                    fitilBoy: hesapla(boy, e.fitilBoyFormulu).toFixed(1),
+                    fitilAdet: (hesapla(1, e.fitilAdetFormulu) * adet).toFixed(0),
+                    tekerlek: (hesapla(1, e.tekerlekAdetFormulu) * adet).toFixed(0),
+                    takoz: (hesapla(1, e.koseTakozuAdetFormulu) * adet).toFixed(0)
+                };
 
-                // Tül TP (Zincirleme Mantık)
-                let tulTP = en * (parseFloat(endeks.tulKalinligi) || 1);
-                tulTP = uygulaFormul(tulTP, endeks.tulTpFormulu).toFixed(1);
-
-                // İp Aralık Mantığı
-                let payda = 0;
-                if (tulBoy <= 150) payda = 3;
-                else if (tulBoy <= 230) payda = 5;
-                else payda = 7;
-                const ipAralik = ((tulBoy - 10) / payda).toFixed(1);
-
-                // İp Adet Mantığı
-                let ipBase = tulBoy <= 150 ? 2 : (tulBoy <= 230 ? 3 : 4);
-                const ipAdet = Math.floor(uygulaFormul(ipBase, endeks.ipAdetFormulu) * adet);
-
-                printHtml += `
-                    <tr>
-                        <td>${index + 1}</td>
-                        <td>${kasaEn}</td><td>${adet * 2}</td>
-                        <td>${kasaBoy}</td><td>${adet * 2}</td>
-                        <td>${kanatBoy}</td><td>${adet * 2}</td>
-                        <td>${tulBoy.toFixed(1)}</td><td>${adet}</td>
-                        <td>${tulTP}</td>
-                        <td>${ipAralik}</td>
-                        <td>${uygulaFormul(en + boy + en + boy + 100, endeks.ipAralikFormulu).toFixed(0)}</td>
-                        <td>${ipAdet}</td>
-                    </tr>`;
+                printHtml += "<tr>";
+                aktifSutunlar.forEach(key => { printHtml += `<td>${veriler[key]}</td>`; });
+                printHtml += "</tr>";
             });
 
             printHtml += `</tbody></table></body></html>`;
-
             const win = window.open('', '_blank');
             win.document.write(printHtml);
             win.document.close();
-            win.print();
+            win.onload = () => { win.print(); modalKapat('duzenModal'); };
         };
 
-        // DİĞER FONKSİYONLAR (Guncelle, Detay vs.)
+        // DİĞER FONKSİYONLAR
         window.detayGoster = (kod) => {
             seciliSiparisKodu = kod;
             const sip = tumSiparisler.find(s => s.siparisKodu === kod);
@@ -281,24 +313,7 @@
             document.getElementById('detayBaslik').innerText = `${sip.musteriAdiSoyadi} | ${sip.siparisKodu}`;
             document.getElementById('modalFiyat').value = sip.toplamTutar;
             document.getElementById('modalDurum').value = sip.durum;
-            const urunHtml = `
-                <table class="w-full text-left text-sm border-collapse">
-                    <thead class="bg-gray-800 text-white">
-                        <tr><th class="p-3">Ürün Bilgisi</th><th class="p-3 text-center">Ölçü</th><th class="p-3 text-center">Adet</th></tr>
-                    </thead>
-                    <tbody class="divide-y border">
-                        ${sip.urunler.map(u => `
-                            <tr class="hover:bg-gray-50">
-                                <td class="p-4">
-                                    <div class="font-bold text-gray-800">${u.model} (${u.seri})</div>
-                                    <div class="text-xs text-gray-500">${u.renk} | ${u.yon} | ${u.tulCinsi}</div>
-                                </td>
-                                <td class="p-4 text-center font-bold text-gray-600">${u.en} x ${u.boy}</td>
-                                <td class="p-4 text-center font-bold text-gray-800">${u.adet} Ad.</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>`;
+            const urunHtml = `<table class="w-full text-left text-sm border-collapse"><thead class="bg-gray-800 text-white"><tr><th class="p-3">Ürün Bilgisi</th><th class="p-3 text-center">Ölçü</th><th class="p-3 text-center">Adet</th></tr></thead><tbody class="divide-y border">${sip.urunler.map(u => `<tr><td class="p-4"><b>${u.model}</b><br><small>${u.renk} | ${u.yon}</small></td><td class="text-center">${u.en}x${u.boy}</td><td class="text-center">${u.adet}</td></tr>`).join('')}</tbody></table>`;
             document.getElementById('detayIcerik').innerHTML = urunHtml;
             document.getElementById('detayModal').classList.add('active');
         };

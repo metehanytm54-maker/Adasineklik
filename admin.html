@@ -55,8 +55,7 @@
                 <button onclick="modalKapat('detayModal')" class="text-3xl text-gray-400 hover:text-red-500 transition">&times;</button>
             </div>
             
-            <div id="detayIcerik" class="overflow-x-auto">
-                </div>
+            <div id="detayIcerik" class="overflow-x-auto"></div>
 
             <div class="mt-8 bg-gray-50 p-6 rounded-xl border border-gray-200">
                 <h3 class="font-bold text-gray-700 mb-4 flex items-center">⚙️ Fiyat ve Durum Güncelle</h3>
@@ -136,7 +135,6 @@
                         return;
                     }
 
-                    // Sıralama ve Render
                     const renderList = [...tumSiparisler].reverse();
                     container.innerHTML = renderList.map(sip => `
                         <div class="admin-row p-4 grid grid-cols-2 md:grid-cols-6 gap-4 items-center shadow-sm">
@@ -147,7 +145,7 @@
                             <div class="text-xs font-mono font-bold text-blue-600">${sip.siparisKodu}</div>
                             <div class="text-xs text-gray-500">${sip.olusturmaTarihi ? new Date(sip.olusturmaTarihi).toLocaleDateString('tr-TR') : '-'}</div>
                             <div>
-                                <span class="px-2 py-1 rounded-md text-[10px] font-bold ${sip.durum === 'Tamamlandı' ? 'bg-green-100 text-green-700' : 'bg-blue-50 text-blue-600'}">
+                                <span class="px-2 py-1 rounded-md text-[10px] font-bold ${sip.durum === 'Tamamlandı' ? 'bg-green-100 text-green-700' : (sip.durum === 'İptal Edildi' ? 'bg-red-100 text-red-700' : 'bg-blue-50 text-blue-600')}">
                                     ${sip.durum || 'Bekliyor'}
                                 </span>
                             </div>
@@ -207,9 +205,14 @@
         window.modalKapat = (id) => document.getElementById(id).classList.remove('active');
 
         window.siparisGuncelle = async () => {
-            const yeniFiyat = parseFloat(document.getElementById('modalFiyat').value) || 0;
+            let yeniFiyat = parseFloat(document.getElementById('modalFiyat').value) || 0;
             const yeniDurum = document.getElementById('modalDurum').value;
             const index = tumSiparisler.findIndex(s => s.siparisKodu === seciliSiparisKodu);
+            
+            // "İptal Edildi" durumu kontrolü
+            if (yeniDurum === "İptal Edildi") {
+                yeniFiyat = 0;
+            }
             
             if (index !== -1) {
                 tumSiparisler[index].toplamTutar = yeniFiyat;

@@ -102,59 +102,7 @@
         let musteriSiparisleri = [];
         let musterininOdemeleri = [];
 
-        async function verileriYukle() {
-            const container = document.getElementById('anaIcerik');
-            const hamVeri = sessionStorage.getItem("girisYapanMusteri");
-            if (!hamVeri) return;
-
-            const aktifMusteri = JSON.parse(hamVeri);
-            const girisTelefon = String(aktifMusteri.telefon).trim(); // Eşleşme için telefon temizlendi
-
-            try {
-                const [sipSnap, odeSnap] = await Promise.all([
-                    getDoc(doc(db, "Kullanicilar", userPath, "Veriler", "Siparisler")),
-                    getDoc(doc(db, "Kullanicilar", userPath, "Veriler", "Odemeler"))
-                ]);
-
-                const tumSiparisler = JSON.parse(sipSnap.data().json_data || "[]");
-                const tumOdemeler = JSON.parse(odeSnap.data().json_data || "[]");
-
-                // SADECE TELEFON NUMARASI EŞLEŞTİRMESİ
-                musteriSiparisleri = tumSiparisler.filter(s => String(s.telefon).trim() === girisTelefon);
-                
-                // Ödemeler genellikle sipariş koduyla veya müşteri telefon bilgisiyle kaydedilir. 
-                // Eğer Ödemeler tablosunda telefon yoksa, kullanıcının sipariş kodları üzerinden eşleştirme yapılır:
-                const siparisKodlarim = musteriSiparisleri.map(s => s.siparisKodu);
-                musterininOdemeleri = tumOdemeler.filter(o => 
-                    (o.telefon && String(o.telefon).trim() === girisTelefon) || 
-                    (siparisKodlarim.includes(o.siparisKodu))
-                );
-
-                const tHarcama = musteriSiparisleri.reduce((sum, s) => sum + (Number(s.toplamTutar) || 0), 0);
-                const tOdenen = musterininOdemeleri.reduce((sum, o) => sum + (Number(o.tutar) || 0), 0);
-
-                document.getElementById('toplamHarcama').innerText = tHarcama.toLocaleString('tr-TR') + " TL";
-                document.getElementById('cariBorc').innerText = (tHarcama - tOdenen).toLocaleString('tr-TR') + " TL";
-
-                container.innerHTML = [...musteriSiparisleri].reverse().map(sip => `
-                    <div class="siparis-row p-4 grid grid-cols-2 md:grid-cols-5 gap-3 items-center">
-                        <div class="text-sm font-bold text-gray-700">${new Date(sip.olusturmaTarihi).toLocaleDateString('tr-TR')}</div>
-                        <div class="text-xs font-mono font-bold text-blue-600 uppercase">${sip.siparisKodu}</div>
-                        <div>
-                            <span class="px-2 py-1 rounded-md text-[10px] font-black uppercase ${sip.durum === 'Tamamlandı' ? 'bg-green-100 text-green-700' : 'bg-blue-50 text-blue-600'}">
-                                ${sip.durum}
-                            </span>
-                        </div>
-                        <div class="font-black text-gray-800">${(Number(sip.toplamTutar) || 0).toLocaleString('tr-TR')} TL</div>
-                        <div class="text-right">
-                            <button onclick="detayAc('${sip.siparisKodu}')" class="bg-gray-800 text-white px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase hover:bg-black transition">
-                                Liste Görüntüle
-                            </button>
-                        </div>
-                    </div>
-                `).join('');
-            } catch (err) { container.innerHTML = "Veri yükleme hatası."; }
-        }
+       verileriYukle
 
         window.odemeleriGoster = () => {
             const container = document.getElementById('odemeIcerik');
@@ -205,3 +153,4 @@
     </script>
 </body>
 </html>
+

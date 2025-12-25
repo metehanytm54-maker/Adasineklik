@@ -21,21 +21,21 @@
             <h2 class="text-2xl font-black text-center mb-6 text-gray-800">Yönetici Girişi</h2>
             <input type="text" id="adminUser" placeholder="Kullanıcı Adı" class="w-full border p-3 rounded-xl mb-3 outline-none focus:ring-2 focus:ring-blue-500">
             <input type="password" id="adminPass" placeholder="Şifre" class="w-full border p-3 rounded-xl mb-4 outline-none focus:ring-2 focus:ring-blue-500">
-            <button onclick="girisYap()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold">Giriş Yap</button>
+            <button onclick="girisYap()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition">Giriş Yap</button>
         </div>
     </div>
 
     <div id="adminIcerik" class="max-w-6xl mx-auto p-4 md:p-8">
-        <div class="flex justify-between items-center mb-8 bg-white p-5 rounded-xl border">
+        <div class="flex justify-between items-center mb-8 bg-white p-5 rounded-xl border shadow-sm">
             <h1 class="text-xl font-black text-gray-800 uppercase tracking-tight">Sipariş Yönetimi</h1>
             <div class="flex gap-2">
-                <button onclick="verileriYukle()" class="text-sm bg-gray-100 px-4 py-2 rounded-lg font-bold">🔄 Yenile</button>
-                <button onclick="cikisYap()" class="text-sm bg-red-50 text-red-600 px-4 py-2 rounded-lg font-bold">Çıkış</button>
+                <button onclick="verileriYukle()" class="text-sm bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-bold hover:bg-blue-100">🔄 Listeyi Yenile</button>
+                <button onclick="cikisYap()" class="text-sm bg-red-50 text-red-600 px-4 py-2 rounded-lg font-bold border border-red-100">Çıkış</button>
             </div>
         </div>
 
-        <div class="hidden md:grid grid-cols-6 gap-4 px-6 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-widest">
-            <div class="col-span-1">Müşteri</div>
+        <div class="hidden md:grid grid-cols-6 gap-4 px-6 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-widest border-b mb-2">
+            <div>Müşteri</div>
             <div>Sipariş Kodu</div>
             <div>Tarih</div>
             <div>Durum</div>
@@ -43,40 +43,41 @@
             <div class="text-right">İşlem</div>
         </div>
 
-        <div id="adminSiparisListesi" class="space-y-3 mt-2">
-            </div>
+        <div id="adminSiparisListesi" class="space-y-3">
+            <div class="text-center py-20 text-gray-400 font-medium">Veriler yükleniyor, lütfen bekleyin...</div>
+        </div>
     </div>
 
     <div id="detayModal" class="modal">
         <div class="modal-content p-6 shadow-2xl">
             <div class="flex justify-between items-center border-b pb-4 mb-4">
-                <h2 id="detayBaslik" class="text-xl font-black text-gray-800">Sipariş Detayı</h2>
-                <button onclick="modalKapat('detayModal')" class="text-2xl text-gray-400 hover:text-red-500">&times;</button>
+                <h2 id="detayBaslik" class="text-xl font-bold text-gray-800">Sipariş Detayı</h2>
+                <button onclick="modalKapat('detayModal')" class="text-3xl text-gray-400 hover:text-red-500 transition">&times;</button>
             </div>
             
-            <div id="detayIcerik">
+            <div id="detayIcerik" class="overflow-x-auto">
                 </div>
 
-            <div class="mt-8 bg-gray-50 p-6 rounded-xl border">
-                <h3 class="font-bold text-gray-700 mb-4">Fiyat ve Durum Güncelle</h3>
+            <div class="mt-8 bg-gray-50 p-6 rounded-xl border border-gray-200">
+                <h3 class="font-bold text-gray-700 mb-4 flex items-center">⚙️ Fiyat ve Durum Güncelle</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="text-xs font-bold text-gray-400 block mb-1">SATIŞ TUTARI (TL)</label>
-                        <input type="number" id="modalFiyat" class="w-full border p-3 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 font-bold">
+                        <label class="text-[10px] font-bold text-gray-400 block mb-1 uppercase">Satış Tutarı (TL)</label>
+                        <input type="number" id="modalFiyat" class="w-full border p-3 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 font-bold text-lg">
                     </div>
                     <div>
-                        <label class="text-xs font-bold text-gray-400 block mb-1">SİPARİŞ DURUMU</label>
+                        <label class="text-[10px] font-bold text-gray-400 block mb-1 uppercase">Sipariş Durumu</label>
                         <select id="modalDurum" class="w-full border p-3 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 font-bold">
-                            <option>Online Sipariş</option>
-                            <option>Hazırlanıyor</option>
-                            <option>Ölçü Alındı</option>
-                            <option>Montaj Bekliyor</option>
-                            <option>Tamamlandı</option>
-                            <option>İptal Edildi</option>
+                            <option value="Online Sipariş">Online Sipariş</option>
+                            <option value="Hazırlanıyor">Hazırlanıyor</option>
+                            <option value="Ölçü Alındı">Ölçü Alındı</option>
+                            <option value="Montaj Bekliyor">Montaj Bekliyor</option>
+                            <option value="Tamamlandı">Tamamlandı</option>
+                            <option value="İptal Edildi">İptal Edildi</option>
                         </select>
                     </div>
                 </div>
-                <button onclick="siparisGuncelle()" class="w-full mt-4 bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 shadow-lg">Değişiklikleri Kaydet</button>
+                <button onclick="siparisGuncelle()" class="w-full mt-6 bg-green-600 text-white py-4 rounded-xl font-bold hover:bg-green-700 shadow-lg transition transform active:scale-95">Değişiklikleri Kaydet</button>
             </div>
         </div>
     </div>
@@ -104,13 +105,15 @@
         let seciliSiparisKodu = null;
 
         window.girisYap = () => {
-            if (document.getElementById('adminUser').value === ADMIN_USER && document.getElementById('adminPass').value === ADMIN_PASS) {
+            const u = document.getElementById('adminUser').value;
+            const p = document.getElementById('adminPass').value;
+            if (u === ADMIN_USER && p === ADMIN_PASS) {
                 sessionStorage.setItem("adminLoggedIn", "true");
-                location.reload();
-            } else { alert("Hatalı Giriş!"); }
+                window.location.reload();
+            } else { alert("Hatalı Kullanıcı!"); }
         };
 
-        window.cikisYap = () => { sessionStorage.removeItem("adminLoggedIn"); location.reload(); };
+        window.cikisYap = () => { sessionStorage.removeItem("adminLoggedIn"); window.location.reload(); };
 
         if (sessionStorage.getItem("adminLoggedIn") === "true") {
             document.getElementById('loginForm').style.display = 'none';
@@ -118,63 +121,84 @@
             verileriYukle();
         }
 
-        window.verileriYukle = async () => {
+        async function verileriYukle() {
             const container = document.getElementById('adminSiparisListesi');
             try {
-                const snap = await getDoc(doc(db, "Kullanicilar", userPath, "Veriler", "Siparisler"));
+                const docRef = doc(db, "Kullanicilar", userPath, "Veriler", "Siparisler");
+                const snap = await getDoc(docRef);
+
                 if (snap.exists()) {
-                    tumSiparisler = JSON.parse(snap.data().json_data || "[]");
-                    container.innerHTML = tumSiparisler.map(sip => `
-                        <div class="admin-row p-4 grid grid-cols-2 md:grid-cols-6 gap-4 items-center">
+                    const data = snap.data();
+                    tumSiparisler = JSON.parse(data.json_data || "[]");
+                    
+                    if (tumSiparisler.length === 0) {
+                        container.innerHTML = `<div class="p-10 text-center text-gray-400 bg-white rounded-xl">Henüz sipariş bulunmuyor.</div>`;
+                        return;
+                    }
+
+                    // Sıralama ve Render
+                    const renderList = [...tumSiparisler].reverse();
+                    container.innerHTML = renderList.map(sip => `
+                        <div class="admin-row p-4 grid grid-cols-2 md:grid-cols-6 gap-4 items-center shadow-sm">
                             <div class="col-span-1">
-                                <p class="text-sm font-bold text-gray-800">${sip.musteriAdiSoyadi}</p>
-                                <p class="text-[10px] text-gray-400">${sip.telefon}</p>
+                                <p class="text-sm font-bold text-gray-800">${sip.musteriAdiSoyadi || 'İsimsiz'}</p>
+                                <p class="text-[10px] text-gray-400">${sip.telefon || '-'}</p>
                             </div>
                             <div class="text-xs font-mono font-bold text-blue-600">${sip.siparisKodu}</div>
-                            <div class="text-xs text-gray-500">${new Date(sip.olusturmaTarihi).toLocaleDateString('tr-TR')}</div>
+                            <div class="text-xs text-gray-500">${sip.olusturmaTarihi ? new Date(sip.olusturmaTarihi).toLocaleDateString('tr-TR') : '-'}</div>
                             <div>
                                 <span class="px-2 py-1 rounded-md text-[10px] font-bold ${sip.durum === 'Tamamlandı' ? 'bg-green-100 text-green-700' : 'bg-blue-50 text-blue-600'}">
-                                    ${sip.durum}
+                                    ${sip.durum || 'Bekliyor'}
                                 </span>
                             </div>
-                            <div class="font-black text-gray-700">${Number(sip.toplamTutar).toLocaleString('tr-TR')} TL</div>
+                            <div class="font-black text-gray-700 text-sm">${(Number(sip.toplamTutar) || 0).toLocaleString('tr-TR')} TL</div>
                             <div class="text-right">
-                                <button onclick="detayGoster('${sip.siparisKodu}')" class="bg-gray-800 text-white px-3 py-1.5 rounded-md text-xs font-bold hover:bg-black transition">
+                                <button onclick="detayGoster('${sip.siparisKodu}')" class="bg-gray-900 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-black transition">
                                     Liste Görüntüle
                                 </button>
                             </div>
                         </div>
-                    `).reverse().join('');
+                    `).join('');
+                } else {
+                    container.innerHTML = "Veritabanında 'Siparisler' dökümanı bulunamadı.";
                 }
-            } catch (err) { console.error(err); }
-        };
+            } catch (err) {
+                console.error("Firebase Hatası:", err);
+                container.innerHTML = "Bir hata oluştu. Konsolu kontrol edin.";
+            }
+        }
+        window.verileriYukle = verileriYukle;
 
         window.detayGoster = (kod) => {
             seciliSiparisKodu = kod;
             const sip = tumSiparisler.find(s => s.siparisKodu === kod);
-            document.getElementById('detayBaslik').innerText = `${sip.musteriAdiSoyadi} - ${sip.siparisKodu}`;
+            if(!sip) return;
+
+            document.getElementById('detayBaslik').innerText = `${sip.musteriAdiSoyadi} | ${sip.siparisKodu}`;
             document.getElementById('modalFiyat').value = sip.toplamTutar;
             document.getElementById('modalDurum').value = sip.durum;
 
             const urunHtml = `
-                <table class="w-full text-left text-sm">
+                <table class="w-full text-left text-sm border-collapse min-w-[500px]">
                     <thead class="bg-gray-800 text-white">
-                        <tr><th class="p-3">Ürün Detayı</th><th class="p-3 text-center">Ölçü</th><th class="p-3 text-center">Adet</th></tr>
+                        <tr><th class="p-3 rounded-tl-lg">Ürün Bilgisi</th><th class="p-3 text-center">Ölçü</th><th class="p-3 text-center rounded-tr-lg">Adet</th></tr>
                     </thead>
-                    <tbody class="divide-y">
+                    <tbody class="divide-y border">
                         ${sip.urunler.map(u => `
-                            <tr>
-                                <td class="p-3">
+                            <tr class="hover:bg-gray-50">
+                                <td class="p-4">
                                     <div class="font-bold text-gray-800">${u.model} (${u.seri})</div>
-                                    <div class="text-xs text-gray-500">${u.renk} | ${u.yon} | ${u.tulCinsi}</div>
+                                    <div class="text-xs text-gray-500 mt-1">${u.renk} | ${u.yon} | ${u.tulCinsi}</div>
                                 </td>
-                                <td class="p-3 text-center font-bold text-gray-600">${u.en}x${u.boy}</td>
-                                <td class="p-3 text-center font-bold">${u.adet} Ad.</td>
+                                <td class="p-4 text-center font-bold text-gray-600">${u.en} x ${u.boy}</td>
+                                <td class="p-4 text-center font-bold text-gray-800">${u.adet} Ad.</td>
                             </tr>
                         `).join('')}
                     </tbody>
                 </table>
-                <div class="mt-4 p-3 bg-blue-50 text-xs text-blue-800 rounded-lg"><b>Adres:</b> ${sip.adres || 'Belirtilmedi'}</div>
+                <div class="mt-4 p-4 bg-blue-50 text-sm text-blue-800 rounded-xl border border-blue-100 italic">
+                    <span class="font-bold">Teslimat Adresi:</span> ${sip.adres || 'Adres bilgisi girilmemiş.'}
+                </div>
             `;
             document.getElementById('detayIcerik').innerHTML = urunHtml;
             document.getElementById('detayModal').classList.add('active');
@@ -196,8 +220,7 @@
                     });
                     modalKapat('detayModal');
                     verileriYukle();
-                    alert("Başarıyla güncellendi.");
-                } catch (err) { alert("Hata oluştu!"); }
+                } catch (err) { alert("Kaydetme hatası!"); }
             }
         };
     </script>

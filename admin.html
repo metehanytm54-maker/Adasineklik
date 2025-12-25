@@ -84,8 +84,7 @@
         <div class="modal-content p-6 max-w-md">
             <h3 class="text-lg font-black text-gray-800 mb-4 border-b pb-2 uppercase tracking-tighter">İmalat Listesi Düzeni</h3>
             <p class="text-xs text-gray-400 mb-4">PDF'de görünmesini istediğiniz sütunları seçin:</p>
-            <div id="sutunListesi" class="grid grid-cols-2 gap-2 mb-6">
-                </div>
+            <div id="sutunListesi" class="grid grid-cols-2 gap-2 mb-6"></div>
             <div class="flex gap-2">
                 <button onclick="imalatListesiHazirla()" class="flex-1 bg-orange-600 text-white py-3 rounded-xl font-bold hover:bg-orange-700 transition">📄 PDF Oluştur</button>
                 <button onclick="modalKapat('duzenModal')" class="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-bold">Vazgeç</button>
@@ -116,27 +115,26 @@
         let tumEndeksler = [];
         let seciliSiparisKodu = null;
 
-        // Yazdırma Sütun Tanımları
         const SUTUN_TANIMLARI = {
             sira: "S. No",
             kasaEn: "Kasa EN",
-            enAdet: "EN Adet",
+            enAdet: "EN Ad.",
             kasaBoy: "Kasa BOY",
-            boyAdet: "BOY Adet",
+            boyAdet: "BOY Ad.",
             kanatBoy: "Kanat BOY",
-            kanatAdet: "Kanat Adet",
+            kanatAdet: "Kanat Ad.",
             tulBoy: "Tül BOY",
-            tulAdet: "Tül Adet",
+            tulAdet: "Tül Ad.",
             tulTP: "Tül TP",
             ipAralik: "İp Aralık",
             ipBoy: "İp BOY",
-            ipAdet: "İp Adet",
-            seritBoy: "Şerit BOY",
-            seritAdet: "Şerit Adet",
-            fitilBoy: "Fitil BOY",
-            fitilAdet: "Fitil Adet",
-            tekerlek: "Tekerlek",
-            takoz: "Köşe Takoz"
+            ipAdet: "İp Ad.",
+            seritBoy: "Şer. BOY",
+            seritAdet: "Şer. Ad.",
+            fitilBoy: "Fit. BOY",
+            fitilAdet: "Fit. Ad.",
+            tekerlek: "Tek.",
+            takoz: "Takoz"
         };
         let aktifSutunlar = Object.keys(SUTUN_TANIMLARI);
 
@@ -163,11 +161,7 @@
                     getDoc(doc(db, "Kullanicilar", userPath, "Veriler", "Siparisler")),
                     getDoc(doc(db, "Kullanicilar", userPath, "Veriler", "KesimEndeksleri"))
                 ]);
-
-                if (endexSnap.exists()) {
-                    tumEndeksler = JSON.parse(endexSnap.data().json_data || "[]");
-                }
-
+                if (endexSnap.exists()) tumEndeksler = JSON.parse(endexSnap.data().json_data || "[]");
                 if (sipSnap.exists()) {
                     tumSiparisler = JSON.parse(sipSnap.data().json_data || "[]");
                     if (tumSiparisler.length === 0) {
@@ -197,18 +191,13 @@
                     </div>
                     <div class="font-black text-gray-700 text-sm">${(Number(sip.toplamTutar) || 0).toLocaleString('tr-TR')} TL</div>
                     <div class="text-right flex flex-col md:flex-row gap-2 justify-end">
-                        <button onclick="duzenAc('${sip.siparisKodu}')" class="bg-orange-600 text-white px-3 py-2 rounded-lg text-[10px] font-bold hover:bg-orange-700 transition">
-                            ⚙️ İmalat Listesi
-                        </button>
-                        <button onclick="detayGoster('${sip.siparisKodu}')" class="bg-gray-900 text-white px-3 py-2 rounded-lg text-[10px] font-bold hover:bg-black transition">
-                            Liste Görüntüle
-                        </button>
+                        <button onclick="duzenAc('${sip.siparisKodu}')" class="bg-orange-600 text-white px-3 py-2 rounded-lg text-[10px] font-bold hover:bg-orange-700 transition">⚙️ İmalat Listesi</button>
+                        <button onclick="detayGoster('${sip.siparisKodu}')" class="bg-gray-900 text-white px-3 py-2 rounded-lg text-[10px] font-bold hover:bg-black transition">Liste Görüntüle</button>
                     </div>
                 </div>
             `).join('');
         }
 
-        // DÜZEN OLUŞTURMA MANTIĞI
         window.duzenAc = (kod) => {
             seciliSiparisKodu = kod;
             const container = document.getElementById('sutunListesi');
@@ -226,7 +215,6 @@
             else { aktifSutunlar = aktifSutunlar.filter(i => i !== el.value); }
         };
 
-        // HESAPLAMA MOTORU
         const hesapla = (deger, form) => {
             if (!form) return deger;
             const d = parseFloat(form.deger) || 0;
@@ -244,21 +232,65 @@
             const sip = tumSiparisler.find(s => s.siparisKodu === seciliSiparisKodu);
             if(!sip) return;
 
-            let printHtml = `<html><head><style>
+            // Yazdırma penceresi için görünmez iframe oluştur
+            const iframe = document.createElement('iframe');
+            iframe.style.position = 'fixed';
+            iframe.style.right = '0';
+            iframe.style.bottom = '0';
+            iframe.style.width = '0';
+            iframe.style.height = '0';
+            iframe.style.border = '0';
+            document.body.appendChild(iframe);
+
+            let doc = iframe.contentWindow.document;
+
+            let html = `<html><head><style>
                 @page { size: A4 landscape; margin: 1cm; }
-                body { font-family: sans-serif; font-size: 9pt; }
-                table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-                th, td { border: 1px solid #000; padding: 4px; text-align: center; overflow: hidden; }
-                th { background: #f0f0f0; font-weight: bold; font-size: 8pt; }
-                h2 { border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 10px; }
+                body { font-family: sans-serif; font-size: 8pt; color: #333; }
+                table { width: 100%; border-collapse: collapse; margin-bottom: 20px; table-layout: fixed; }
+                th, td { border: 1px solid #ccc; padding: 4px; text-align: center; word-wrap: break-word; }
+                th { background: #f3f4f6; font-weight: bold; }
+                .header { border-bottom: 2px solid #333; margin-bottom: 15px; padding-bottom: 5px; }
+                .section-title { font-weight: bold; font-size: 10pt; margin-bottom: 8px; text-transform: uppercase; color: #555; }
             </style></head><body>
-            <h2>İMALAT KESİM LİSTESİ - ${sip.siparisKodu}</h2>
-            <p>Müşteri: ${sip.musteriAdiSoyadi} | Tarih: ${new Date().toLocaleDateString('tr-TR')}</p>
+            <div class="header">
+                <h2 style="margin:0">ADA SİNEKLİK İMALAT FORMU</h2>
+                <p style="margin:5px 0">Kod: <b>${sip.siparisKodu}</b> | Müşteri: <b>${sip.musteriAdiSoyadi}</b> | Tarih: ${new Date().toLocaleDateString('tr-TR')}</p>
+            </div>
+
+            <div class="section-title">1. Sipariş Detay Listesi</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:40px">No</th>
+                        <th>Model / Seri</th>
+                        <th>Renk</th>
+                        <th>Yön</th>
+                        <th>Tül Cinsi</th>
+                        <th>Ölçü (ExB)</th>
+                        <th>Adet</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${sip.urunler.map((u, i) => `
+                        <tr>
+                            <td>${i+1}</td>
+                            <td>${u.model} ${u.seri}</td>
+                            <td>${u.renk}</td>
+                            <td>${u.yon}</td>
+                            <td>${u.tulCinsi}</td>
+                            <td>${u.en} x ${u.boy}</td>
+                            <td>${u.adet}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+
+            <div class="section-title">2. Teknik Kesim Listesi</div>
             <table><thead><tr>`;
 
-            // Seçili başlıkları ekle
-            aktifSutunlar.forEach(key => { printHtml += `<th>${SUTUN_TANIMLARI[key]}</th>`; });
-            printHtml += `</tr></thead><tbody>`;
+            aktifSutunlar.forEach(key => { html += `<th>${SUTUN_TANIMLARI[key]}</th>`; });
+            html += `</tr></thead><tbody>`;
 
             sip.urunler.forEach((u, i) => {
                 const en = parseFloat(u.en) || 0;
@@ -293,19 +325,27 @@
                     takoz: (hesapla(1, e.koseTakozuAdetFormulu) * adet).toFixed(0)
                 };
 
-                printHtml += "<tr>";
-                aktifSutunlar.forEach(key => { printHtml += `<td>${veriler[key]}</td>`; });
-                printHtml += "</tr>";
+                html += "<tr>";
+                aktifSutunlar.forEach(key => { html += `<td>${veriler[key]}</td>`; });
+                html += "</tr>";
             });
 
-            printHtml += `</tbody></table></body></html>`;
-            const win = window.open('', '_blank');
-            win.document.write(printHtml);
-            win.document.close();
-            win.onload = () => { win.print(); modalKapat('duzenModal'); };
+            html += `</tbody></table></body></html>`;
+
+            doc.open();
+            doc.write(html);
+            doc.close();
+
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+            
+            // Temizlik
+            setTimeout(() => {
+                document.body.removeChild(iframe);
+                modalKapat('duzenModal');
+            }, 1000);
         };
 
-        // DİĞER FONKSİYONLAR
         window.detayGoster = (kod) => {
             seciliSiparisKodu = kod;
             const sip = tumSiparisler.find(s => s.siparisKodu === kod);
@@ -313,7 +353,7 @@
             document.getElementById('detayBaslik').innerText = `${sip.musteriAdiSoyadi} | ${sip.siparisKodu}`;
             document.getElementById('modalFiyat').value = sip.toplamTutar;
             document.getElementById('modalDurum').value = sip.durum;
-            const urunHtml = `<table class="w-full text-left text-sm border-collapse"><thead class="bg-gray-800 text-white"><tr><th class="p-3">Ürün Bilgisi</th><th class="p-3 text-center">Ölçü</th><th class="p-3 text-center">Adet</th></tr></thead><tbody class="divide-y border">${sip.urunler.map(u => `<tr><td class="p-4"><b>${u.model}</b><br><small>${u.renk} | ${u.yon}</small></td><td class="text-center">${u.en}x${u.boy}</td><td class="text-center">${u.adet}</td></tr>`).join('')}</tbody></table>`;
+            const urunHtml = `<table class="w-full text-left text-sm border-collapse"><thead class="bg-gray-800 text-white"><tr><th class="p-3">Ürün Bilgisi</th><th class="p-3 text-center">Ölçü</th><th class="p-3 text-center">Adet</th></tr></thead><tbody class="divide-y border">${sip.urunler.map(u => `<tr><td class="p-4"><b>${u.model}</b><br><small>${u.renk} | ${u.yon}</small></td><td class="text-center font-bold">${u.en}x${u.boy}</td><td class="text-center">${u.adet}</td></tr>`).join('')}</tbody></table>`;
             document.getElementById('detayIcerik').innerHTML = urunHtml;
             document.getElementById('detayModal').classList.add('active');
         };

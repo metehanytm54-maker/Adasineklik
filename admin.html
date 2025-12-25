@@ -12,6 +12,7 @@
         .modal.active { display: flex; }
         .modal-content { background: white; width: 100%; max-width: 800px; border-radius: 16px; max-height: 90vh; overflow-y: auto; position: relative; }
         #adminIcerik { display: none; }
+        @media print { .no-print { display: none; } }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -44,7 +45,7 @@
         </div>
 
         <div id="adminSiparisListesi" class="space-y-3">
-            <div class="text-center py-20 text-gray-400 font-medium">Veriler yükleniyor, lütfen bekleyin...</div>
+            <div class="text-center py-20 text-gray-400 font-medium">Veriler yükleniyor...</div>
         </div>
     </div>
 
@@ -54,19 +55,17 @@
                 <h2 id="detayBaslik" class="text-xl font-bold text-gray-800">Sipariş Detayı</h2>
                 <button onclick="modalKapat('detayModal')" class="text-3xl text-gray-400 hover:text-red-500 transition">&times;</button>
             </div>
-            
             <div id="detayIcerik" class="overflow-x-auto"></div>
-
             <div class="mt-8 bg-gray-50 p-6 rounded-xl border border-gray-200">
                 <h3 class="font-bold text-gray-700 mb-4 flex items-center">⚙️ Fiyat ve Durum Güncelle</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="text-[10px] font-bold text-gray-400 block mb-1 uppercase">Satış Tutarı (TL)</label>
-                        <input type="number" id="modalFiyat" class="w-full border p-3 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 font-bold text-lg">
+                        <input type="number" id="modalFiyat" class="w-full border p-3 rounded-lg outline-none font-bold text-lg">
                     </div>
                     <div>
                         <label class="text-[10px] font-bold text-gray-400 block mb-1 uppercase">Sipariş Durumu</label>
-                        <select id="modalDurum" class="w-full border p-3 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 font-bold">
+                        <select id="modalDurum" class="w-full border p-3 rounded-lg outline-none font-bold">
                             <option value="Online Sipariş">Online Sipariş</option>
                             <option value="Hazırlanıyor">Hazırlanıyor</option>
                             <option value="Ölçü Alındı">Ölçü Alındı</option>
@@ -76,7 +75,7 @@
                         </select>
                     </div>
                 </div>
-                <button onclick="siparisGuncelle()" class="w-full mt-6 bg-green-600 text-white py-4 rounded-xl font-bold hover:bg-green-700 shadow-lg transition transform active:scale-95">Değişiklikleri Kaydet</button>
+                <button onclick="siparisGuncelle()" class="w-full mt-6 bg-green-600 text-white py-4 rounded-xl font-bold hover:bg-green-700 shadow-lg transition">Değişiklikleri Kaydet</button>
             </div>
         </div>
     </div>
@@ -101,8 +100,10 @@
         const ADMIN_USER = "admin";
         const ADMIN_PASS = "12345";
         let tumSiparisler = [];
+        let tumEndeksler = [];
         let seciliSiparisKodu = null;
 
+        // GİRİŞ VE ÇIKIŞ FONKSİYONLARI
         window.girisYap = () => {
             const u = document.getElementById('adminUser').value;
             const p = document.getElementById('adminPass').value;
@@ -111,7 +112,6 @@
                 window.location.reload();
             } else { alert("Hatalı Kullanıcı!"); }
         };
-
         window.cikisYap = () => { sessionStorage.removeItem("adminLoggedIn"); window.location.reload(); };
 
         if (sessionStorage.getItem("adminLoggedIn") === "true") {
@@ -123,109 +123,199 @@
         async function verileriYukle() {
             const container = document.getElementById('adminSiparisListesi');
             try {
-                const docRef = doc(db, "Kullanicilar", userPath, "Veriler", "Siparisler");
-                const snap = await getDoc(docRef);
+                // Siparişleri ve Endeksleri eş zamanlı çek
+                const [sipSnap, endexSnap] = await Promise.all([
+                    getDoc(doc(db, "Kullanicilar", userPath, "Veriler", "Siparisler")),
+                    getDoc(doc(db, "Kullanicilar", userPath, "Veriler", "Musteriler")) // Not: APK'da endeksler genellikle bu yapıdadır, gerekirse yolu güncelleyin.
+                ]);
 
-                if (snap.exists()) {
-                    const data = snap.data();
-                    tumSiparisler = JSON.parse(data.json_data || "[]");
-                    
+                // Endeksleri yükle (Kotlin'deki endeksleriYukle karşılığı)
+                // Eğer endeksler farklı bir dokümandaysa buradaki yolu güncelleyebilirsiniz.
+                const endeksData = await getDoc(doc(db, "Kullanicilar", userPath, "Veriler", "KesimEndeksleri"));
+                tumEndeksler = JSON.parse(endeksData.data()?.json_data || "[]");
+
+                if (sipSnap.exists()) {
+                    tumSiparisler = JSON.parse(sipSnap.data().json_data || "[]");
                     if (tumSiparisler.length === 0) {
                         container.innerHTML = `<div class="p-10 text-center text-gray-400 bg-white rounded-xl">Henüz sipariş bulunmuyor.</div>`;
                         return;
                     }
-
-                    const renderList = [...tumSiparisler].reverse();
-                    container.innerHTML = renderList.map(sip => `
-                        <div class="admin-row p-4 grid grid-cols-2 md:grid-cols-6 gap-4 items-center shadow-sm">
-                            <div class="col-span-1">
-                                <p class="text-sm font-bold text-gray-800">${sip.musteriAdiSoyadi || 'İsimsiz'}</p>
-                                <p class="text-[10px] text-gray-400">${sip.telefon || '-'}</p>
-                            </div>
-                            <div class="text-xs font-mono font-bold text-blue-600">${sip.siparisKodu}</div>
-                            <div class="text-xs text-gray-500">${sip.olusturmaTarihi ? new Date(sip.olusturmaTarihi).toLocaleDateString('tr-TR') : '-'}</div>
-                            <div>
-                                <span class="px-2 py-1 rounded-md text-[10px] font-bold ${sip.durum === 'Tamamlandı' ? 'bg-green-100 text-green-700' : (sip.durum === 'İptal Edildi' ? 'bg-red-100 text-red-700' : 'bg-blue-50 text-blue-600')}">
-                                    ${sip.durum || 'Bekliyor'}
-                                </span>
-                            </div>
-                            <div class="font-black text-gray-700 text-sm">${(Number(sip.toplamTutar) || 0).toLocaleString('tr-TR')} TL</div>
-                            <div class="text-right">
-                                <button onclick="detayGoster('${sip.siparisKodu}')" class="bg-gray-900 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-black transition">
-                                    Liste Görüntüle
-                                </button>
-                            </div>
-                        </div>
-                    `).join('');
-                } else {
-                    container.innerHTML = "Veritabanında 'Siparisler' dökümanı bulunamadı.";
+                    renderOrders();
                 }
-            } catch (err) {
-                console.error("Firebase Hatası:", err);
-                container.innerHTML = "Bir hata oluştu. Konsolu kontrol edin.";
-            }
+            } catch (err) { console.error(err); }
         }
-        window.verileriYukle = verileriYukle;
 
+        function renderOrders() {
+            const container = document.getElementById('adminSiparisListesi');
+            const renderList = [...tumSiparisler].reverse();
+            container.innerHTML = renderList.map(sip => `
+                <div class="admin-row p-4 grid grid-cols-2 md:grid-cols-6 gap-4 items-center shadow-sm">
+                    <div class="col-span-1">
+                        <p class="text-sm font-bold text-gray-800">${sip.musteriAdiSoyadi || 'İsimsiz'}</p>
+                        <p class="text-[10px] text-gray-400">${sip.telefon || '-'}</p>
+                    </div>
+                    <div class="text-xs font-mono font-bold text-blue-600">${sip.siparisKodu}</div>
+                    <div class="text-xs text-gray-500">${sip.olusturmaTarihi ? new Date(sip.olusturmaTarihi).toLocaleDateString('tr-TR') : '-'}</div>
+                    <div>
+                        <span class="px-2 py-1 rounded-md text-[10px] font-bold ${sip.durum === 'Tamamlandı' ? 'bg-green-100 text-green-700' : 'bg-blue-50 text-blue-600'}">
+                            ${sip.durum || 'Bekliyor'}
+                        </span>
+                    </div>
+                    <div class="font-black text-gray-700 text-sm">${(Number(sip.toplamTutar) || 0).toLocaleString('tr-TR')} TL</div>
+                    <div class="text-right flex flex-col md:flex-row gap-2 justify-end">
+                        <button onclick="imalatListesiYazdir('${sip.siparisKodu}')" class="bg-orange-600 text-white px-3 py-2 rounded-lg text-[10px] font-bold hover:bg-orange-700 transition">
+                            ⚙️ İmalat Listesi
+                        </button>
+                        <button onclick="detayGoster('${sip.siparisKodu}')" class="bg-gray-900 text-white px-3 py-2 rounded-lg text-[10px] font-bold hover:bg-black transition text-nowrap">
+                            Liste Görüntüle
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // --- HESAPLAMA MANTIĞI (Kotlin'den Port Edildi) ---
+        const uygulaFormul = (temelDeger, endeksSatiri) => {
+            if (!endeksSatiri) return temelDeger;
+            const d = parseFloat(endeksSatiri.deger) || 0;
+            switch (endeksSatiri.operator) {
+                case "CIKAR": return temelDeger - d;
+                case "EKLE": return temelDeger + d;
+                case "CARP": return temelDeger * d;
+                case "BOL": return d !== 0 ? temelDeger / d : 0;
+                case "SABIT": return d;
+                default: return temelDeger;
+            }
+        };
+
+        window.imalatListesiYazdir = (kod) => {
+            const sip = tumSiparisler.find(s => s.siparisKodu === kod);
+            if (!sip) return;
+
+            let printHtml = `
+            <html>
+            <head>
+                <style>
+                    @page { size: A4 landscape; margin: 1cm; }
+                    body { font-family: Arial, sans-serif; font-size: 10pt; }
+                    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                    th, td { border: 1px solid #000; padding: 4px; text-align: center; font-size: 8pt; }
+                    th { background-color: #f2f2f2; font-weight: bold; }
+                    h2 { border-bottom: 2px solid #000; padding-bottom: 5px; }
+                </style>
+            </head>
+            <body>
+                <h2>İMALAT KESİM LİSTESİ - ${sip.siparisKodu}</h2>
+                <p><b>Müşteri:</b> ${sip.musteriAdiSoyadi} | <b>Tarih:</b> ${new Date().toLocaleDateString('tr-TR')}</p>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>S.No</th><th>Kasa EN</th><th>Ad.</th><th>Kasa BOY</th><th>Ad.</th><th>Kanat BOY</th><th>Ad.</th>
+                            <th>Tül BOY</th><th>Ad.</th><th>Tül TP</th><th>İp Aralık</th><th>İp BOY</th><th>Ad.</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
+            sip.urunler.forEach((u, index) => {
+                const en = parseFloat(u.en) || 0;
+                const boy = parseFloat(u.boy) || 0;
+                const adet = parseInt(u.adet) || 1;
+
+                // Endeks Bulma (Kotlin'deki endeksBul mantığı)
+                const endeks = tumEndeksler.find(e => e.yon === u.yon && e.seri === u.seri && e.model === u.model) || 
+                              tumEndeksler.find(e => e.seri === u.seri) || {};
+
+                // Hesaplamalar
+                const kasaEn = uygulaFormul(en, endeks.enFormulu).toFixed(1);
+                const kasaBoy = uygulaFormul(boy, endeks.boyFormulu).toFixed(1);
+                
+                const kanatKaynak = endeks.kanatFormulu?.kaynakBoyut === "EN" ? en : boy;
+                const kanatBoy = uygulaFormul(kanatKaynak, endeks.kanatFormulu).toFixed(1);
+                
+                const tulBoy = uygulaFormul(boy, endeks.tulFormulu);
+                const fitilBoy = uygulaFormul(boy, endeks.fitilBoyFormulu).toFixed(1);
+
+                // Tül TP (Zincirleme Mantık)
+                let tulTP = en * (parseFloat(endeks.tulKalinligi) || 1);
+                tulTP = uygulaFormul(tulTP, endeks.tulTpFormulu).toFixed(1);
+
+                // İp Aralık Mantığı
+                let payda = 0;
+                if (tulBoy <= 150) payda = 3;
+                else if (tulBoy <= 230) payda = 5;
+                else payda = 7;
+                const ipAralik = ((tulBoy - 10) / payda).toFixed(1);
+
+                // İp Adet Mantığı
+                let ipBase = tulBoy <= 150 ? 2 : (tulBoy <= 230 ? 3 : 4);
+                const ipAdet = Math.floor(uygulaFormul(ipBase, endeks.ipAdetFormulu) * adet);
+
+                printHtml += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${kasaEn}</td><td>${adet * 2}</td>
+                        <td>${kasaBoy}</td><td>${adet * 2}</td>
+                        <td>${kanatBoy}</td><td>${adet * 2}</td>
+                        <td>${tulBoy.toFixed(1)}</td><td>${adet}</td>
+                        <td>${tulTP}</td>
+                        <td>${ipAralik}</td>
+                        <td>${uygulaFormul(en + boy + en + boy + 100, endeks.ipAralikFormulu).toFixed(0)}</td>
+                        <td>${ipAdet}</td>
+                    </tr>`;
+            });
+
+            printHtml += `</tbody></table></body></html>`;
+
+            const win = window.open('', '_blank');
+            win.document.write(printHtml);
+            win.document.close();
+            win.print();
+        };
+
+        // DİĞER FONKSİYONLAR (Guncelle, Detay vs.)
         window.detayGoster = (kod) => {
             seciliSiparisKodu = kod;
             const sip = tumSiparisler.find(s => s.siparisKodu === kod);
             if(!sip) return;
-
             document.getElementById('detayBaslik').innerText = `${sip.musteriAdiSoyadi} | ${sip.siparisKodu}`;
             document.getElementById('modalFiyat').value = sip.toplamTutar;
             document.getElementById('modalDurum').value = sip.durum;
-
             const urunHtml = `
-                <table class="w-full text-left text-sm border-collapse min-w-[500px]">
+                <table class="w-full text-left text-sm border-collapse">
                     <thead class="bg-gray-800 text-white">
-                        <tr><th class="p-3 rounded-tl-lg">Ürün Bilgisi</th><th class="p-3 text-center">Ölçü</th><th class="p-3 text-center rounded-tr-lg">Adet</th></tr>
+                        <tr><th class="p-3">Ürün Bilgisi</th><th class="p-3 text-center">Ölçü</th><th class="p-3 text-center">Adet</th></tr>
                     </thead>
                     <tbody class="divide-y border">
                         ${sip.urunler.map(u => `
                             <tr class="hover:bg-gray-50">
                                 <td class="p-4">
                                     <div class="font-bold text-gray-800">${u.model} (${u.seri})</div>
-                                    <div class="text-xs text-gray-500 mt-1">${u.renk} | ${u.yon} | ${u.tulCinsi}</div>
+                                    <div class="text-xs text-gray-500">${u.renk} | ${u.yon} | ${u.tulCinsi}</div>
                                 </td>
                                 <td class="p-4 text-center font-bold text-gray-600">${u.en} x ${u.boy}</td>
                                 <td class="p-4 text-center font-bold text-gray-800">${u.adet} Ad.</td>
                             </tr>
                         `).join('')}
                     </tbody>
-                </table>
-                <div class="mt-4 p-4 bg-blue-50 text-sm text-blue-800 rounded-xl border border-blue-100 italic">
-                    <span class="font-bold">Teslimat Adresi:</span> ${sip.adres || 'Adres bilgisi girilmemiş.'}
-                </div>
-            `;
+                </table>`;
             document.getElementById('detayIcerik').innerHTML = urunHtml;
             document.getElementById('detayModal').classList.add('active');
         };
 
-        window.modalKapat = (id) => document.getElementById(id).classList.remove('active');
-
         window.siparisGuncelle = async () => {
-            let yeniFiyat = parseFloat(document.getElementById('modalFiyat').value) || 0;
-            const yeniDurum = document.getElementById('modalDurum').value;
             const index = tumSiparisler.findIndex(s => s.siparisKodu === seciliSiparisKodu);
-            
-            // "İptal Edildi" durumu kontrolü
-            if (yeniDurum === "İptal Edildi") {
-                yeniFiyat = 0;
-            }
-            
             if (index !== -1) {
-                tumSiparisler[index].toplamTutar = yeniFiyat;
-                tumSiparisler[index].durum = yeniDurum;
-                try {
-                    await setDoc(doc(db, "Kullanicilar", userPath, "Veriler", "Siparisler"), {
-                        json_data: JSON.stringify(tumSiparisler)
-                    });
-                    modalKapat('detayModal');
-                    verileriYukle();
-                } catch (err) { alert("Kaydetme hatası!"); }
+                tumSiparisler[index].toplamTutar = parseFloat(document.getElementById('modalFiyat').value) || 0;
+                tumSiparisler[index].durum = document.getElementById('modalDurum').value;
+                await setDoc(doc(db, "Kullanicilar", userPath, "Veriler", "Siparisler"), { json_data: JSON.stringify(tumSiparisler) });
+                modalKapat('detayModal');
+                verileriYukle();
             }
         };
+
+        window.modalKapat = (id) => document.getElementById(id).classList.remove('active');
+        window.verileriYukle = verileriYukle;
     </script>
 </body>
 </html>

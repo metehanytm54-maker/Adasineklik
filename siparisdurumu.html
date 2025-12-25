@@ -21,7 +21,7 @@
         <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
             <div class="flex items-center gap-4">
                 <button onclick="window.location.href='index.html'" class="p-2 hover:bg-gray-100 rounded-full transition text-blue-600 font-bold">← Geri</button>
-                <h1 class="text-2xl font-black text-gray-800 uppercase">Hesap Özeti</h1>
+                <h1 class="text-2xl font-black text-gray-800 uppercase tracking-tighter">Hesap Özeti</h1>
             </div>
             <button onclick="odemeleriGoster()" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700 shadow-lg transition flex items-center gap-2">
                 💳 Ödemelerim
@@ -32,14 +32,14 @@
             <div class="summary-card flex justify-between items-center shadow-sm">
                 <div>
                     <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Toplam Harcama</p>
-                    <p id="toplamHarcama" class="text-3xl font-black text-gray-800">0,00 TL</p>
+                    <p id="toplamHarcama" class="text-3xl font-black text-gray-800 tracking-tighter">0,00 TL</p>
                 </div>
                 <div class="bg-blue-50 p-4 rounded-2xl text-2xl">💰</div>
             </div>
             <div class="summary-card flex justify-between items-center border-orange-200 bg-orange-50/40 shadow-sm">
                 <div>
                     <p class="text-xs font-bold text-orange-400 uppercase tracking-wider">Kalan Cari Borç</p>
-                    <p id="cariBorc" class="text-3xl font-black text-orange-600">0,00 TL</p>
+                    <p id="cariBorc" class="text-3xl font-black text-orange-600 tracking-tighter">0,00 TL</p>
                 </div>
                 <div class="bg-orange-100 p-4 rounded-2xl text-2xl">⏳</div>
             </div>
@@ -58,20 +58,17 @@
         </div>
 
         <div id="anaIcerik" class="space-y-3">
-            <div class="text-center py-20 text-gray-400 font-medium italic">Veriler yükleniyor...</div>
+            <div class="text-center py-20 text-gray-400 font-medium italic italic">Veriler telefon numarasına göre sorgulanıyor...</div>
         </div>
     </div>
 
     <div id="detayModal" class="modal">
         <div class="modal-content p-6 shadow-2xl">
             <div class="flex justify-between items-center border-b pb-4 mb-4">
-                <h2 class="text-xl font-black text-gray-800">Sipariş Detayı</h2>
+                <h2 class="text-xl font-black text-gray-800">Ürün Detayları</h2>
                 <button onclick="modalKapat('detayModal')" class="text-3xl text-gray-300 hover:text-red-500">&times;</button>
             </div>
             <div id="modalIcerik" class="overflow-x-auto"></div>
-            <div class="mt-6 pt-4 border-t text-right">
-                <button onclick="modalKapat('detayModal')" class="bg-gray-800 text-white px-6 py-2 rounded-lg font-bold">Pencereyi Kapat</button>
-            </div>
         </div>
     </div>
 
@@ -108,12 +105,11 @@
         async function verileriYukle() {
             const container = document.getElementById('anaIcerik');
             const hamVeri = sessionStorage.getItem("girisYapanMusteri");
-            if (!hamVeri) {
-                container.innerHTML = "Lütfen giriş yapın.";
-                return;
-            }
+            if (!hamVeri) return;
 
             const aktifMusteri = JSON.parse(hamVeri);
+            const girisTelefon = String(aktifMusteri.telefon).trim(); // Eşleşme için telefon temizlendi
+
             try {
                 const [sipSnap, odeSnap] = await Promise.all([
                     getDoc(doc(db, "Kullanicilar", userPath, "Veriler", "Siparisler")),
@@ -123,9 +119,16 @@
                 const tumSiparisler = JSON.parse(sipSnap.data().json_data || "[]");
                 const tumOdemeler = JSON.parse(odeSnap.data().json_data || "[]");
 
-                // GÜVENLİK: Sadece aktif kullanıcıya ait veriler filtreleniyor
-                musteriSiparisleri = tumSiparisler.filter(s => s.telefon === aktifMusteri.telefon);
-                musterininOdemeleri = tumOdemeler.filter(o => o.musteriAdiSoyadi === aktifMusteri.adSoyad);
+                // SADECE TELEFON NUMARASI EŞLEŞTİRMESİ
+                musteriSiparisleri = tumSiparisler.filter(s => String(s.telefon).trim() === girisTelefon);
+                
+                // Ödemeler genellikle sipariş koduyla veya müşteri telefon bilgisiyle kaydedilir. 
+                // Eğer Ödemeler tablosunda telefon yoksa, kullanıcının sipariş kodları üzerinden eşleştirme yapılır:
+                const siparisKodlarim = musteriSiparisleri.map(s => s.siparisKodu);
+                musterininOdemeleri = tumOdemeler.filter(o => 
+                    (o.telefon && String(o.telefon).trim() === girisTelefon) || 
+                    (siparisKodlarim.includes(o.siparisKodu))
+                );
 
                 const tHarcama = musteriSiparisleri.reduce((sum, s) => sum + (Number(s.toplamTutar) || 0), 0);
                 const tOdenen = musterininOdemeleri.reduce((sum, o) => sum + (Number(o.tutar) || 0), 0);
@@ -150,20 +153,17 @@
                         </div>
                     </div>
                 `).join('');
-            } catch (err) { 
-                console.error(err);
-                container.innerHTML = "Veriler yüklenirken bir hata oluştu."; 
-            }
+            } catch (err) { container.innerHTML = "Veri yükleme hatası."; }
         }
 
         window.odemeleriGoster = () => {
             const container = document.getElementById('odemeIcerik');
-            container.innerHTML = musterininOdemeleri.length === 0 ? '<p class="text-center text-gray-400">Kayıtlı ödemeniz bulunmuyor.</p>' : 
+            container.innerHTML = musterininOdemeleri.length === 0 ? '<p class="text-center text-gray-400 py-4">Kayıtlı ödeme bulunamadı.</p>' : 
                 [...musterininOdemeleri].reverse().map(o => `
                     <div class="flex justify-between items-center p-4 bg-blue-50/50 rounded-xl border border-blue-100">
                         <div>
                             <p class="text-[10px] font-bold text-gray-400 uppercase">${new Date(o.tarih).toLocaleDateString('tr-TR')}</p>
-                            <p class="text-sm font-bold text-blue-800">Tahsilat İşlemi</p>
+                            <p class="text-sm font-bold text-blue-800">Ödeme Alındı</p>
                         </div>
                         <p class="text-lg font-black text-blue-600">+ ${Number(o.tutar).toLocaleString('tr-TR')} TL</p>
                     </div>
@@ -174,7 +174,6 @@
         window.detayAc = (kod) => {
             const sip = musteriSiparisleri.find(s => s.siparisKodu === kod);
             if (!sip) return;
-
             document.getElementById('modalIcerik').innerHTML = `
                 <table class="w-full text-left text-sm border-collapse min-w-[500px]">
                     <thead class="bg-[#2C2C2C] text-white">
@@ -186,12 +185,10 @@
                     </thead>
                     <tbody class="divide-y border-x border-b border-gray-100">
                         ${sip.urunler.map(u => `
-                            <tr class="hover:bg-gray-50 transition">
+                            <tr>
                                 <td class="p-4">
                                     <div class="font-bold text-gray-900 text-sm mb-0.5">${u.model} ${u.seri ? `(${u.seri})` : ''}</div>
-                                    <div class="text-[11px] text-gray-500 font-medium italic">
-                                        Renk: ${u.renk} | Tül: ${u.tulCinsi || 'Standart'} | Yön: ${u.yon}
-                                    </div>
+                                    <div class="text-[11px] text-gray-500 font-medium italic">Renk: ${u.renk} | Tül: ${u.tulCinsi || 'Standart'} | Yön: ${u.yon}</div>
                                 </td>
                                 <td class="p-4 text-center font-bold text-gray-700">${u.en} x ${u.boy}</td>
                                 <td class="p-4 text-center font-bold text-gray-900">${u.adet} Ad.</td>
@@ -204,8 +201,6 @@
         };
 
         window.modalKapat = (id) => document.getElementById(id).classList.remove('active');
-        
-        // Başlat
         verileriYukle();
     </script>
 </body>

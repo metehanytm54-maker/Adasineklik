@@ -108,6 +108,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const userPath = "adasineklik@54_com".replace(/\./g, '_');
+        window.firebaseDB = db;
 
         const ADMIN_USER = "admin";
         const ADMIN_PASS = "12345";
@@ -213,3 +214,4 @@
     </script>
 </body>
 </html>
+

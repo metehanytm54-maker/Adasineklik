@@ -1,170 +1,138 @@
-<div class="flex flex-col gap-6">
-    <div class="flex justify-between items-center bg-blue-600 p-6 rounded-[24px] text-white shadow-lg shadow-blue-100">
-        <div>
-            <h3 class="text-xl font-black uppercase tracking-tighter">Birim Fiyat & Stok</h3>
-            <p class="text-[10px] opacity-80 font-bold">TOPLAM ÜRÜN: <span id="stokSayisi">0</span></p>
-        </div>
-        <button onclick="yeniMalzemeAc()" class="bg-white text-blue-600 px-6 py-3 rounded-xl font-black text-xs hover:bg-blue-50 transition-all">+ YENİ EKLE</button>
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ada Sineklik Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; background: #f1f5f9; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 1000; align-items: center; justify-content: center; padding: 15px; }
+        .modal.active { display: flex; }
+        .btn-card { transition: all 0.2s; cursor: pointer; background: white; border-radius: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .btn-card:hover { transform: translateY(-4px); border-color: #3b82f6; box-shadow: 0 10px 15px -3px rgba(59,130,246,0.2); }
+    </style>
+</head>
+<body>
+
+<div id="loginForm" class="flex items-center justify-center min-h-screen">
+    <div class="bg-white p-8 rounded-[30px] shadow-2xl w-full max-w-sm border">
+        <h2 class="text-2xl font-black text-center mb-6 text-slate-800 uppercase italic">Ada Sineklik</h2>
+        <input type="text" id="adminUser" placeholder="Kullanıcı Adı" class="w-full border p-4 rounded-xl mb-3 outline-none focus:ring-2 ring-blue-500">
+        <input type="password" id="adminPass" placeholder="Şifre" class="w-full border p-4 rounded-xl mb-6 outline-none focus:ring-2 ring-blue-500">
+        <button onclick="girisYap()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-bold hover:bg-blue-700 shadow-lg">SİSTEME GİRİŞ</button>
     </div>
-
-    <input type="text" id="araBox" oninput="listeyiFiltrele()" placeholder="Malzeme adı veya seri ile ara..." class="w-full p-5 rounded-2xl border-2 border-slate-100 outline-none focus:border-blue-400 transition-all bg-white font-medium">
-
-    <div id="malzemeListesi" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        </div>
 </div>
 
-<div id="miniDialog" class="hidden fixed inset-0 z-[1200] bg-slate-900/90 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white w-full max-w-lg rounded-[32px] p-8 shadow-2xl">
-        <h4 id="dBaslik" class="font-black text-slate-800 uppercase mb-6 text-center">Malzeme Kaydı</h4>
-        
-        <div class="space-y-4">
-            <input type="text" id="mAd" oninput="adDegisti()" placeholder="Malzeme Adı (Örn: Tül)" class="w-full p-4 rounded-xl border-2 border-slate-100 outline-none focus:border-blue-500 font-bold">
-            
-            <div class="grid grid-cols-2 gap-4">
-                <select id="mSeri" class="p-4 rounded-xl border-2 border-slate-100 outline-none font-bold bg-white text-sm"></select>
-                <input type="text" id="mRenk" placeholder="Renk" class="p-4 rounded-xl border-2 border-slate-100 outline-none font-bold text-sm">
-            </div>
+<div id="adminIcerik" class="hidden max-w-[1200px] mx-auto p-6">
+    <div class="flex justify-between items-center mb-10 bg-white p-6 rounded-[25px] shadow-sm">
+        <h1 class="text-xl font-black text-slate-800 tracking-tighter">YÖNETİCİ PANELİ</h1>
+        <button onclick="cikisYap()" class="bg-red-50 text-red-600 px-5 py-2 rounded-xl font-bold text-xs">ÇIKIŞ YAP</button>
+    </div>
 
-            <div class="grid grid-cols-2 gap-2 bg-slate-50 p-4 rounded-2xl border">
-                <div class="space-y-2">
-                    <label class="text-[9px] font-black text-slate-400 ml-1">STOK MİKTARI</label>
-                    <input type="text" id="mStok" placeholder="0" class="w-full p-3 rounded-lg border outline-none font-bold">
-                </div>
-                <div class="space-y-2">
-                    <label class="text-[9px] font-black text-slate-400 ml-1">BİRİM FİYAT (₺)</label>
-                    <input type="text" id="mFiyat" placeholder="0.00" class="w-full p-3 rounded-lg border outline-none font-bold text-blue-600">
-                </div>
-            </div>
-
-            <div class="flex gap-3 pt-4">
-                <button onclick="miniDialogKapat()" class="flex-1 py-4 font-bold text-slate-400 hover:text-slate-600 transition">İPTAL</button>
-                <button onclick="veriyiKaydet()" class="flex-[2] bg-blue-600 text-white py-4 rounded-2xl font-black shadow-lg shadow-blue-100 uppercase text-sm">Kaydet</button>
-            </div>
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-10">
+        <div onclick="modalAc('maliyet')" class="btn-card p-6 flex flex-col items-center border-2 border-transparent">
+            <span class="text-3xl mb-2">💰</span>
+            <span class="text-[10px] font-black uppercase text-slate-500">Birim Fiyat</span>
         </div>
+        <div onclick="modalAc('stok')" class="btn-card p-6 flex flex-col items-center border-2 border-transparent">
+            <span class="text-3xl mb-2">📦</span>
+            <span class="text-[10px] font-black uppercase text-slate-500">Stok Yönetimi</span>
+        </div>
+        <div onclick="modalAc('ayarlar')" class="btn-card p-6 flex flex-col items-center border-2 border-transparent">
+            <span class="text-3xl mb-2">⚙️</span>
+            <span class="text-[10px] font-black uppercase text-slate-500">Ürün Ayar</span>
+        </div>
+        <div onclick="modalAc('endeks')" class="btn-card p-6 flex flex-col items-center border-2 border-transparent">
+            <span class="text-3xl mb-2">📏</span>
+            <span class="text-[10px] font-black uppercase text-slate-500">Endeksler</span>
+        </div>
+        <div onclick="modalAc('musteri')" class="btn-card p-6 flex flex-col items-center border-2 border-transparent">
+            <span class="text-3xl mb-2">👥</span>
+            <span class="text-[10px] font-black uppercase text-slate-500">Müşteriler</span>
+        </div>
+        <div onclick="modalAc('odeme')" class="btn-card p-6 flex flex-col items-center border-2 border-transparent">
+            <span class="text-3xl mb-2">💳</span>
+            <span class="text-[10px] font-black uppercase text-slate-500">Ödemeler</span>
+        </div>
+    </div>
+
+    <div id="siparisOzet" class="bg-white p-8 rounded-[30px] shadow-sm min-h-[200px]">
+        <h2 class="font-black text-slate-400 text-xs uppercase mb-4 tracking-widest">Sistem Durumu</h2>
+        <div id="anaListe">Bağlantı aktif, veriler bekleniyor...</div>
+    </div>
+</div>
+
+<div id="genelModal" class="modal">
+    <div class="bg-white w-full max-w-4xl rounded-[35px] max-height-[90vh] overflow-hidden flex flex-col">
+        <div class="p-6 border-b flex justify-between items-center">
+            <h2 id="modalBaslik" class="font-black text-slate-800 uppercase tracking-tighter">İşlem Paneli</h2>
+            <button onclick="modalKapat()" class="w-10 h-10 rounded-full bg-slate-100 font-bold hover:bg-red-50 hover:text-red-500 transition-all text-xl">&times;</button>
+        </div>
+        <div id="modalBody" class="p-6 overflow-y-auto"></div>
     </div>
 </div>
 
 <script>
-    var tumMalzemeler = [];
-    var seriListesi = [];
-    var tulListesi = [];
-    var duzenlenenId = null;
-    const userPath = "adasineklik@54_com".replace(/\./g, '_');
-
-    window.birimFiyatBaslat = async () => {
-        // 1. Seri ve Tül Listelerini Getir
-        const modelSnap = await window.db.doc(`Kullanicilar/${userPath}/Veriler/UrunModelleri`).get();
-        if(modelSnap.exists()){
-            const data = modelSnap.data().liste || [];
-            data.forEach(item => {
-                if(item.ad === "Seri") seriListesi = item.ozellikler;
-                if(item.ad === "Tül Cinsi") tulListesi = item.ozellikler;
-            });
-        }
-
-        // 2. Malzemeleri Dinle (Kotlin'deki bulutVerileriniYukle)
-        window.onSnapshot(window.doc(window.db, "Kullanicilar", userPath, "Veriler", "DepoMaliyetleri"), (doc) => {
-            if(doc.exists()){
-                tumMalzemeler = JSON.parse(doc.data().json_data || "[]");
-                ekranaBas();
-            }
-        });
+    const firebaseConfig = {
+        apiKey: "AIzaSyD5cilsAyJrzPzwtgIBd1w7StfAkUBAO7E",
+        authDomain: "adasineklik-f8c9f.firebaseapp.com",
+        projectId: "adasineklik-f8c9f",
+        storageBucket: "adasineklik-f8c9f.firebasestorage.app",
+        messagingSenderId: "612764827500",
+        appId: "1:612764827500:web:5b11b94229a36336547d49"
     };
 
-    function ekranaBas(filtre = "") {
-        const container = document.getElementById('malzemeListesi');
-        const liste = tumMalzemeler.filter(m => m.ad.toLowerCase().includes(filtre.toLowerCase()) || m.seri.toLowerCase().includes(filtre.toLowerCase()));
-        document.getElementById('stokSayisi').innerText = liste.length;
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    window.db = db; // Global erişim için
 
-        container.innerHTML = liste.map(m => `
-            <div class="bg-white p-5 rounded-2xl border-2 border-slate-50 shadow-sm flex justify-between items-center group hover:border-blue-100 transition-all">
-                <div>
-                    <h4 class="font-black text-slate-800 text-sm uppercase">${m.ad}</h4>
-                    <p class="text-[10px] font-bold text-slate-400 uppercase">${m.seri} / ${m.renk}</p>
-                    <div class="mt-3 flex gap-2">
-                        <span class="bg-blue-50 text-blue-600 text-[9px] font-black px-2 py-1 rounded">STOK: ${m.adet || m.metre || 0}</span>
-                        <span class="bg-emerald-50 text-emerald-600 text-[9px] font-black px-2 py-1 rounded">FİYAT: ${m.adetFiyati || m.metreFiyati || 0} ₺</span>
-                    </div>
-                </div>
-                <div class="flex gap-2">
-                    <button onclick="duzenleModu('${m.id}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-50 text-slate-400 hover:bg-blue-600 hover:text-white transition-all text-xs">✏️</button>
-                    <button onclick="sil('${m.id}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-50 text-red-300 hover:bg-red-600 hover:text-white transition-all text-xs">🗑️</button>
-                </div>
-            </div>
-        `).join('');
+    function girisYap() {
+        const u = document.getElementById('adminUser').value;
+        const p = document.getElementById('adminPass').value;
+        if(u === "admin" && p === "12345") {
+            localStorage.setItem("adminOK", "1");
+            oturumKontrol();
+        } else { alert("Hata!"); }
     }
 
-    function adDegisti() {
-        const ad = document.getElementById('mAd').value.toLowerCase();
-        const select = document.getElementById('mSeri');
-        const liste = ad.includes("tül") ? tulListesi : seriListesi;
-        
-        select.innerHTML = '<option value="Yok">--- Seçiniz ---</option>' + 
-            liste.map(s => `<option value="${s}">${s}</option>`).join('');
-        
-        document.getElementById('mRenk').style.display = ad.includes("tül") ? "none" : "block";
-    }
-
-    function yeniMalzemeAc() {
-        duzenlenenId = null;
-        document.getElementById('mAd').value = "";
-        adDegisti();
-        document.getElementById('miniDialog').classList.remove('hidden');
-    }
-
-    function duzenleModu(id) {
-        const m = tumMalzemeler.find(x => x.id === id);
-        if(!m) return;
-        duzenlenenId = id;
-        document.getElementById('mAd').value = m.ad;
-        adDegisti();
-        document.getElementById('mSeri').value = m.seri;
-        document.getElementById('mRenk').value = m.renk;
-        document.getElementById('mStok').value = m.adet || m.metre || "";
-        document.getElementById('mFiyat').value = m.adetFiyati || m.metreFiyati || "";
-        document.getElementById('miniDialog').classList.remove('hidden');
-    }
-
-    async function veriyiKaydet() {
-        const ad = document.getElementById('mAd').value;
-        if(!ad) return;
-
-        const yeni = {
-            id: duzenlenenId || Date.now().toString(),
-            ad: ad,
-            seri: document.getElementById('mSeri').value,
-            renk: document.getElementById('mRenk').value || "Yok",
-            adet: document.getElementById('mStok').value,
-            adetFiyati: document.getElementById('mFiyat').value,
-            olusturmaTarihi: Date.now()
-        };
-
-        let liste = [...tumMalzemeler];
-        if(duzenlenenId) {
-            const idx = liste.findIndex(x => x.id === duzenlenenId);
-            liste[idx] = yeni;
-        } else {
-            liste.push(yeni);
+    function oturumKontrol() {
+        if(localStorage.getItem("adminOK") === "1") {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('adminIcerik').style.display = 'block';
         }
+    }
+    oturumKontrol();
 
-        await window.setDoc(window.doc(window.db, "Kullanicilar", userPath, "Veriler", "DepoMaliyetleri"), {
-            json_data: JSON.stringify(liste)
-        });
+    function cikisYap() { localStorage.clear(); location.reload(); }
 
-        miniDialogKapat();
+    async function modalAc(tip) {
+        const body = document.getElementById('modalBody');
+        const m = document.getElementById('genelModal');
+        const baslik = document.getElementById('modalBaslik');
+        
+        body.innerHTML = "Yükleniyor...";
+        m.classList.add('active');
+
+        let url = "";
+        if(tip === 'maliyet') { url = 'birim_fiyat.html'; baslik.innerText = "Birim Fiyat Yönetimi"; }
+        else { body.innerHTML = `<div class='p-10 text-center text-slate-400'>${tip}.html dosyası henüz hazır değil.</div>`; return; }
+
+        try {
+            const res = await fetch(url);
+            const html = await res.text();
+            body.innerHTML = html;
+            // Scriptleri manuel çalıştır
+            const scripts = body.getElementsByTagName('script');
+            for(let s of scripts) { eval(s.innerText); }
+        } catch(e) { body.innerHTML = "Hata: Dosya yüklenemedi."; }
     }
 
-    async function sil(id) {
-        if(!confirm("Silinsin mi?")) return;
-        const yeniListe = tumMalzemeler.filter(x => x.id !== id);
-        await window.setDoc(window.doc(window.db, "Kullanicilar", userPath, "Veriler", "DepoMaliyetleri"), {
-            json_data: JSON.stringify(yeniListe)
-        });
-    }
-
-    function miniDialogKapat() { document.getElementById('miniDialog').classList.add('hidden'); }
-    function listeyiFiltrele() { ekranaBas(document.getElementById('araBox').value); }
-    
-    // Sayfa içinden başlatma
-    birimFiyatBaslat();
+    function modalKapat() { document.getElementById('genelModal').classList.remove('active'); }
 </script>
+
+</body>
+</html>

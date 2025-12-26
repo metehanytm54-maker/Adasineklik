@@ -250,6 +250,47 @@
                 </div>
             `).join('');
         }
+        // admin.html içinde Sipariş Kartı Render Kısmına Eklenecek Bölüm:
+
+function maliyetHesapla(siparis) {
+    // Bu değerler DepoMaliyetleri dokümanından gelen güncel fiyatlar olmalıdır
+    // Örnek basitleştirilmiş hesaplama:
+    const en = (siparis.en || 0) / 100;
+    const boy = (siparis.boy || 0) / 100;
+    
+    // Varsayılan birim maliyetler (Firebase'den çekilen verilerle eşleşmeli)
+    let profilMetreFiyati = 45; // Örnek
+    let tulMetreKareFiyati = 120; // Örnek
+    
+    const profilMaliyeti = ((en + boy) * 2) * profilMetreFiyati;
+    const tulMaliyeti = (en * boy) * tulMetreKareFiyati;
+    const sabitGider = 30; // Aksesuar, tekerlek vb.
+    
+    return profilMaliyeti + tulMaliyeti + sabitGider;
+}
+
+// Kartın HTML yapısı içinde Satış Tutarı yanına:
+const satisTutari = siparis.toplamTutar || 0;
+const tahminiMaliyet = maliyetHesapla(siparis);
+const kar = satisTutari - tahminiMaliyet;
+
+// HTML Çıktısı (Kart tasarımı içine ekleyin):
+`
+<div class="flex justify-between items-center bg-gray-50 p-3 rounded-xl mt-2 border border-dashed border-gray-300">
+    <div class="text-center">
+        <p class="text-[10px] text-gray-400 font-bold uppercase">Satış</p>
+        <p class="text-sm font-black text-green-600">${satisTutari}₺</p>
+    </div>
+    <div class="text-center border-x px-4">
+        <p class="text-[10px] text-gray-400 font-bold uppercase">Maliyet</p>
+        <p class="text-sm font-black text-red-500">${tahminiMaliyet.toFixed(2)}₺</p>
+    </div>
+    <div class="text-center">
+        <p class="text-[10px] text-gray-400 font-bold uppercase">Kâr</p>
+        <p class="text-sm font-black ${kar > 0 ? 'text-blue-600' : 'text-red-700'}">${kar.toFixed(2)}₺</p>
+    </div>
+</div>
+`
 
         // --- MALZEME / BİRİM FİYAT RENDER (YENİ) ---
         function renderMaterials() {
@@ -461,5 +502,6 @@
     </script>
 </body>
 </html>
+
 
 

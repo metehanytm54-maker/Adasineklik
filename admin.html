@@ -3,117 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ada Sineklik - Admin</title>
+    <title>Ada Sineklik Panel</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
-        .modal { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(8px); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; background: #f1f5f9; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 1000; align-items: center; justify-content: center; padding: 15px; }
         .modal.active { display: flex; }
-        .modal-content { background: white; width: 100%; max-width: 1000px; border-radius: 32px; max-height: 90vh; overflow-y: auto; position: relative; }
-        .nav-card { transition: all 0.2s; cursor: pointer; background: white; border: 2px solid transparent; }
-        .nav-card:hover { border-color: #3b82f6; transform: translateY(-3px); }
+        .btn-card { transition: all 0.2s; cursor: pointer; background: white; border-radius: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .btn-card:hover { transform: translateY(-4px); border-color: #3b82f6; box-shadow: 0 10px 15px -3px rgba(59,130,246,0.2); }
     </style>
 </head>
 <body>
 
-    <div id="loginForm" class="flex items-center justify-center min-h-screen">
-        <div class="bg-white p-10 rounded-[40px] shadow-2xl w-full max-w-md border border-slate-100">
-            <h2 class="text-3xl font-black text-center mb-8 text-slate-800 tracking-tighter">YÖNETİCİ GİRİŞİ</h2>
-            <input type="text" id="adminUser" placeholder="Kullanıcı Adı" class="w-full border-2 border-slate-100 p-4 rounded-2xl mb-4 outline-none focus:border-blue-500">
-            <input type="password" id="adminPass" placeholder="Şifre" class="w-full border-2 border-slate-100 p-4 rounded-2xl mb-6 outline-none focus:border-blue-500">
-            <button id="btnGirisYap" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-black hover:bg-blue-700 shadow-xl transition-all">GİRİŞ YAP</button>
+<div id="loginForm" class="flex items-center justify-center min-h-screen">
+    <div class="bg-white p-8 rounded-[30px] shadow-2xl w-full max-w-sm border">
+        <h2 class="text-2xl font-black text-center mb-6 text-slate-800 uppercase italic">Ada Sineklik</h2>
+        <input type="text" id="adminUser" placeholder="Kullanıcı Adı" class="w-full border p-4 rounded-xl mb-3 outline-none focus:ring-2 ring-blue-500">
+        <input type="password" id="adminPass" placeholder="Şifre" class="w-full border p-4 rounded-xl mb-6 outline-none focus:ring-2 ring-blue-500">
+        <button onclick="girisYap()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-bold hover:bg-blue-700 shadow-lg">SİSTEME GİRİŞ</button>
+    </div>
+</div>
+
+<div id="adminIcerik" class="hidden max-w-[1200px] mx-auto p-6">
+    <div class="flex justify-between items-center mb-10 bg-white p-6 rounded-[25px] shadow-sm">
+        <h1 class="text-xl font-black text-slate-800 tracking-tighter">YÖNETİCİ PANELİ</h1>
+        <button onclick="cikisYap()" class="bg-red-50 text-red-600 px-5 py-2 rounded-xl font-bold text-xs">ÇIKIŞ YAP</button>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-10">
+        <div onclick="modalAc('maliyet')" class="btn-card p-6 flex flex-col items-center border-2 border-transparent">
+            <span class="text-3xl mb-2">💰</span>
+            <span class="text-[10px] font-black uppercase text-slate-500">Birim Fiyat</span>
+        </div>
+        <div onclick="modalAc('stok')" class="btn-card p-6 flex flex-col items-center border-2 border-transparent">
+            <span class="text-3xl mb-2">📦</span>
+            <span class="text-[10px] font-black uppercase text-slate-500">Stok Yönetimi</span>
+        </div>
+        <div onclick="modalAc('ayarlar')" class="btn-card p-6 flex flex-col items-center border-2 border-transparent">
+            <span class="text-3xl mb-2">⚙️</span>
+            <span class="text-[10px] font-black uppercase text-slate-500">Ürün Ayar</span>
+        </div>
+        <div onclick="modalAc('endeks')" class="btn-card p-6 flex flex-col items-center border-2 border-transparent">
+            <span class="text-3xl mb-2">📏</span>
+            <span class="text-[10px] font-black uppercase text-slate-500">Endeksler</span>
+        </div>
+        <div onclick="modalAc('musteri')" class="btn-card p-6 flex flex-col items-center border-2 border-transparent">
+            <span class="text-3xl mb-2">👥</span>
+            <span class="text-[10px] font-black uppercase text-slate-500">Müşteriler</span>
+        </div>
+        <div onclick="modalAc('odeme')" class="btn-card p-6 flex flex-col items-center border-2 border-transparent">
+            <span class="text-3xl mb-2">💳</span>
+            <span class="text-[10px] font-black uppercase text-slate-500">Ödemeler</span>
         </div>
     </div>
 
-    <div id="adminIcerik" class="hidden max-w-[1200px] mx-auto p-6 md:p-12">
-        <div class="flex flex-col md:flex-row justify-between items-center mb-12 gap-6 bg-white p-8 rounded-[32px] shadow-sm">
-            <div>
-                <h1 class="text-3xl font-black text-slate-900 tracking-tighter">ADA SİNEKLİK</h1>
-                <p class="text-slate-400 font-bold text-xs uppercase tracking-widest">Merkezi Yönetim Sistemi</p>
-            </div>
-            <button id="btnCikis" class="bg-red-50 text-red-600 px-6 py-3 rounded-2xl font-black hover:bg-red-100 transition text-xs">OTURUMU KAPAT</button>
-        </div>
-
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-12">
-            <div onclick="modalAc('maliyetModal')" class="nav-card p-6 rounded-[24px] shadow-sm flex flex-col items-center">
-                <span class="text-3xl mb-3">💰</span>
-                <span class="text-[10px] font-black uppercase text-slate-600">Birim Fiyat</span>
-            </div>
-            </div>
-
-        <div class="bg-white rounded-[32px] border shadow-sm p-8">
-            <h2 class="font-black text-slate-800 mb-6 uppercase tracking-tight">Bekleyen İşlemler</h2>
-            <div id="anaListe" class="text-slate-400 italic text-sm">Yükleniyor...</div>
-        </div>
+    <div id="siparisOzet" class="bg-white p-8 rounded-[30px] shadow-sm min-h-[200px]">
+        <h2 class="font-black text-slate-400 text-xs uppercase mb-4 tracking-widest">Sistem Durumu</h2>
+        <div id="anaListe">Bağlantı aktif, veriler bekleniyor...</div>
     </div>
+</div>
 
-    <div id="genelModal" class="modal">
-        <div class="modal-content">
-            <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10">
-                <h2 id="modalBaslik" class="font-black text-slate-800 uppercase">Panel</h2>
-                <button onclick="modalKapat()" class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 hover:text-red-500 transition-all text-2xl font-bold">&times;</button>
-            </div>
-            <div id="modalBody" class="p-6"></div>
+<div id="genelModal" class="modal">
+    <div class="bg-white w-full max-w-4xl rounded-[35px] max-height-[90vh] overflow-hidden flex flex-col">
+        <div class="p-6 border-b flex justify-between items-center">
+            <h2 id="modalBaslik" class="font-black text-slate-800 uppercase tracking-tighter">İşlem Paneli</h2>
+            <button onclick="modalKapat()" class="w-10 h-10 rounded-full bg-slate-100 font-bold hover:bg-red-50 hover:text-red-500 transition-all text-xl">&times;</button>
         </div>
+        <div id="modalBody" class="p-6 overflow-y-auto"></div>
     </div>
+</div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyD5cilsAyJrzPzwtgIBd1w7StfAkUBAO7E",
+        authDomain: "adasineklik-f8c9f.firebaseapp.com",
+        projectId: "adasineklik-f8c9f",
+        storageBucket: "adasineklik-f8c9f.firebasestorage.app",
+        messagingSenderId: "612764827500",
+        appId: "1:612764827500:web:5b11b94229a36336547d49"
+    };
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyD5cilsAyJrzPzwtgIBd1w7StfAkUBAO7E",
-            authDomain: "adasineklik-f8c9f.firebaseapp.com",
-            projectId: "adasineklik-f8c9f",
-            storageBucket: "adasineklik-f8c9f.firebasestorage.app",
-            messagingSenderId: "612764827500",
-            appId: "1:612764827500:web:5b11b94229a36336547d49"
-        };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    window.db = db; // Global erişim için
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        
-        // KRİTİK: Diğer dosyaların db'ye erişmesi için window objesine aktarıyoruz
-        window.db = db;
-        window.doc = doc;
-        window.setDoc = setDoc;
-        window.onSnapshot = onSnapshot;
+    function girisYap() {
+        const u = document.getElementById('adminUser').value;
+        const p = document.getElementById('adminPass').value;
+        if(u === "admin" && p === "12345") {
+            localStorage.setItem("adminOK", "1");
+            oturumKontrol();
+        } else { alert("Hata!"); }
+    }
 
-        // Giriş Kontrolü
-        const btnGiris = document.getElementById('btnGirisYap');
-        btnGiris.onclick = () => {
-            if(document.getElementById('adminUser').value === "admin" && document.getElementById('adminPass').value === "12345") {
-                sessionStorage.setItem("logged", "true");
-                checkAuth();
-            } else { alert("Hatalı Giriş!"); }
-        };
-
-        function checkAuth() {
-            if(sessionStorage.getItem("logged") === "true") {
-                document.getElementById('loginForm').style.display = 'none';
-                document.getElementById('adminIcerik').style.display = 'block';
-            }
+    function oturumKontrol() {
+        if(localStorage.getItem("adminOK") === "1") {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('adminIcerik').style.display = 'block';
         }
-        checkAuth();
+    }
+    oturumKontrol();
 
-        document.getElementById('btnCikis').onclick = () => { sessionStorage.clear(); location.reload(); };
+    function cikisYap() { localStorage.clear(); location.reload(); }
 
-        // Modal Fonksiyonları
-        window.modalAc = async (tip) => {
-            const body = document.getElementById('modalBody');
-            document.getElementById('genelModal').classList.add('active');
-            body.innerHTML = "Yükleniyor...";
-            
-            if(tip === 'maliyetModal') {
-                const res = await fetch('birim_fiyat.html');
-                body.innerHTML = await res.text();
-                // birim_fiyat.html içindeki script'i manuel tetiklemek gerekebilir
-                if(window.birimFiyatBaslat) window.birimFiyatBaslat();
-            }
-        };
+    async function modalAc(tip) {
+        const body = document.getElementById('modalBody');
+        const m = document.getElementById('genelModal');
+        const baslik = document.getElementById('modalBaslik');
+        
+        body.innerHTML = "Yükleniyor...";
+        m.classList.add('active');
 
-        window.modalKapat = () => document.getElementById('genelModal').classList.remove('active');
-    </script>
+        let url = "";
+        if(tip === 'maliyet') { url = 'birim_fiyat.html'; baslik.innerText = "Birim Fiyat Yönetimi"; }
+        else { body.innerHTML = `<div class='p-10 text-center text-slate-400'>${tip}.html dosyası henüz hazır değil.</div>`; return; }
+
+        try {
+            const res = await fetch(url);
+            const html = await res.text();
+            body.innerHTML = html;
+            // Scriptleri manuel çalıştır
+            const scripts = body.getElementsByTagName('script');
+            for(let s of scripts) { eval(s.innerText); }
+        } catch(e) { body.innerHTML = "Hata: Dosya yüklenemedi."; }
+    }
+
+    function modalKapat() { document.getElementById('genelModal').classList.remove('active'); }
+</script>
+
 </body>
 </html>

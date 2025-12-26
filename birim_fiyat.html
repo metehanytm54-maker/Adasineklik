@@ -35,7 +35,7 @@
                         <th class="p-4 text-right">İşlem</th>
                     </tr>
                 </thead>
-                <tbody id="malzemeTablosu" class="divide-y">
+                <tbody id="malzemeTablosu" class="divide-y text-sm">
                     <tr><td colspan="5" class="p-10 text-center text-gray-400">Veriler yükleniyor...</td></tr>
                 </tbody>
             </table>
@@ -52,7 +52,9 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="md:col-span-2">
                     <label class="text-[10px] font-bold text-gray-400 uppercase">Malzeme Adı</label>
-                    <select id="spinnerMalzeme Adı" class="w-full border p-2.5 rounded-lg outline-none bg-white"></select>
+                    <select id="spinnerAdi" onchange="formKontrol()" class="w-full border p-2.5 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 font-bold">
+                        <option value="">--- Malzeme Seçiniz ---</option>
+                    </select>
                 </div>
 
                 <div>
@@ -66,24 +68,24 @@
                 </div>
 
                 <div class="p-3 bg-blue-50/50 rounded-lg border border-blue-100">
-                    <p class="text-[10px] font-bold text-blue-600 mb-2 border-b border-blue-200">ADET BAZLI</p>
-                    <input type="number" id="etAdetFiyati" placeholder="0.00 ₺" class="w-full text-sm p-2 border rounded outline-none focus:border-blue-400">
+                    <p class="text-[10px] font-bold text-blue-600 mb-1 border-b">ADET BAZLI</p>
+                    <input type="number" id="etAdetFiyati" placeholder="0.00 ₺" class="w-full text-sm p-1.5 border rounded">
                 </div>
                 <div class="p-3 bg-blue-50/50 rounded-lg border border-blue-100">
-                    <p class="text-[10px] font-bold text-blue-600 mb-2 border-b border-blue-200">KİLO BAZLI</p>
-                    <input type="number" id="etKiloFiyati" placeholder="0.00 ₺" class="w-full text-sm p-2 border rounded outline-none focus:border-blue-400">
+                    <p class="text-[10px] font-bold text-blue-600 mb-1 border-b">KİLO BAZLI</p>
+                    <input type="number" id="etKiloFiyati" placeholder="0.00 ₺" class="w-full text-sm p-1.5 border rounded">
                 </div>
                 <div class="p-3 bg-blue-50/50 rounded-lg border border-blue-100">
-                    <p class="text-[10px] font-bold text-blue-600 mb-2 border-b border-blue-200">METRE BAZLI</p>
-                    <input type="number" id="etMetreFiyati" placeholder="0.00 ₺" class="w-full text-sm p-2 border rounded outline-none focus:border-blue-400">
+                    <p class="text-[10px] font-bold text-blue-600 mb-1 border-b">METRE BAZLI</p>
+                    <input type="number" id="etMetreFiyati" placeholder="0.00 ₺" class="w-full text-sm p-1.5 border rounded">
                 </div>
                 <div class="p-3 bg-blue-50/50 rounded-lg border border-blue-100">
-                    <p class="text-[10px] font-bold text-blue-600 mb-2 border-b border-blue-200">m² BAZLI</p>
-                    <input type="number" id="etMetreKareFiyati" placeholder="0.00 ₺" class="w-full text-sm p-2 border rounded outline-none focus:border-blue-400">
+                    <p class="text-[10px] font-bold text-blue-600 mb-1 border-b">m² BAZLI</p>
+                    <input type="number" id="etMetreKareFiyati" placeholder="0.00 ₺" class="w-full text-sm p-1.5 border rounded">
                 </div>
             </div>
 
-            <button onclick="kaydet()" class="w-full mt-6 bg-blue-600 text-white py-4 rounded-xl font-bold hover:bg-blue-700 shadow-lg transition uppercase tracking-wide">Kaydet / Bilgileri Güncelle</button>
+            <button onclick="kaydet()" class="w-full mt-6 bg-blue-600 text-white py-4 rounded-xl font-bold hover:bg-blue-700 shadow-lg transition uppercase">Veriyi Kaydet / Güncelle</button>
         </div>
     </div>
 
@@ -108,7 +110,7 @@
         let anaMalzemeAdlari = [];
         let seriListesi = [];
         let tulListesi = [];
-        let renkListesi = []; // Yeni eklendi
+        let renkListesi = [];
         let duzenlenenId = null;
 
         async function verileriYukle() {
@@ -122,35 +124,36 @@
                 if(results[2].exists()){
                     const raw = results[2].data().liste || [];
                     raw.forEach(item => {
-                        if(item.ad === "Seri") seriListesi = item.ozellikler || [];
-                        if(item.ad === "Tül Cinsi") tulListesi = item.ozellikler || [];
-                        if(item.ad === "Renk") renkListesi = item.ozellikler || []; // urun_ayar'dan çekilen renkler
+                        if(item.ad.trim() === "Seri") seriListesi = item.ozellikler || [];
+                        if(item.ad.trim() === "Tül Cinsi") tulListesi = item.ozellikler || [];
+                        if(item.ad.trim() === "Renk") renkListesi = item.ozellikler || [];
                     });
                 }
                 
-                setupSelectors();
+                populateSelectors();
                 renderTable();
             } catch (err) { console.error("Hata:", err); }
         }
 
-        // Açılır listeleri başlat
-        function setupSelectors() {
-            fillSelect("spinnerAdi", anaMalzemeAdlari, "Malzeme");
-            fillSelect("spinnerRenk", renkListesi, "Renk");
-        }
+        // Seçicileri Ayarlardan gelen verilerle doldur
+        function populateSelectors() {
+            // Malzeme Adı Select
+            const sAdi = document.getElementById('spinnerAdi');
+            sAdi.innerHTML = `<option value="">--- Malzeme Seçiniz ---</option>` + 
+                             anaMalzemeAdlari.map(a => `<option value="${a}">${a}</option>`).join('');
 
-        function fillSelect(id, list, hint) {
-            const el = document.getElementById(id);
-            el.innerHTML = `<option value="">--- ${hint} Seçiniz ---</option>` + 
-                           list.map(i => `<option value="${i}">${i}</option>`).join('');
+            // Renk Select
+            const sRenk = document.getElementById('spinnerRenk');
+            sRenk.innerHTML = `<option value="Yok">--- Renk Seçiniz ---</option>` + 
+                              renkListesi.map(r => `<option value="${r}">${r}</option>`).join('');
         }
 
         window.formKontrol = () => {
-            const secilenAd = document.getElementById('spinnerAdi').value;
+            const ad = document.getElementById('spinnerAdi').value;
             const renkAlani = document.getElementById('renkAlani');
             const lblSeri = document.getElementById('lblSeri');
 
-            if(secilenAd.toLowerCase().includes("tül")) {
+            if(ad.toLowerCase().includes("tül")) {
                 lblSeri.innerText = "TÜL CİNSİ SEÇİMİ";
                 renkAlani.style.display = 'none';
                 populateSeri(tulListesi, "--- Tül Seçin ---");
@@ -174,21 +177,21 @@
                 return;
             }
             container.innerHTML = malzemeListesi.map((m, index) => `
-                <tr class="hover:bg-gray-50 transition text-sm">
+                <tr class="hover:bg-gray-50 transition border-b">
                     <td class="p-4 font-bold text-gray-800">${m.ad}</td>
                     <td class="p-4"><span class="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs font-bold uppercase">${m.seri}</span></td>
-                    <td class="p-4 text-gray-500 font-medium">${m.renk}</td>
+                    <td class="p-4 text-gray-500">${m.renk}</td>
                     <td class="p-4">
-                        <div class="text-[11px] grid grid-cols-2 gap-x-4 gap-y-1">
-                            ${m.adetFiyati ? `<span class="text-gray-400">Adet: <b class="text-gray-700">${m.adetFiyati}₺</b></span>` : ''}
-                            ${m.kiloFiyati ? `<span class="text-gray-400">Kilo: <b class="text-gray-700">${m.kiloFiyati}₺</b></span>` : ''}
-                            ${m.metreFiyati ? `<span class="text-gray-400">Metre: <b class="text-gray-700">${m.metreFiyati}₺</b></span>` : ''}
-                            ${m.metrekareFiyati ? `<span class="text-gray-400">m²: <b class="text-gray-700">${m.metrekareFiyati}₺</b></span>` : ''}
+                        <div class="text-[10px] grid grid-cols-2 gap-1">
+                            ${m.adetFiyati ? `<span>Adet: <b>${m.adetFiyati}₺</b></span>` : ''}
+                            ${m.kiloFiyati ? `<span>Kilo: <b>${m.kiloFiyati}₺</b></span>` : ''}
+                            ${m.metreFiyati ? `<span>Metre: <b>${m.metreFiyati}₺</b></span>` : ''}
+                            ${m.metrekareFiyati ? `<span>m²: <b>${m.metrekareFiyati}₺</b></span>` : ''}
                         </div>
                     </td>
                     <td class="p-4 text-right">
-                        <button onclick="duzenle(${index})" class="bg-blue-50 text-blue-600 px-3 py-1 rounded-md font-bold text-xs hover:bg-blue-600 hover:text-white transition">DÜZENLE</button>
-                        <button onclick="sil(${index})" class="bg-red-50 text-red-600 px-3 py-1 rounded-md font-bold text-xs hover:bg-red-600 hover:text-white transition ml-1">SİL</button>
+                        <button onclick="duzenle(${index})" class="text-blue-600 font-bold mr-3 hover:underline">Düzenle</button>
+                        <button onclick="sil(${index})" class="text-red-600 font-bold hover:underline">Sil</button>
                     </td>
                 </tr>
             `).join('');
@@ -196,13 +199,13 @@
 
         window.kaydet = async () => {
             const ad = document.getElementById('spinnerAdi').value;
-            if(!ad) return alert("Lütfen malzeme seçin!");
+            if(!ad) return alert("Malzeme seçimi zorunludur!");
 
             const yeniMalzeme = {
                 id: duzenlenenId || crypto.randomUUID(),
                 ad: ad,
                 seri: document.getElementById('spinnerSeri').value,
-                renk: document.getElementById('spinnerRenk').value || "Yok",
+                renk: document.getElementById('spinnerRenk').value,
                 adetFiyati: document.getElementById('etAdetFiyati').value,
                 kiloFiyati: document.getElementById('etKiloFiyati').value,
                 metreFiyati: document.getElementById('etMetreFiyati').value,
@@ -231,7 +234,7 @@
             duzenlenenId = null;
             document.getElementById('modalBaslik').innerText = "Yeni Malzeme Kaydı";
             document.getElementById('spinnerAdi').value = "";
-            document.getElementById('spinnerRenk').value = "";
+            document.getElementById('spinnerRenk').value = "Yok";
             document.querySelectorAll('input[type="number"]').forEach(i => i.value = "");
             formKontrol();
             document.getElementById('malzemeModal').classList.add('active');

@@ -1,239 +1,170 @@
 <div class="flex flex-col gap-6">
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-[24px] border shadow-sm gap-4">
+    <div class="flex justify-between items-center bg-blue-600 p-6 rounded-[24px] text-white shadow-lg shadow-blue-100">
         <div>
-            <h3 class="text-xl font-black text-slate-800 uppercase tracking-tighter">Birim Fiyat & Stok Listesi</h3>
-            <p class="text-xs text-slate-400 font-medium">Toplam <span id="toplamMalzeme" class="text-blue-600">0</span> kalem ürün kayıtlı.</p>
+            <h3 class="text-xl font-black uppercase tracking-tighter">Birim Fiyat & Stok</h3>
+            <p class="text-[10px] opacity-80 font-bold">TOPLAM ÜRÜN: <span id="stokSayisi">0</span></p>
         </div>
-        <button onclick="malzemeDialogAc()" class="bg-blue-600 text-white px-8 py-4 rounded-2xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-100 transition-all active:scale-95 text-sm">
-            + YENİ MALZEME EKLE
-        </button>
+        <button onclick="yeniMalzemeAc()" class="bg-white text-blue-600 px-6 py-3 rounded-xl font-black text-xs hover:bg-blue-50 transition-all">+ YENİ EKLE</button>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <input type="text" id="malzemeAra" oninput="malzemeFiltrele()" placeholder="Malzeme adı veya seri ara..." 
-               class="md:col-span-3 p-4 rounded-2xl border-2 border-white shadow-sm outline-none focus:border-blue-400 transition-all bg-white">
-        <select id="filtreTip" onchange="malzemeFiltrele()" class="p-4 rounded-2xl border-2 border-white shadow-sm outline-none bg-white font-bold text-xs uppercase">
-            <option value="Tümü">Tüm Gruplar</option>
-            <option value="Tül">Tül Grupları</option>
-            <option value="Profil">Profil & Diğer</option>
-        </select>
-    </div>
+    <input type="text" id="araBox" oninput="listeyiFiltrele()" placeholder="Malzeme adı veya seri ile ara..." class="w-full p-5 rounded-2xl border-2 border-slate-100 outline-none focus:border-blue-400 transition-all bg-white font-medium">
 
-    <div id="malzemeListesiContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div class="col-span-full py-20 text-center text-slate-400 italic">Veritabanı ile bağlantı kuruluyor...</div>
-    </div>
+    <div id="malzemeListesi" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        </div>
 </div>
 
-<div id="malzemeDialog" class="hidden fixed inset-0 z-[1100] bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="bg-white w-full max-w-2xl rounded-[32px] shadow-2xl overflow-hidden max-h-[95vh] flex flex-col">
-        <div class="p-6 border-b flex justify-between items-center bg-slate-50/50">
-            <h4 id="dialogBaslik" class="font-black text-slate-800 uppercase tracking-tight">Malzeme Kartı Düzenle</h4>
-            <button onclick="malzemeDialogKapat()" class="w-10 h-10 flex items-center justify-center rounded-full bg-white shadow-sm text-slate-400 hover:text-red-500 transition-all text-2xl">&times;</button>
-        </div>
+<div id="miniDialog" class="hidden fixed inset-0 z-[1200] bg-slate-900/90 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-lg rounded-[32px] p-8 shadow-2xl">
+        <h4 id="dBaslik" class="font-black text-slate-800 uppercase mb-6 text-center">Malzeme Kaydı</h4>
         
-        <div class="p-8 overflow-y-auto space-y-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div class="md:col-span-2">
-                    <label class="text-[10px] font-black text-slate-400 uppercase ml-2 mb-1 block">Malzeme Tanımı</label>
-                    <input type="text" id="etMalzemeAdi" oninput="adKontrol()" placeholder="Örn: 17x25 Kasa Profili" class="w-full border-2 border-slate-100 p-4 rounded-2xl outline-none focus:border-blue-500 bg-slate-50/50 font-bold">
+        <div class="space-y-4">
+            <input type="text" id="mAd" oninput="adDegisti()" placeholder="Malzeme Adı (Örn: Tül)" class="w-full p-4 rounded-xl border-2 border-slate-100 outline-none focus:border-blue-500 font-bold">
+            
+            <div class="grid grid-cols-2 gap-4">
+                <select id="mSeri" class="p-4 rounded-xl border-2 border-slate-100 outline-none font-bold bg-white text-sm"></select>
+                <input type="text" id="mRenk" placeholder="Renk" class="p-4 rounded-xl border-2 border-slate-100 outline-none font-bold text-sm">
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 bg-slate-50 p-4 rounded-2xl border">
+                <div class="space-y-2">
+                    <label class="text-[9px] font-black text-slate-400 ml-1">STOK MİKTARI</label>
+                    <input type="text" id="mStok" placeholder="0" class="w-full p-3 rounded-lg border outline-none font-bold">
                 </div>
-                <div>
-                    <label id="spinnerEtiket" class="text-[10px] font-black text-slate-400 uppercase ml-2 mb-1 block">Seri / Model</label>
-                    <select id="spinnerSeri" class="w-full border-2 border-slate-100 p-4 rounded-2xl outline-none focus:border-blue-500 bg-white font-bold">
-                        <option value="Yok">--- Seçiniz ---</option>
-                    </select>
-                </div>
-                <div id="renkAlani">
-                    <label class="text-[10px] font-black text-slate-400 uppercase ml-2 mb-1 block">Renk Seçeneği</label>
-                    <input type="text" id="etRenk" placeholder="Örn: Beyaz" class="w-full border-2 border-slate-100 p-4 rounded-2xl outline-none focus:border-blue-500 bg-white font-bold">
+                <div class="space-y-2">
+                    <label class="text-[9px] font-black text-slate-400 ml-1">BİRİM FİYAT (₺)</label>
+                    <input type="text" id="mFiyat" placeholder="0.00" class="w-full p-3 rounded-lg border outline-none font-bold text-blue-600">
                 </div>
             </div>
 
-            <div class="p-4 bg-blue-50 rounded-2xl border border-blue-100">
-                <p class="text-[10px] font-bold text-blue-500 uppercase mb-3 text-center tracking-widest">Birim Fiyat ve Mevcut Stok Bilgileri</p>
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="bg-white p-3 rounded-xl border">
-                        <span class="text-[9px] font-black text-slate-400 uppercase block">Adet / Fiyat</span>
-                        <div class="flex gap-1 mt-1"><input type="number" id="etAdet" placeholder="0" class="w-1/2 font-bold outline-none text-sm"><input type="number" id="etAdetFiyati" placeholder="₺" class="w-1/2 font-bold text-blue-600 outline-none text-sm border-l pl-2"></div>
-                    </div>
-                    <div class="bg-white p-3 rounded-xl border">
-                        <span class="text-[9px] font-black text-slate-400 uppercase block">Kilo / Fiyat</span>
-                        <div class="flex gap-1 mt-1"><input type="number" id="etKilo" placeholder="0" class="w-1/2 font-bold outline-none text-sm"><input type="number" id="etKiloFiyati" placeholder="₺" class="w-1/2 font-bold text-blue-600 outline-none text-sm border-l pl-2"></div>
-                    </div>
-                    <div class="bg-white p-3 rounded-xl border">
-                        <span class="text-[9px] font-black text-slate-400 uppercase block">Metre / Fiyat</span>
-                        <div class="flex gap-1 mt-1"><input type="number" id="etMetre" placeholder="0" class="w-1/2 font-bold outline-none text-sm"><input type="number" id="etMetreFiyati" placeholder="₺" class="w-1/2 font-bold text-blue-600 outline-none text-sm border-l pl-2"></div>
-                    </div>
-                    <div class="bg-white p-3 rounded-xl border">
-                        <span class="text-[9px] font-black text-slate-400 uppercase block">M2 / Fiyat</span>
-                        <div class="flex gap-1 mt-1"><input type="number" id="etMetreKare" placeholder="0" class="w-1/2 font-bold outline-none text-sm"><input type="number" id="etMetreKareFiyati" placeholder="₺" class="w-1/2 font-bold text-blue-600 outline-none text-sm border-l pl-2"></div>
-                    </div>
-                </div>
+            <div class="flex gap-3 pt-4">
+                <button onclick="miniDialogKapat()" class="flex-1 py-4 font-bold text-slate-400 hover:text-slate-600 transition">İPTAL</button>
+                <button onclick="veriyiKaydet()" class="flex-[2] bg-blue-600 text-white py-4 rounded-2xl font-black shadow-lg shadow-blue-100 uppercase text-sm">Kaydet</button>
             </div>
-
-            <button onclick="malzemeKaydet()" id="btnKaydet" class="w-full bg-blue-600 text-white py-5 rounded-2xl font-black hover:bg-blue-700 transition-all shadow-xl shadow-blue-100 uppercase tracking-widest">Kaydet ve Senkronize Et</button>
         </div>
     </div>
 </div>
 
 <script>
-    // Firebase erişimi için (admin.html'deki db nesnesini kullanıyoruz)
-    var db = window.firebaseDB; 
-    var depoMaliyetleri = [];
+    var tumMalzemeler = [];
     var seriListesi = [];
     var tulListesi = [];
     var duzenlenenId = null;
     const userPath = "adasineklik@54_com".replace(/\./g, '_');
 
-    async function birimFiyatBaslat() {
-        try {
-            // 1. Ürün Modellerini Çek (Kotlin'deki UrunModelleri mantığı)
-            const modelSnap = await db.doc(`Kullanicilar/${userPath}/Veriler/UrunModelleri`).get();
-            if(modelSnap.exists()) {
-                const data = modelSnap.data().liste || [];
-                data.forEach(item => {
-                    if(item.ad === "Seri") seriListesi = item.ozellikler || [];
-                    if(item.ad === "Tül Cinsi") tulListesi = item.ozellikler || [];
-                });
-            }
-
-            // 2. Depo Verilerini Çek ve Dinle (Real-time)
-            db.doc(`Kullanicilar/${userPath}/Veriler/DepoMaliyetleri`).onSnapshot((doc) => {
-                if (doc.exists()) {
-                    depoMaliyetleri = JSON.parse(doc.data().json_data || "[]");
-                    malzemeListele();
-                } else {
-                    document.getElementById('malzemeListesiContainer').innerHTML = `<div class="col-span-full py-10 text-center text-slate-400">Henüz kayıtlı malzeme yok.</div>`;
-                }
+    window.birimFiyatBaslat = async () => {
+        // 1. Seri ve Tül Listelerini Getir
+        const modelSnap = await window.db.doc(`Kullanicilar/${userPath}/Veriler/UrunModelleri`).get();
+        if(modelSnap.exists()){
+            const data = modelSnap.data().liste || [];
+            data.forEach(item => {
+                if(item.ad === "Seri") seriListesi = item.ozellikler;
+                if(item.ad === "Tül Cinsi") tulListesi = item.ozellikler;
             });
-        } catch (err) {
-            console.error("Yükleme hatası:", err);
-        }
-    }
-
-    function malzemeListele(filtre = "") {
-        const container = document.getElementById('malzemeListesiContainer');
-        const countLabel = document.getElementById('toplamMalzeme');
-        
-        let gösterilecekListe = depoMaliyetleri;
-        if(filtre) {
-            gösterilecekListe = depoMaliyetleri.filter(m => 
-                m.ad.toLowerCase().includes(filtre.toLowerCase()) || 
-                m.seri.toLowerCase().includes(filtre.toLowerCase())
-            );
         }
 
-        countLabel.innerText = gösterilecekListe.length;
+        // 2. Malzemeleri Dinle (Kotlin'deki bulutVerileriniYukle)
+        window.onSnapshot(window.doc(window.db, "Kullanicilar", userPath, "Veriler", "DepoMaliyetleri"), (doc) => {
+            if(doc.exists()){
+                tumMalzemeler = JSON.parse(doc.data().json_data || "[]");
+                ekranaBas();
+            }
+        });
+    };
 
-        container.innerHTML = gösterilecekListe.map(m => `
-            <div class="bg-white p-5 rounded-[24px] border-2 border-white shadow-sm hover:border-blue-200 transition-all group">
-                <div class="flex justify-between items-start mb-4">
-                    <div>
-                        <h5 class="font-black text-slate-800 uppercase text-sm leading-tight">${m.ad}</h5>
-                        <span class="text-[10px] font-bold text-blue-500 bg-blue-50 px-2 py-0.5 rounded-md mt-1 inline-block uppercase">${m.seri}</span>
-                    </div>
-                    <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                        <button onclick="malzemeDuzenle('${m.id}')" class="w-8 h-8 flex items-center justify-center bg-slate-100 rounded-lg text-slate-600 hover:bg-blue-600 hover:text-white">✏️</button>
-                        <button onclick="malzemeSil('${m.id}')" class="w-8 h-8 flex items-center justify-center bg-slate-100 rounded-lg text-red-600 hover:bg-red-600 hover:text-white">🗑️</button>
+    function ekranaBas(filtre = "") {
+        const container = document.getElementById('malzemeListesi');
+        const liste = tumMalzemeler.filter(m => m.ad.toLowerCase().includes(filtre.toLowerCase()) || m.seri.toLowerCase().includes(filtre.toLowerCase()));
+        document.getElementById('stokSayisi').innerText = liste.length;
+
+        container.innerHTML = liste.map(m => `
+            <div class="bg-white p-5 rounded-2xl border-2 border-slate-50 shadow-sm flex justify-between items-center group hover:border-blue-100 transition-all">
+                <div>
+                    <h4 class="font-black text-slate-800 text-sm uppercase">${m.ad}</h4>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase">${m.seri} / ${m.renk}</p>
+                    <div class="mt-3 flex gap-2">
+                        <span class="bg-blue-50 text-blue-600 text-[9px] font-black px-2 py-1 rounded">STOK: ${m.adet || m.metre || 0}</span>
+                        <span class="bg-emerald-50 text-emerald-600 text-[9px] font-black px-2 py-1 rounded">FİYAT: ${m.adetFiyati || m.metreFiyati || 0} ₺</span>
                     </div>
                 </div>
-                <div class="grid grid-cols-2 gap-2 border-t pt-4">
-                    ${m.adet ? `<div class="text-[10px] font-bold text-slate-500 uppercase">Stok: <span class="text-slate-800">${m.adet} Ad.</span></div>` : ''}
-                    ${m.kilo ? `<div class="text-[10px] font-bold text-slate-500 uppercase">Stok: <span class="text-slate-800">${m.kilo} Kg.</span></div>` : ''}
-                    ${m.metre ? `<div class="text-[10px] font-bold text-slate-500 uppercase">Stok: <span class="text-slate-800">${m.metre} Mt.</span></div>` : ''}
-                    ${m.metrekare ? `<div class="text-[10px] font-bold text-slate-500 uppercase">Stok: <span class="text-slate-800">${m.metrekare} M2</span></div>` : ''}
+                <div class="flex gap-2">
+                    <button onclick="duzenleModu('${m.id}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-50 text-slate-400 hover:bg-blue-600 hover:text-white transition-all text-xs">✏️</button>
+                    <button onclick="sil('${m.id}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-50 text-red-300 hover:bg-red-600 hover:text-white transition-all text-xs">🗑️</button>
                 </div>
             </div>
         `).join('');
     }
 
-    function adKontrol() {
-        const ad = document.getElementById('etMalzemeAdi').value;
-        const spinner = document.getElementById('spinnerSeri');
-        const renkAlani = document.getElementById('renkAlani');
-        const etiket = document.getElementById('spinnerEtiket');
-
-        let liste = ad.toLowerCase().includes("tül") ? tulListesi : seriListesi;
-        etiket.innerText = ad.toLowerCase().includes("tül") ? "Tül Cinsi" : "Seri / Model";
-        renkAlani.style.display = ad.toLowerCase().includes("tül") ? "none" : "block";
-
-        spinner.innerHTML = `<option value="Yok">--- Seçiniz ---</option>` + 
+    function adDegisti() {
+        const ad = document.getElementById('mAd').value.toLowerCase();
+        const select = document.getElementById('mSeri');
+        const liste = ad.includes("tül") ? tulListesi : seriListesi;
+        
+        select.innerHTML = '<option value="Yok">--- Seçiniz ---</option>' + 
             liste.map(s => `<option value="${s}">${s}</option>`).join('');
+        
+        document.getElementById('mRenk').style.display = ad.includes("tül") ? "none" : "block";
     }
 
-    async function malzemeKaydet() {
-        const btn = document.getElementById('btnKaydet');
-        btn.disabled = true;
-        btn.innerText = "KAYDEDİLİYOR...";
+    function yeniMalzemeAc() {
+        duzenlenenId = null;
+        document.getElementById('mAd').value = "";
+        adDegisti();
+        document.getElementById('miniDialog').classList.remove('hidden');
+    }
+
+    function duzenleModu(id) {
+        const m = tumMalzemeler.find(x => x.id === id);
+        if(!m) return;
+        duzenlenenId = id;
+        document.getElementById('mAd').value = m.ad;
+        adDegisti();
+        document.getElementById('mSeri').value = m.seri;
+        document.getElementById('mRenk').value = m.renk;
+        document.getElementById('mStok').value = m.adet || m.metre || "";
+        document.getElementById('mFiyat').value = m.adetFiyati || m.metreFiyati || "";
+        document.getElementById('miniDialog').classList.remove('hidden');
+    }
+
+    async function veriyiKaydet() {
+        const ad = document.getElementById('mAd').value;
+        if(!ad) return;
 
         const yeni = {
             id: duzenlenenId || Date.now().toString(),
-            ad: document.getElementById('etMalzemeAdi').value,
-            seri: document.getElementById('spinnerSeri').value,
-            renk: document.getElementById('etRenk').value || "Yok",
-            adet: document.getElementById('etAdet').value,
-            adetFiyati: document.getElementById('etAdetFiyati').value,
-            kilo: document.getElementById('etKilo').value,
-            kiloFiyati: document.getElementById('etKiloFiyati').value,
-            metre: document.getElementById('etMetre').value,
-            metreFiyati: document.getElementById('etMetreFiyati').value,
-            metrekare: document.getElementById('etMetreKare').value,
-            metrekareFiyati: document.getElementById('etMetreKareFiyati').value,
+            ad: ad,
+            seri: document.getElementById('mSeri').value,
+            renk: document.getElementById('mRenk').value || "Yok",
+            adet: document.getElementById('mStok').value,
+            adetFiyati: document.getElementById('mFiyat').value,
             olusturmaTarihi: Date.now()
         };
 
-        let yeniListe = [...depoMaliyetleri];
+        let liste = [...tumMalzemeler];
         if(duzenlenenId) {
-            const idx = yeniListe.findIndex(i => i.id === duzenlenenId);
-            yeniListe[idx] = yeni;
+            const idx = liste.findIndex(x => x.id === duzenlenenId);
+            liste[idx] = yeni;
         } else {
-            yeniListe.push(yeni);
+            liste.push(yeni);
         }
 
-        try {
-            await db.doc(`Kullanicilar/${userPath}/Veriler/DepoMaliyetleri`).set({
-                json_data: JSON.stringify(yeniListe)
-            });
-            malzemeDialogKapat();
-        } catch (e) { alert("Hata oluştu!"); }
-        btn.disabled = false;
+        await window.setDoc(window.doc(window.db, "Kullanicilar", userPath, "Veriler", "DepoMaliyetleri"), {
+            json_data: JSON.stringify(liste)
+        });
+
+        miniDialogKapat();
     }
 
-    function malzemeDuzenle(id) {
-        const m = depoMaliyetleri.find(i => i.id === id);
-        if(!m) return;
-        duzenlenenId = id;
-        document.getElementById('dialogBaslik').innerText = "Kayıt Düzenle";
-        document.getElementById('etMalzemeAdi').value = m.ad;
-        adKontrol();
-        document.getElementById('spinnerSeri').value = m.seri;
-        document.getElementById('etRenk').value = m.renk;
-        document.getElementById('etAdet').value = m.adet;
-        document.getElementById('etAdetFiyati').value = m.adetFiyati;
-        document.getElementById('etKilo').value = m.kilo;
-        document.getElementById('etKiloFiyati').value = m.kiloFiyati;
-        document.getElementById('etMetre').value = m.metre;
-        document.getElementById('etMetreFiyati').value = m.metreFiyati;
-        document.getElementById('etMetreKare').value = m.metrekare;
-        document.getElementById('etMetreKareFiyati').value = m.metrekareFiyati;
-        document.getElementById('malzemeDialog').classList.remove('hidden');
+    async function sil(id) {
+        if(!confirm("Silinsin mi?")) return;
+        const yeniListe = tumMalzemeler.filter(x => x.id !== id);
+        await window.setDoc(window.doc(window.db, "Kullanicilar", userPath, "Veriler", "DepoMaliyetleri"), {
+            json_data: JSON.stringify(yeniListe)
+        });
     }
 
-    async function malzemeSil(id) {
-        if(!confirm("Bu malzemeyi silmek istediğinize emin misiniz?")) return;
-        const yeniListe = depoMaliyetleri.filter(i => i.id !== id);
-        await db.doc(`Kullanicilar/${userPath}/Veriler/DepoMaliyetleri`).set({ json_data: JSON.stringify(yeniListe) });
-    }
-
-    function malzemeDialogAc() {
-        duzenlenenId = null;
-        document.getElementById('dialogBaslik').innerText = "Yeni Malzeme Ekle";
-        document.getElementById('etMalzemeAdi').value = "";
-        document.getElementById('malzemeDialog').classList.remove('hidden');
-    }
-
-    function malzemeDialogKapat() { document.getElementById('malzemeDialog').classList.add('hidden'); }
-    function malzemeFiltrele() { malzemeListele(document.getElementById('malzemeAra').value); }
-
+    function miniDialogKapat() { document.getElementById('miniDialog').classList.add('hidden'); }
+    function listeyiFiltrele() { ekranaBas(document.getElementById('araBox').value); }
+    
+    // Sayfa içinden başlatma
     birimFiyatBaslat();
 </script>

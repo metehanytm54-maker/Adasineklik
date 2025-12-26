@@ -3,237 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ADA SİNEKLİK | Profesyonel Yönetim Paneli</title>
+    <title>Ada Sineklik - Admin Paneli</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; color: #1e293b; }
-        
-        /* Modal & UI Elements */
-        .modal { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.9); align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(8px); padding: 20px; }
+        .admin-row { background: white; border: 1px solid #e5e7eb; border-radius: 8px; transition: all 0.2s; }
+        .admin-row:hover { border-color: #3b82f6; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); align-items: center; justify-content: center; z-index: 100; padding: 15px; }
         .modal.active { display: flex; }
-        .modal-content { background: white; width: 100%; max-width: 1280px; border-radius: 32px; max-height: 90vh; overflow-y: auto; position: relative; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
-        
-        .admin-card { background: white; border: 1px solid #e2e8f0; border-radius: 20px; transition: 0.3s; }
-        .admin-card:hover { border-color: #3b82f6; transform: translateY(-2px); }
-        
-        .input-field { width: 100%; border: 2px solid #f1f5f9; padding: 14px; border-radius: 14px; outline: none; transition: 0.2s; font-size: 14px; background: #f8fafc; font-weight: 600; }
-        .input-field:focus { border-color: #3b82f6; background: white; ring: 4px rgba(59, 130, 246, 0.1); }
-        
-        th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; padding: 18px; border-bottom: 2px solid #f1f5f9; background: #f8fafc; }
-        td { padding: 16px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
-        
-        .nav-btn { display: flex; align-items: center; gap: 10px; padding: 12px 20px; border-radius: 16px; font-weight: 800; font-size: 13px; transition: 0.2s; color: white; cursor: pointer; }
-        .nav-btn:active { scale: 0.95; }
-
-        /* Login Screen */
-        #loginOverlay { position: fixed; inset: 0; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); z-index: 9999; display: flex; align-items: center; justify-content: center; }
-        
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f5f9; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .modal-content { background: white; width: 100%; max-width: 800px; border-radius: 16px; max-height: 90vh; overflow-y: auto; position: relative; }
+        #adminIcerik { display: none; }
+        @media print { .no-print { display: none; } }
     </style>
 </head>
-<body>
+<body class="bg-gray-50 min-h-screen">
 
-    <div id="loginOverlay">
-        <div class="max-w-md w-full p-12 text-center bg-white rounded-[40px] shadow-2xl">
-            <div class="w-20 h-20 bg-blue-600 rounded-3xl mx-auto mb-6 flex items-center justify-center shadow-lg shadow-blue-200">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-            </div>
-            <h1 class="text-4xl font-black text-slate-800 mb-2 tracking-tighter">ADA SİNEKLİK</h1>
-            <p class="text-slate-400 mb-10 font-bold uppercase text-xs tracking-[0.2em]">Yönetim Sistemi v4.0</p>
-            <input type="password" id="masterPass" class="w-full border-4 border-slate-50 p-6 rounded-3xl text-center text-5xl tracking-[0.4em] outline-none focus:border-blue-500 mb-8 transition-all" maxlength="4" autofocus>
-            <button id="loginBtn" class="w-full bg-blue-600 text-white py-6 rounded-3xl font-black text-xl hover:bg-blue-700 transition-all shadow-xl active:scale-95">SİSTEME GİRİŞ YAP</button>
+    <div id="loginForm" class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border">
+            <h2 class="text-2xl font-black text-center mb-6 text-gray-800">Yönetici Girişi</h2>
+            <input type="text" id="adminUser" placeholder="Kullanıcı Adı" class="w-full border p-3 rounded-xl mb-3 outline-none focus:ring-2 focus:ring-blue-500">
+            <input type="password" id="adminPass" placeholder="Şifre" class="w-full border p-3 rounded-xl mb-4 outline-none focus:ring-2 focus:ring-blue-500">
+            <button onclick="girisYap()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition">Giriş Yap</button>
         </div>
     </div>
 
-    <div id="mainDashboard" class="hidden min-h-screen">
-        <header class="bg-white border-b sticky top-0 z-50">
-            <div class="max-w-[1600px] mx-auto px-8 py-5 flex flex-wrap items-center justify-between gap-6">
-                <div class="flex items-center gap-8">
-                    <span class="text-3xl font-black tracking-tighter text-blue-600">ADA<span class="text-slate-800">ERP</span></span>
-                    <nav class="hidden xl:flex flex-wrap gap-3">
-                        <button onclick="openModal('maliyetModal')" class="nav-btn bg-indigo-600">💰 MALİYET</button>
-                        <button onclick="openModal('stokModal')" class="nav-btn bg-amber-500">📦 STOK</button>
-                        <button onclick="openModal('musteriModal')" class="nav-btn bg-cyan-600">👥 MÜŞTERİ</button>
-                        <button onclick="openModal('finansModal')" class="nav-btn bg-emerald-600">💸 FİNANS</button>
-                        <button onclick="openModal('ayarlarModal')" class="nav-btn bg-purple-600">⚙️ AYARLAR</button>
-                    </nav>
-                </div>
-                <div class="flex items-center gap-6">
-                    <div class="text-right hidden sm:block">
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Global Alacak Durumu</p>
-                        <p id="totalBalanceText" class="text-2xl font-black text-red-600">0.00 TL</p>
-                    </div>
-                    <button onclick="location.reload()" class="px-6 py-3 bg-red-50 text-red-600 rounded-2xl font-black hover:bg-red-100 transition">ÇIKIŞ</button>
-                </div>
+    <div id="adminIcerik" class="max-w-6xl mx-auto p-4 md:p-8">
+        <div class="flex justify-between items-center mb-8 bg-white p-5 rounded-xl border shadow-sm">
+            <h1 class="text-xl font-black text-gray-800 uppercase tracking-tight">Sipariş Yönetimi</h1>
+            <div class="flex gap-2">
+                <button onclick="verileriYukle()" class="text-sm bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-bold hover:bg-blue-100">🔄 Listeyi Yenile</button>
+                <button onclick="cikisYap()" class="text-sm bg-red-50 text-red-600 px-4 py-2 rounded-lg font-bold border border-red-100">Çıkış</button>
             </div>
-        </header>
+        </div>
 
-        <main class="max-w-[1600px] mx-auto p-8">
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
-                <div class="admin-card p-8 bg-gradient-to-br from-white to-slate-50">
-                    <p class="text-xs font-black text-slate-400 uppercase mb-2">Toplam Ciro</p>
-                    <h2 id="statCiro" class="text-3xl font-black text-slate-800">0 TL</h2>
-                </div>
-                <div class="admin-card p-8 border-l-8 border-l-emerald-500">
-                    <p class="text-xs font-black text-slate-400 uppercase mb-2">Toplam Tahsilat</p>
-                    <h2 id="statTahsilat" class="text-3xl font-black text-emerald-600">0 TL</h2>
-                </div>
-                <div class="admin-card p-8 border-l-8 border-l-blue-500">
-                    <p class="text-xs font-black text-slate-400 uppercase mb-2">Aktif Sipariş</p>
-                    <h2 id="statSiparisAdet" class="text-3xl font-black text-blue-600">0</h2>
-                </div>
-                <div class="admin-card p-8 border-l-8 border-l-orange-500">
-                    <p class="text-xs font-black text-slate-400 uppercase mb-2">Bekleyen Üretim</p>
-                    <h2 id="statBekleyen" class="text-3xl font-black text-orange-600">0</h2>
-                </div>
+        <div class="hidden md:grid grid-cols-6 gap-4 px-6 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-widest border-b mb-2">
+            <div>Müşteri</div>
+            <div>Sipariş Kodu</div>
+            <div>Tarih</div>
+            <div>Durum</div>
+            <div>Fiyat</div>
+            <div class="text-right">İşlem</div>
+        </div>
+
+        <div id="adminSiparisListesi" class="space-y-3">
+            <div class="text-center py-20 text-gray-400 font-medium">Veriler yükleniyor...</div>
+        </div>
+    </div>
+
+    <div id="detayModal" class="modal">
+        <div class="modal-content p-6 shadow-2xl">
+            <div class="flex justify-between items-center border-b pb-4 mb-4">
+                <h2 id="detayBaslik" class="text-xl font-bold text-gray-800">Sipariş Detayı</h2>
+                <button onclick="modalKapat('detayModal')" class="text-3xl text-gray-400 hover:text-red-500 transition">&times;</button>
             </div>
-
-            <div class="admin-card overflow-hidden shadow-2xl border-none">
-                <div class="p-8 border-b flex flex-wrap justify-between items-center bg-white gap-4">
+            <div id="detayIcerik" class="overflow-x-auto"></div>
+            <div class="mt-8 bg-gray-50 p-6 rounded-xl border border-gray-200">
+                <h3 class="font-bold text-gray-700 mb-4 flex items-center">⚙️ Fiyat ve Durum Güncelle</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <h3 class="font-black text-2xl text-slate-800 tracking-tighter">SİPARİŞ HAVUZU</h3>
-                        <p class="text-slate-400 text-xs font-bold uppercase">Tüm plasiyerlerden gelen veriler</p>
+                        <label class="text-[10px] font-bold text-gray-400 block mb-1 uppercase">Satış Tutarı (TL)</label>
+                        <input type="number" id="modalFiyat" class="w-full border p-3 rounded-lg outline-none font-bold text-lg">
                     </div>
-                    <div class="flex gap-4">
-                        <input type="text" id="orderSearch" placeholder="Müşteri veya Kod Ara..." class="input-field max-w-sm border-2">
-                        <button onclick="window.print()" class="bg-slate-800 text-white px-6 rounded-2xl font-bold">LİSTEYİ YAZDIR</button>
-                    </div>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left">
-                        <thead>
-                            <tr>
-                                <th>Müşteri / Bölge</th>
-                                <th>Sipariş Kodu</th>
-                                <th>Tarih</th>
-                                <th>İçerik</th>
-                                <th>Durum</th>
-                                <th class="text-right">Tutar</th>
-                                <th class="text-center">İşlemler</th>
-                            </tr>
-                        </thead>
-                        <tbody id="orderTableBody" class="font-semibold text-slate-700"></tbody>
-                    </table>
-                </div>
-            </div>
-        </main>
-    </div>
-
-    <div id="maliyetModal" class="modal">
-        <div class="modal-content max-w-4xl p-10">
-            <h2 class="text-3xl font-black mb-8 border-b pb-4">MALİYET PARAMETRELERİ</h2>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-10 bg-slate-50 p-6 rounded-[32px]">
-                <input id="newMalAd" class="input-field" placeholder="Malzeme (Kasa, Tül vb.)">
-                <input id="newMalSeri" class="input-field" placeholder="Seri (40lık, 28mm vb.)">
-                <input id="newMalFiyat" type="number" class="input-field" placeholder="Metre Fiyatı ₺">
-                <button id="saveMaliyetBtn" class="bg-blue-600 text-white rounded-2xl font-black uppercase text-sm">EKLE</button>
-            </div>
-            <table class="w-full">
-                <thead><tr><th>Malzeme</th><th>Seri</th><th class="text-right">Birim Fiyat</th><th class="text-center">İşlem</th></tr></thead>
-                <tbody id="maliyetTableBody"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <div id="stokModal" class="modal">
-        <div class="modal-content max-w-5xl p-10">
-            <h2 class="text-3xl font-black mb-8 border-b pb-4 text-amber-600">HAMMADDE STOK YÖNETİMİ</h2>
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
-                <div class="space-y-4">
-                    <div class="bg-amber-50 p-8 rounded-[32px] border-2 border-amber-100">
-                        <h3 class="font-black mb-4">STOK GİRİŞİ YAP</h3>
-                        <select id="stokMalSelect" class="input-field mb-3"></select>
-                        <select id="stokSeriSelect" class="input-field mb-3"></select>
-                        <input id="stokAdet" type="number" placeholder="Eklenen Miktar" class="input-field mb-4">
-                        <button id="saveStokBtn" class="w-full bg-amber-600 text-white py-4 rounded-2xl font-black">STOKU GÜNCELLE</button>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400 block mb-1 uppercase">Sipariş Durumu</label>
+                        <select id="modalDurum" class="w-full border p-3 rounded-lg outline-none font-bold">
+                            <option value="Online Sipariş">Online Sipariş</option>
+                            <option value="Hazırlanıyor">Hazırlanıyor</option>
+                            <option value="Ölçü Alındı">Ölçü Alındı</option>
+                            <option value="Montaj Bekliyor">Montaj Bekliyor</option>
+                            <option value="Tamamlandı">Tamamlandı</option>
+                            <option value="İptal Edildi">İptal Edildi</option>
+                        </select>
                     </div>
                 </div>
-                <div class="lg:col-span-2 grid grid-cols-2 gap-4" id="stokGrid"></div>
+                <button onclick="siparisGuncelle()" class="w-full mt-6 bg-green-600 text-white py-4 rounded-xl font-bold hover:bg-green-700 shadow-lg transition">Değişiklikleri Kaydet</button>
             </div>
         </div>
     </div>
 
-    <div id="musteriModal" class="modal">
-        <div class="modal-content max-w-6xl p-10">
-            <h2 class="text-3xl font-black mb-8 border-b pb-4 text-cyan-700">MÜŞTERİ & CARİ REHBER</h2>
-            <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                <div class="bg-slate-50 p-8 rounded-[32px] h-fit">
-                    <h3 class="font-black mb-6">YENİ MÜŞTERİ KAYDI</h3>
-                    <input id="mAdSoyad" placeholder="Ad Soyad" class="input-field mb-3">
-                    <input id="mTelefon" placeholder="Telefon" class="input-field mb-3">
-                    <textarea id="mAdres" placeholder="Adres" class="input-field mb-4" rows="3"></textarea>
-                    <button id="saveMusteriBtn" class="w-full bg-cyan-600 text-white py-4 rounded-2xl font-black">KAYDET</button>
-                </div>
-                <div class="lg:col-span-3 overflow-hidden rounded-[32px] border-2 border-slate-50">
-                    <table class="w-full text-xs">
-                        <thead><tr><th>Müşteri Bilgisi</th><th>İletişim</th><th class="text-right">Net Bakiye</th><th>İşlem</th></tr></thead>
-                        <tbody id="musteriTableBody"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="finansModal" class="modal">
-        <div class="modal-content max-w-4xl p-10">
-            <h2 class="text-3xl font-black mb-8 border-b pb-4 text-emerald-700">KASA VE TAHSİLATLAR</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
-                <div class="bg-emerald-50 p-10 rounded-[40px] border-2 border-emerald-100">
-                    <h3 class="font-black mb-6 uppercase text-emerald-800">ÖDEME AL</h3>
-                    <select id="finansMusteriSelect" class="input-field mb-4"></select>
-                    <div class="relative mb-6">
-                        <span class="absolute left-5 top-1/2 -translate-y-1/2 font-black text-emerald-600 text-xl">₺</span>
-                        <input id="finansTutar" type="number" class="input-field pl-12 text-2xl font-black" placeholder="0.00">
-                    </div>
-                    <button id="savePaymentBtn" class="w-full bg-emerald-600 text-white py-5 rounded-3xl font-black shadow-lg">MAKBUZ OLUŞTUR</button>
-                </div>
-                <div id="paymentHistory" class="space-y-4 overflow-y-auto max-h-[500px] pr-4"></div>
-            </div>
-        </div>
-    </div>
-
-    <div id="ayarlarModal" class="modal">
-        <div class="modal-content max-w-xl p-10 text-center">
-            <h2 class="text-3xl font-black mb-2">MOBİL SİNKRONİZASYON</h2>
-            <p class="text-slate-400 font-bold text-xs mb-8 uppercase">Plasiyer uygulama seçeneklerini yönet</p>
-            <select id="ayarKategori" class="input-field mb-4" onchange="loadAyarContent(this.value)">
-                <option value="Model">ÜRÜN MODELLERİ</option>
-                <option value="Seri">PROFİL SERİLERİ</option>
-                <option value="Renk">RENK KARTELASI</option>
-                <option value="Tül Cinsi">TÜL ÇEŞİTLERİ</option>
-            </select>
-            <textarea id="ayarTextArea" rows="12" class="input-field font-mono text-sm mb-6" placeholder="Her satıra bir özellik yazın..."></textarea>
-            <button id="saveAyarlarBtn" class="w-full bg-purple-600 text-white py-5 rounded-3xl font-black shadow-xl">UYGULAMALARI GÜNCELLE</button>
-        </div>
-    </div>
-
-    <div id="imalatModal" class="modal">
-        <div class="modal-content max-w-2xl p-12 text-center">
-            <div class="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-6 text-orange-600 text-4xl">📏</div>
-            <h2 class="text-4xl font-black text-slate-800 mb-2 tracking-tighter uppercase">KESİM LİSTESİ</h2>
-            <p class="text-slate-400 font-bold text-xs mb-10 uppercase tracking-widest">Atölye için gerekli ölçüleri seçin</p>
-            
-            <div id="imalatSutunlar" class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-12 text-left bg-slate-50 p-6 rounded-[32px]">
-                </div>
-
-            <div class="flex gap-4">
-                <button onclick="closeModal('imalatModal')" class="flex-1 py-5 font-black text-slate-400 hover:text-slate-600 transition">VAZGEÇ</button>
-                <button id="printPdfBtn" class="flex-1 bg-orange-600 text-white py-5 rounded-3xl font-black text-lg shadow-xl hover:bg-orange-700 transition active:scale-95">PDF OLUŞTUR VE YAZDIR</button>
+    <div id="duzenModal" class="modal">
+        <div class="modal-content p-6 max-w-md">
+            <h3 class="text-lg font-black text-gray-800 mb-4 border-b pb-2 uppercase tracking-tighter">İmalat Listesi Düzeni</h3>
+            <p class="text-xs text-gray-400 mb-4">PDF'de görünmesini istediğiniz sütunları seçin:</p>
+            <div id="sutunListesi" class="grid grid-cols-2 gap-2 mb-6"></div>
+            <div class="flex gap-2">
+                <button onclick="imalatListesiHazirla()" class="flex-1 bg-orange-600 text-white py-3 rounded-xl font-bold hover:bg-orange-700 transition">📄 PDF Oluştur</button>
+                <button onclick="modalKapat('duzenModal')" class="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-bold">Vazgeç</button>
             </div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
-        // --- KONFİGÜRASYON ---
         const firebaseConfig = {
             apiKey: "AIzaSyD5cilsAyJrzPzwtgIBd1w7StfAkUBAO7E",
             authDomain: "adasineklik-f8c9f.firebaseapp.com",
@@ -247,265 +109,269 @@
         const db = getFirestore(app);
         const userPath = "adasineklik@54_com".replace(/\./g, '_');
 
-        // --- GLOBAL STATE ---
-        let DB_Siparisler = [], DB_Musteriler = [], DB_Odemeler = [], DB_Maliyetler = [], DB_Stok = [], DB_Ayarlar = [];
-        let activeOrderCode = null;
+        const ADMIN_USER = "admin";
+        const ADMIN_PASS = "12345";
+        let tumSiparisler = [];
+        let tumEndeksler = [];
+        let seciliSiparisKodu = null;
 
-        // Kotlin Column Matching
-        const IML_HEADERS = {
-            0: "S. No", 1: "Kasa EN", 2: "En Adet", 3: "Kasa Boy", 4: "Boy Adet",
-            5: "Kanat Boy", 6: "Kanat Adet", 7: "Tül Boy", 8: "Tül Adet", 9: "Tül TP",
-            10: "İp Aralık", 11: "İp Boy", 12: "İp Adet", 13: "Şerit Boy", 14: "Şerit Adet",
-            15: "Fitil Boy", 16: "Fitil Adet", 17: "Teker Adet", 18: "Köşe Takoz Adet"
+        const SUTUN_TANIMLARI = {
+            sira: "S. No",
+            kasaEn: "Kasa EN",
+            enAdet: "EN Ad.",
+            kasaBoy: "Kasa BOY",
+            boyAdet: "BOY Ad.",
+            kanatBoy: "Kanat BOY",
+            kanatAdet: "Kanat Ad.",
+            tulBoy: "Tül BOY",
+            tulAdet: "Tül Ad.",
+            tulTP: "Tül TP",
+            ipAralik: "İp Aralık",
+            ipBoy: "İp BOY",
+            ipAdet: "İp Ad.",
+            seritBoy: "Şer. BOY",
+            seritAdet: "Şer. Ad.",
+            fitilBoy: "Fit. BOY",
+            fitilAdet: "Fit. Ad.",
+            tekerlek: "Teker. Ad.",
+            takoz: "Takoz. Ad."
+        };
+        let aktifSutunlar = Object.keys(SUTUN_TANIMLARI);
+
+        window.girisYap = () => {
+            const u = document.getElementById('adminUser').value;
+            const p = document.getElementById('adminPass').value;
+            if (u === ADMIN_USER && p === ADMIN_PASS) {
+                sessionStorage.setItem("adminLoggedIn", "true");
+                window.location.reload();
+            } else { alert("Hatalı Kullanıcı!"); }
+        };
+        window.cikisYap = () => { sessionStorage.removeItem("adminLoggedIn"); window.location.reload(); };
+
+        if (sessionStorage.getItem("adminLoggedIn") === "true") {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('adminIcerik').style.display = 'block';
+            verileriYukle();
+        }
+
+        async function verileriYukle() {
+            const container = document.getElementById('adminSiparisListesi');
+            try {
+                const [sipSnap, endexSnap] = await Promise.all([
+                    getDoc(doc(db, "Kullanicilar", userPath, "Veriler", "Siparisler")),
+                    getDoc(doc(db, "Kullanicilar", userPath, "Veriler", "KesimEndeksleri"))
+                ]);
+                if (endexSnap.exists()) tumEndeksler = JSON.parse(endexSnap.data().json_data || "[]");
+                if (sipSnap.exists()) {
+                    tumSiparisler = JSON.parse(sipSnap.data().json_data || "[]");
+                    if (tumSiparisler.length === 0) {
+                        container.innerHTML = `<div class="p-10 text-center text-gray-400 bg-white rounded-xl">Henüz sipariş bulunmuyor.</div>`;
+                        return;
+                    }
+                    renderOrders();
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        function renderOrders() {
+            const container = document.getElementById('adminSiparisListesi');
+            const renderList = [...tumSiparisler].reverse();
+            container.innerHTML = renderList.map(sip => `
+                <div class="admin-row p-4 grid grid-cols-2 md:grid-cols-6 gap-4 items-center shadow-sm">
+                    <div class="col-span-1">
+                        <p class="text-sm font-bold text-gray-800">${sip.musteriAdiSoyadi || 'İsimsiz'}</p>
+                        <p class="text-[10px] text-gray-400">${sip.telefon || '-'}</p>
+                    </div>
+                    <div class="text-xs font-mono font-bold text-blue-600">${sip.siparisKodu}</div>
+                    <div class="text-xs text-gray-500">${sip.olusturmaTarihi ? new Date(sip.olusturmaTarihi).toLocaleDateString('tr-TR') : '-'}</div>
+                    <div>
+                        <span class="px-2 py-1 rounded-md text-[10px] font-bold ${sip.durum === 'Tamamlandı' ? 'bg-green-100 text-green-700' : 'bg-blue-50 text-blue-600'}">
+                            ${sip.durum || 'Bekliyor'}
+                        </span>
+                    </div>
+                    <div class="font-black text-gray-700 text-sm">${(Number(sip.toplamTutar) || 0).toLocaleString('tr-TR')} TL</div>
+                    <div class="text-right flex flex-col md:flex-row gap-2 justify-end">
+                        <button onclick="duzenAc('${sip.siparisKodu}')" class="bg-orange-600 text-white px-3 py-2 rounded-lg text-[10px] font-bold hover:bg-orange-700 transition">⚙️ İmalat Listesi</button>
+                        <button onclick="detayGoster('${sip.siparisKodu}')" class="bg-gray-900 text-white px-3 py-2 rounded-lg text-[10px] font-bold hover:bg-black transition">Liste Görüntüle</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.duzenAc = (kod) => {
+            seciliSiparisKodu = kod;
+            const container = document.getElementById('sutunListesi');
+            container.innerHTML = Object.entries(SUTUN_TANIMLARI).map(([key, label]) => `
+                <label class="flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-blue-50 transition">
+                    <input type="checkbox" value="${key}" ${aktifSutunlar.includes(key) ? 'checked' : ''} class="w-4 h-4 rounded" onchange="sutunTetikle(this)">
+                    <span class="text-[11px] font-bold text-gray-700">${label}</span>
+                </label>
+            `).join('');
+            document.getElementById('duzenModal').classList.add('active');
         };
 
-        // --- GİRİŞ KONTROL ---
-        const loginBtn = document.getElementById('loginBtn');
-        const passInp = document.getElementById('masterPass');
-        
-        const handleLogin = () => {
-            if(passInp.value === "1234") {
-                document.getElementById('loginOverlay').style.display = 'none';
-                document.getElementById('mainDashboard').classList.remove('hidden');
-                syncEngine();
-            } else {
-                alert("YETKİSİZ GİRİŞ!");
-                passInp.value = "";
+        window.sutunTetikle = (el) => {
+            if(el.checked) { if(!aktifSutunlar.includes(el.value)) aktifSutunlar.push(el.value); }
+            else { aktifSutunlar = aktifSutunlar.filter(i => i !== el.value); }
+        };
+
+        const hesapla = (deger, form) => {
+            if (!form) return deger;
+            const d = parseFloat(form.deger) || 0;
+            switch (form.operator) {
+                case "CIKAR": return deger - d;
+                case "EKLE": return deger + d;
+                case "CARP": return deger * d;
+                case "BOL": return d !== 0 ? deger / d : 0;
+                case "SABIT": return d;
+                default: return deger;
             }
         };
 
-        loginBtn.onclick = handleLogin;
-        passInp.onkeypress = (e) => { if(e.key === 'Enter') handleLogin(); };
+        window.imalatListesiHazirla = () => {
+            const sip = tumSiparisler.find(s => s.siparisKodu === seciliSiparisKodu);
+            if(!sip) return;
 
-        // --- VERİ SENKRONİZASYONU ---
-        function syncEngine() {
-            // Siparişleri Dinle
-            onSnapshot(doc(db, "Kullanicilar", userPath, "Veriler", "Siparisler"), (snap) => {
-                DB_Siparisler = JSON.parse(snap.data()?.json_data || "[]");
-                renderOrders();
-                renderStats();
-            });
+            const iframe = document.createElement('iframe');
+            iframe.style.position = 'fixed';
+            iframe.style.right = '0';
+            iframe.style.bottom = '0';
+            iframe.style.width = '0';
+            iframe.style.height = '0';
+            iframe.style.border = '0';
+            document.body.appendChild(iframe);
 
-            // Müşterileri Dinle
-            onSnapshot(doc(db, "Kullanicilar", userPath, "Veriler", "Musteriler"), (snap) => {
-                DB_Musteriler = JSON.parse(snap.data()?.json_data || "[]");
-                renderMusteriler();
-            });
+            let doc = iframe.contentWindow.document;
 
-            // Ödemeleri Dinle
-            onSnapshot(doc(db, "Kullanicilar", userPath, "Veriler", "Odemeler"), (snap) => {
-                DB_Odemeler = JSON.parse(snap.data()?.json_data || "[]");
-                renderFinans();
-            });
-
-            // Statik Verileri Al (Maliyet, Stok, Ayar)
-            refreshStaticData();
-        }
-
-        async function refreshStaticData() {
-            const malDoc = await getDoc(doc(db, "Kullanicilar", userPath, "Veriler", "DepoMaliyetleri"));
-            DB_Maliyetler = JSON.parse(malDoc.data()?.json_data || "[]");
-            renderMaliyet();
-
-            const stokDoc = await getDoc(doc(db, "Kullanicilar", userPath, "Veriler", "StokListesi"));
-            DB_Stok = JSON.parse(stokDoc.data()?.json_data || "[]");
-            renderStok();
-
-            const ayarDoc = await getDoc(doc(db, "Kullanicilar", userPath, "Veriler", "UrunModelleri"));
-            DB_Ayarlar = ayarDoc.data()?.liste || [];
-            loadAyarContent("Model");
-        }
-
-        // --- RENDER FONKSİYONLARI ---
-        function renderOrders() {
-            const tbody = document.getElementById('orderTableBody');
-            const search = document.getElementById('orderSearch').value.toLowerCase();
-            
-            tbody.innerHTML = DB_Siparisler.slice().reverse().filter(s => 
-                s.musteriAdiSoyadi.toLowerCase().includes(search) || s.siparisKodu.toLowerCase().includes(search)
-            ).map(s => `
-                <tr class="hover:bg-blue-50/50 transition-colors">
-                    <td><div class="font-black text-slate-800">${s.musteriAdiSoyadi}</div><div class="text-[10px] text-slate-400 font-bold uppercase">${s.bolge || 'Bölge Belirtilmemiş'}</div></td>
-                    <td><span class="bg-blue-50 text-blue-600 px-3 py-1 rounded-lg font-mono font-bold border border-blue-100">${s.siparisKodu}</span></td>
-                    <td class="text-xs text-slate-500 font-bold">${new Date(s.olusturmaTarihi).toLocaleDateString('tr-TR')}</td>
-                    <td class="text-[10px] text-slate-600 font-black">${s.urunler.length} KALEM ÜRÜN</td>
-                    <td><select onchange="updateStatus('${s.siparisKodu}', this.value)" class="text-[10px] font-black uppercase rounded-xl border-none bg-slate-100 p-2 cursor-pointer focus:ring-2 focus:ring-blue-500">
-                        <option value="Online Sipariş" ${s.durum==='Online Sipariş'?'selected':''}>Online Sipariş</option>
-                        <option value="Hazırlanıyor" ${s.durum==='Hazırlanıyor'?'selected':''}>Hazırlanıyor</option>
-                        <option value="Tamamlandı" ${s.durum==='Tamamlandı'?'selected':''}>Tamamlandı</option>
-                        <option value="İptal Edildi" ${s.durum==='İptal Edildi'?'selected':''}>İptal Edildi</option>
-                    </select></td>
-                    <td class="text-right font-black text-slate-900">${Number(s.toplamTutar).toLocaleString('tr-TR')} ₺</td>
-                    <td class="text-center">
-                        <div class="flex gap-2 justify-center">
-                            <button onclick="openImalat('${s.siparisKodu}')" class="bg-orange-100 text-orange-600 p-3 rounded-2xl hover:bg-orange-200 transition" title="Kesim Listesi">📏</button>
-                            <button onclick="deleteSiparis('${s.siparisKodu}')" class="bg-red-50 text-red-300 p-3 rounded-2xl hover:text-red-600 transition">🗑️</button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function renderStats() {
-            const totalCiro = DB_Siparisler.reduce((acc, curr) => acc + Number(curr.toplamTutar), 0);
-            const totalTahsilat = DB_Odemeler.reduce((acc, curr) => acc + Number(curr.tutar), 0);
-            document.getElementById('statCiro').innerText = totalCiro.toLocaleString() + " TL";
-            document.getElementById('statTahsilat').innerText = totalTahsilat.toLocaleString() + " TL";
-            document.getElementById('statSiparisAdet').innerText = DB_Siparisler.length;
-            document.getElementById('statBekleyen').innerText = DB_Siparisler.filter(s => s.durum !== 'Tamamlandı').length;
-            document.getElementById('totalBalanceText').innerText = (totalCiro - totalTahsilat).toLocaleString() + " TL";
-        }
-
-        function renderMusteriler() {
-            const tbody = document.getElementById('musteriTableBody');
-            const select = document.getElementById('finansMusteriSelect');
-            select.innerHTML = DB_Musteriler.map(m => `<option value="${m.adSoyad}">${m.adSoyad}</option>`).join('');
-
-            tbody.innerHTML = DB_Musteriler.map(m => {
-                const satis = DB_Siparisler.filter(s => s.musteriAdiSoyadi === m.adSoyad).reduce((a, b) => a + Number(b.toplamTutar), 0);
-                const tahsilat = DB_Odemeler.filter(o => o.musteriAdiSoyadi === m.adSoyad).reduce((a, b) => a + Number(b.tutar), 0);
-                const bakiye = satis - tahsilat;
-                return `
-                <tr class="hover:bg-cyan-50/50 transition">
-                    <td><div class="font-black text-slate-800">${m.adSoyad}</div></td>
-                    <td><div class="font-bold text-slate-400">${m.telefon || '-'}</div></td>
-                    <td class="text-right font-black ${bakiye > 0 ? 'text-red-500' : 'text-emerald-500'}">${bakiye.toLocaleString()} TL</td>
-                    <td class="text-center"><button onclick="deleteMusteri('${m.adSoyad}')" class="text-red-200 hover:text-red-500">🗑️</button></td>
-                </tr>`;
-            }).join('');
-        }
-
-        // --- İMALAT & KESİM MOTORU (Kotlin Logic) ---
-        window.openImalat = (kod) => {
-            activeOrderCode = kod;
-            const container = document.getElementById('imalatSutunlar');
-            container.innerHTML = Object.entries(IML_HEADERS).map(([id, name]) => `
-                <label class="flex items-center gap-3 p-3 bg-white border-2 border-slate-100 rounded-2xl cursor-pointer hover:border-orange-300 transition">
-                    <input type="checkbox" value="${name}" checked class="iml-col-check w-5 h-5 accent-orange-600">
-                    <span class="text-xs font-black text-slate-600 uppercase">${name}</span>
-                </label>
-            `).join('');
-            openModal('imalatModal');
-        };
-
-        document.getElementById('printPdfBtn').onclick = () => {
-            const sip = DB_Siparisler.find(s => s.siparisKodu === activeOrderCode);
-            const selectedCols = Array.from(document.querySelectorAll('.iml-col-check:checked')).map(i => i.value);
-            
-            let html = `<html><head><title>İmalat Formu_${activeOrderCode}</title><style>
-                @page { size: A4 landscape; margin: 10mm; }
-                body { font-family: 'Inter', sans-serif; font-size: 10px; color: #333; }
-                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-                th, td { border: 1px solid #000; padding: 6px; text-align: center; }
-                th { background: #f0f0f0; font-weight: 800; font-size: 9px; }
-                .header { display: flex; justify-content: space-between; border-bottom: 3px solid #000; padding-bottom: 10px; margin-bottom: 10px; }
-                .footer { margin-top: 20px; font-weight: bold; font-style: italic; text-align: right; }
+            let html = `<html><head><style>
+                @page { size: A4 landscape; margin: 1cm; }
+                body { font-family: sans-serif; font-size: 8pt; color: #333; }
+                table { width: 100%; border-collapse: collapse; margin-bottom: 20px; table-layout: fixed; }
+                th, td { border: 1px solid #ccc; padding: 4px; text-align: center; word-wrap: break-word; }
+                /* Kesim listesi başlıkları için özel stil */
+                .kesim-tablo th { background: #f9fafb; font-size: 7pt; font-weight: bold; line-height: 1; height: 25px; }
+                .siparis-tablo th { background: #f3f4f6; font-size: 8pt; font-weight: bold; }
+                .header { border-bottom: 2px solid #333; margin-bottom: 15px; padding-bottom: 5px; }
+                .section-title { font-weight: bold; font-size: 10pt; margin-bottom: 8px; text-transform: uppercase; color: #555; }
             </style></head><body>
             <div class="header">
-                <div><h1 style="margin:0; font-size:24px;">ADA SİNEKLİK ÜRETİM FORMU</h1></div>
-                <div style="text-align:right">
-                    <b>MÜŞTERİ:</b> ${sip.musteriAdiSoyadi}<br>
-                    <b>KOD:</b> ${sip.siparisKodu} | <b>TARİH:</b> ${new Date().toLocaleDateString('tr-TR')}
-                </div>
+                <h2 style="margin:0">ADA SİNEKLİK İMALAT FORMU</h2>
+                <p style="margin:5px 0">Kod: <b>${sip.siparisKodu}</b> | Müşteri: <b>${sip.musteriAdiSoyadi}</b> | Tarih: ${new Date().toLocaleDateString('tr-TR')}</p>
             </div>
-            <table><thead><tr>`;
-            
-            selectedCols.forEach(c => html += `<th>${c}</th>`);
+
+            <div class="section-title">1. Sipariş Detay Listesi</div>
+            <table class="siparis-tablo">
+                <thead>
+                    <tr>
+                        <th style="width:40px">No</th>
+                        <th>Model / Seri</th>
+                        <th>Renk</th>
+                        <th>Yön</th>
+                        <th>Tül Cinsi</th>
+                        <th>Ölçü (ExB)</th>
+                        <th>Adet</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${sip.urunler.map((u, i) => `
+                        <tr>
+                            <td>${i+1}</td>
+                            <td>${u.model} ${u.seri}</td>
+                            <td>${u.renk}</td>
+                            <td>${u.yon}</td>
+                            <td>${u.tulCinsi}</td>
+                            <td>${u.en} x ${u.boy}</td>
+                            <td>${u.adet}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+
+            <div class="section-title">2. Teknik Kesim Listesi</div>
+            <table class="kesim-tablo"><thead><tr>`;
+
+            aktifSutunlar.forEach(key => { html += `<th>${SUTUN_TANIMLARI[key]}</th>`; });
             html += `</tr></thead><tbody>`;
 
-            sip.urunler.forEach((u, idx) => {
-                const en = parseFloat(u.en), boy = parseFloat(u.boy), adet = parseInt(u.adet);
-                
-                // Kotlin Activity'deki Kesim Formülleri
-                const tulBoy = (boy - 6.5);
-                const kanatBoy = (boy - 3.5);
-                const ipBoy = ((en + boy) * 2) + 100;
-                const ipAralik = (tulBoy - 10) / (tulBoy <= 150 ? 3 : (tulBoy <= 230 ? 5 : 7));
-                const ipAdet = (tulBoy <= 150 ? 2 : (tulBoy <= 230 ? 3 : 4)) * adet;
+            sip.urunler.forEach((u, i) => {
+                const en = parseFloat(u.en) || 0;
+                const boy = parseFloat(u.boy) || 0;
+                const adet = parseInt(u.adet) || 1;
+                const e = tumEndeksler.find(ed => ed.yon === u.yon && ed.seri === u.seri && ed.model === u.model) || 
+                          tumEndeksler.find(ed => ed.seri === u.seri) || {};
 
-                const values = {
-                    "S. No": idx + 1,
-                    "Kasa EN": en.toFixed(1),
-                    "En Adet": (adet * 2),
-                    "Kasa Boy": boy.toFixed(1),
-                    "Boy Adet": (adet * 2),
-                    "Kanat Boy": kanatBoy.toFixed(1),
-                    "Kanat Adet": (adet * 2),
-                    "Tül Boy": tulBoy.toFixed(1),
-                    "Tül Adet": adet,
-                    "Tül TP": (en * 0.45).toFixed(1),
-                    "İp Aralık": ipAralik.toFixed(1),
-                    "İp Boy": ipBoy.toFixed(0),
-                    "İp Adet": ipAdet,
-                    "Şerit Boy": en.toFixed(1),
-                    "Şerit Adet": (adet * 2),
-                    "Fitil Boy": boy.toFixed(1),
-                    "Fitil Adet": (adet * 2),
-                    "Teker Adet": (adet * 2),
-                    "Köşe Takoz Adet": (adet * 4)
+                const tulBoy = hesapla(boy, e.tulFormulu);
+                const ipBase = tulBoy <= 150 ? 2 : (tulBoy <= 230 ? 3 : 4);
+                const payda = tulBoy <= 150 ? 3 : (tulBoy <= 230 ? 5 : 7);
+
+                const veriler = {
+                    sira: i + 1,
+                    kasaEn: hesapla(en, e.enFormulu).toFixed(1),
+                    enAdet: (hesapla(1, e.enAdet) * adet).toFixed(0),
+                    kasaBoy: hesapla(boy, e.boyFormulu).toFixed(1),
+                    boyAdet: (hesapla(1, e.boyAdet) * adet).toFixed(0),
+                    kanatBoy: hesapla(e.kanatFormulu?.kaynakBoyut === "EN" ? en : boy, e.kanatFormulu).toFixed(1),
+                    kanatAdet: (hesapla(1, e.kanatAdet) * adet).toFixed(0),
+                    tulBoy: tulBoy.toFixed(1),
+                    tulAdet: (hesapla(1, e.tulAdet) * adet).toFixed(0),
+                    tulTP: hesapla(en * (parseFloat(e.tulKalinligi) || 1), e.tulTpFormulu).toFixed(1),
+                    ipAralik: ((tulBoy - 10) / payda).toFixed(1),
+                    ipBoy: hesapla(en + boy + en + boy + 100, e.ipAralikFormulu).toFixed(0),
+                    ipAdet: (hesapla(ipBase, e.ipAdetFormulu) * adet).toFixed(0),
+                    seritBoy: hesapla(boy, e.seritBoyFormulu).toFixed(1),
+                    seritAdet: (hesapla(1, e.seritAdetFormulu) * adet).toFixed(0),
+                    fitilBoy: hesapla(boy, e.fitilBoyFormulu).toFixed(1),
+                    fitilAdet: (hesapla(1, e.fitilAdetFormulu) * adet).toFixed(0),
+                    tekerlek: (hesapla(1, e.tekerlekAdetFormulu) * adet).toFixed(0),
+                    takoz: (hesapla(1, e.koseTakozuAdetFormulu) * adet).toFixed(0)
                 };
 
-                html += `<tr>`;
-                selectedCols.forEach(c => html += `<td>${values[c] || '-'}</td>`);
-                html += `</tr>`;
+                html += "<tr>";
+                aktifSutunlar.forEach(key => { html += `<td>${veriler[key]}</td>`; });
+                html += "</tr>";
             });
 
-            html += `</tbody></table><div class="footer">ADA SİNEKLİK YAZILIM SİSTEMİ ÇIKTISIDIR</div></body></html>`;
-            const win = window.open('', '_blank');
-            win.document.write(html);
-            win.document.close();
-            win.print();
+            html += `</tbody></table></body></html>`;
+
+            doc.open();
+            doc.write(html);
+            doc.close();
+
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+            
+            setTimeout(() => {
+                document.body.removeChild(iframe);
+                modalKapat('duzenModal');
+            }, 1000);
         };
 
-        // --- DİĞER FONKSİYONLAR ---
-        window.loadAyarContent = (kat) => {
-            const filtered = DB_Ayarlar.filter(a => a.startsWith(kat + ":")).map(a => a.split(":")[1]);
-            document.getElementById('ayarTextArea').value = filtered.join("\n");
+        window.detayGoster = (kod) => {
+            seciliSiparisKodu = kod;
+            const sip = tumSiparisler.find(s => s.siparisKodu === kod);
+            if(!sip) return;
+            document.getElementById('detayBaslik').innerText = `${sip.musteriAdiSoyadi} | ${sip.siparisKodu}`;
+            document.getElementById('modalFiyat').value = sip.toplamTutar;
+            document.getElementById('modalDurum').value = sip.durum;
+            const urunHtml = `<table class="w-full text-left text-sm border-collapse"><thead class="bg-gray-800 text-white"><tr><th class="p-3">Ürün Bilgisi</th><th class="p-3 text-center">Ölçü</th><th class="p-3 text-center">Adet</th></tr></thead><tbody class="divide-y border">${sip.urunler.map(u => `<tr><td class="p-4"><b>${u.model}</b><br><small>${u.renk} | ${u.yon}</small></td><td class="text-center font-bold">${u.en}x${u.boy}</td><td class="text-center">${u.adet}</td></tr>`).join('')}</tbody></table>`;
+            document.getElementById('detayIcerik').innerHTML = urunHtml;
+            document.getElementById('detayModal').classList.add('active');
         };
 
-        window.updateStatus = async (kod, durum) => {
-            const idx = DB_Siparisler.findIndex(s => s.siparisKodu === kod);
-            DB_Siparisler[idx].durum = durum;
-            await setDoc(doc(db, "Kullanicilar", userPath, "Veriler", "Siparisler"), { json_data: JSON.stringify(DB_Siparisler) });
+        window.siparisGuncelle = async () => {
+            const index = tumSiparisler.findIndex(s => s.siparisKodu === seciliSiparisKodu);
+            if (index !== -1) {
+                tumSiparisler[index].toplamTutar = parseFloat(document.getElementById('modalFiyat').value) || 0;
+                tumSiparisler[index].durum = document.getElementById('modalDurum').value;
+                await setDoc(doc(db, "Kullanicilar", userPath, "Veriler", "Siparisler"), { json_data: JSON.stringify(tumSiparisler) });
+                modalKapat('detayModal');
+                verileriYukle();
+            }
         };
 
-        // UI Helpers
-        window.openModal = (id) => document.getElementById(id).classList.add('active');
-        window.closeModal = (id) => document.getElementById(id).classList.remove('active');
-        document.getElementById('orderSearch').oninput = renderOrders;
-
-        // CRUD Actions (Eksiltmeden Tüm Buton Fonksiyonları)
-        document.getElementById('saveMusteriBtn').onclick = async () => {
-            const m = { adSoyad: document.getElementById('mAdSoyad').value, telefon: document.getElementById('mTelefon').value, adres: document.getElementById('mAdres').value };
-            DB_Musteriler.push(m);
-            await setDoc(doc(db, "Kullanicilar", userPath, "Veriler", "Musteriler"), { json_data: JSON.stringify(DB_Musteriler) });
-            alert("Müşteri Kaydedildi.");
-        };
-
-        document.getElementById('savePaymentBtn').onclick = async () => {
-            const p = { id: Date.now().toString(), musteriAdiSoyadi: document.getElementById('finansMusteriSelect').value, tutar: Number(document.getElementById('finansTutar').value), tarih: Date.now() };
-            DB_Odemeler.push(p);
-            await setDoc(doc(db, "Kullanicilar", userPath, "Veriler", "Odemeler"), { json_data: JSON.stringify(DB_Odemeler) });
-            document.getElementById('finansTutar').value = "";
-            alert("Ödeme İşlendi.");
-        };
-
-        document.getElementById('saveMaliyetBtn').onclick = async () => {
-            const m = { ad: document.getElementById('newMalAd').value, seri: document.getElementById('newMalSeri').value, fiyat: Number(document.getElementById('newMalFiyat').value) };
-            DB_Maliyetler.push(m);
-            await setDoc(doc(db, "Kullanicilar", userPath, "Veriler", "DepoMaliyetleri"), { json_data: JSON.stringify(DB_Maliyetler) });
-            refreshStaticData();
-        };
-
-        document.getElementById('saveAyarlarBtn').onclick = async () => {
-            const kat = document.getElementById('ayarKategori').value;
-            const lines = document.getElementById('ayarTextArea').value.split("\n").filter(l => l.trim() !== "");
-            const otherKats = DB_Ayarlar.filter(a => !a.startsWith(kat + ":"));
-            const newAyarlar = [...otherKats, ...lines.map(l => kat + ":" + l.trim())];
-            await setDoc(doc(db, "Kullanicilar", userPath, "Veriler", "UrunModelleri"), { liste: newAyarlar });
-            alert("Ayarlar Senkronize Edildi.");
-        };
-
+        window.modalKapat = (id) => document.getElementById(id).classList.remove('active');
+        window.verileriYukle = verileriYukle;
     </script>
 </body>
 </html>
+

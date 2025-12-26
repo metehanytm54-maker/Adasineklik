@@ -31,7 +31,6 @@
                     <tr>
                         <th class="p-4">Malzeme Adı</th>
                         <th class="p-4">Seri/Cins</th>
-                        <th class="p-4">Renk</th>
                         <th class="p-4">Birim Fiyatlar</th>
                         <th class="p-4 text-right">İşlem</th>
                     </tr>
@@ -62,13 +61,6 @@
                     <label id="lblSeri" class="text-[11px] font-bold text-gray-400 uppercase mb-1 block">Seri Seçimi</label>
                     <select id="spinnerSeri" class="w-full border-2 border-gray-100 p-3 rounded-xl outline-none focus:border-blue-500 bg-white font-medium">
                         <option value="Yok">--- Seri Seçin ---</option>
-                    </select>
-                </div>
-
-                <div id="renkAlani">
-                    <label class="text-[11px] font-bold text-gray-400 uppercase mb-1 block">Renk</label>
-                    <select id="spinnerRenk" class="w-full border-2 border-gray-100 p-3 rounded-xl outline-none focus:border-blue-500 bg-white font-medium">
-                        <option value="Yok">Yükleniyor...</option>
                     </select>
                 </div>
 
@@ -110,7 +102,6 @@
         let anaMalzemeAdlari = [];
         let seriListesi = [];
         let tulListesi = [];
-        let renkListesi = [];
         let duzenlenenId = null;
 
         async function verileriYukle() {
@@ -130,20 +121,18 @@
                     anaMalzemeAdlari = typeof data === 'string' ? JSON.parse(data || "[]") : (data || []);
                 }
 
-                // 3. Renk ve Seri (Spinner 2 ve 3)
+               
                 if(results[2].exists()){
                     const raw = results[2].data().liste || [];
                     raw.forEach(item => {
                         const ad = item.ad ? item.ad.trim() : "";
                         if(ad === "Seri") seriListesi = item.ozellikler || [];
                         if(ad === "Tül Cinsi") tulListesi = item.ozellikler || [];
-                        if(ad === "Renk") renkListesi = item.ozellikler || [];
                     });
                 }
                 
                 populateSelectors();
                 renderTable();
-                console.log("Bağlantı Başarılı. Renk Sayısı:", renkListesi.length);
             } catch (err) { 
                 console.error("Firebase Hatası:", err);
                 document.getElementById('malzemeTablosu').innerHTML = `<tr><td colspan="5" class="p-10 text-center text-red-500">Hata: ${err.message}</td></tr>`;
@@ -152,31 +141,23 @@
 
         function populateSelectors() {
             const sAdi = document.getElementById('spinnerAdi');
-            const sRenk = document.getElementById('spinnerRenk');
 
             if(sAdi) {
                 sAdi.innerHTML = `<option value="">--- Malzeme Seçiniz ---</option>` + 
                                  anaMalzemeAdlari.map(a => `<option value="${a}">${a}</option>`).join('');
             }
 
-            if(sRenk) {
-                sRenk.innerHTML = `<option value="Yok">Yok / Standart</option>` + 
-                                  renkListesi.map(r => `<option value="${r}">${r}</option>`).join('');
-            }
-        }
+           
 
         window.formKontrol = () => {
             const ad = document.getElementById('spinnerAdi').value;
-            const renkAlani = document.getElementById('renkAlani');
             const lblSeri = document.getElementById('lblSeri');
 
             if(ad.toLowerCase().includes("tül")) {
                 lblSeri.innerText = "TÜL CİNSİ SEÇİMİ";
-                renkAlani.style.visibility = 'hidden'; // Tasarım kaymasın diye gizle
                 populateSeri(tulListesi, "--- Tül Seçin ---");
             } else {
                 lblSeri.innerText = "SERİ SEÇİMİ";
-                renkAlani.style.visibility = 'visible';
                 populateSeri(seriListesi, "--- Seri Seçin ---");
             }
         }
@@ -197,7 +178,6 @@
                 <tr class="hover:bg-gray-50 transition border-b">
                     <td class="p-4 font-bold text-gray-800">${m.ad}</td>
                     <td class="p-4"><span class="bg-blue-50 text-blue-700 px-2 py-1 rounded text-[10px] font-black uppercase">${m.seri}</span></td>
-                    <td class="p-4 text-gray-500 font-medium">${m.renk}</td>
                     <td class="p-4">
                         <div class="text-[10px] grid grid-cols-2 gap-x-2">
                             ${m.adetFiyati ? `<span>Adet: <b>${m.adetFiyati}₺</b></span>` : ''}
@@ -222,7 +202,6 @@
                 id: duzenlenenId || crypto.randomUUID(),
                 ad: ad,
                 seri: document.getElementById('spinnerSeri').value,
-                renk: document.getElementById('spinnerRenk').value,
                 adetFiyati: document.getElementById('etAdetFiyati').value,
                 kiloFiyati: document.getElementById('etKiloFiyati').value,
                 metreFiyati: document.getElementById('etMetreFiyati').value,
@@ -252,7 +231,6 @@
             duzenlenenId = null;
             document.getElementById('modalBaslik').innerText = "Yeni Malzeme Kaydı";
             document.getElementById('spinnerAdi').value = "";
-            document.getElementById('spinnerRenk').value = "Yok";
             document.querySelectorAll('input[type="number"]').forEach(i => i.value = "");
             formKontrol();
             document.getElementById('malzemeModal').classList.add('active');
@@ -265,7 +243,6 @@
             document.getElementById('spinnerAdi').value = m.ad;
             formKontrol();
             document.getElementById('spinnerSeri').value = m.seri;
-            document.getElementById('spinnerRenk').value = m.renk || "Yok";
             document.getElementById('etAdetFiyati').value = m.adetFiyati;
             document.getElementById('etKiloFiyati').value = m.kiloFiyati;
             document.getElementById('etMetreFiyati').value = m.metreFiyati;

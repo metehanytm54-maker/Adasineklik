@@ -31,32 +31,33 @@
             <button onclick="yeniModelAc()" class="bg-indigo-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-indigo-700 transition shadow-lg">+ Yeni Kategori Ekle</button>
         </div>
 
-        <div id="modellerListesi" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            </div>
+        <div id="yuklemeDurumu" class="text-center py-10 text-gray-400 font-bold">Veriler Firebase'den çekiliyor...</div>
+
+        <div id="modellerListesi" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
     </div>
 
     <div id="modelModal" class="modal">
         <div class="bg-white w-full max-w-md rounded-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-6">
-                <h2 id="modalBaslik" class="text-lg font-black text-gray-800 uppercase">Model Düzenle</h2>
+                <h2 id="modalBaslik" class="text-lg font-black text-gray-800 uppercase">Kategori Düzenle</h2>
                 <button onclick="modalKapat()" class="text-2xl text-gray-400 hover:text-red-500">&times;</button>
             </div>
 
             <div class="space-y-4">
                 <div>
-                    <label class="text-[10px] font-bold text-gray-400 uppercase">Kategori Adı (Yön, Seri, Renk vb.)</label>
-                    <input type="text" id="modelAdi" class="w-full border p-3 rounded-xl font-bold outline-none focus:ring-2 focus:ring-indigo-500">
+                    <label class="text-[10px] font-bold text-gray-400 uppercase">Kategori Başlığı (Örn: Seri, Renk, Yön)</label>
+                    <input type="text" id="modelAdi" class="w-full border p-3 rounded-xl font-bold outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50">
                 </div>
 
                 <div>
-                    <label class="text-[10px] font-bold text-gray-400 uppercase">Özellikler / Çeşitler</label>
+                    <label class="text-[10px] font-bold text-gray-400 uppercase">Özellikler (Alt alta eklenir)</label>
                     <div id="ozellikContainer" class="space-y-2 mt-2">
                         </div>
                 </div>
 
                 <div class="pt-4 flex gap-2">
                     <button id="btnSil" onclick="modelSil()" class="hidden bg-red-100 text-red-600 px-4 py-3 rounded-xl font-bold hover:bg-red-200 transition">SİL</button>
-                    <button onclick="modelKaydet()" class="flex-1 bg-indigo-600 text-white py-4 rounded-xl font-bold hover:bg-indigo-700 shadow-lg transition">KAYDET</button>
+                    <button id="btnKaydet" onclick="modelKaydet()" class="flex-1 bg-indigo-600 text-white py-4 rounded-xl font-bold hover:bg-indigo-700 shadow-lg transition">VERİLERİ KAYDET</button>
                 </div>
             </div>
         </div>
@@ -64,8 +65,9 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
+        // FIREBASE AYARLARI (Android projenizdeki google-services.json ile aynı olmalı)
         const firebaseConfig = {
             apiKey: "AIzaSyD5cilsAyJrzPzwtgIBd1w7StfAkUBAO7E",
             authDomain: "adasineklik-f8c9f.firebaseapp.com",
@@ -77,7 +79,10 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        const userPath = "adasineklik@54_com".replace(/\./g, '_');
+
+        // KULLANICI YOLU: Android'deki 'userPath' mantığı
+        // ÖNEMLİ: Android'de hangi email ile giriş yapıyorsanız onu buraya nokta yerine alt çizgi ile yazın
+        const userPath = "adasineklik@54_com"; 
 
         let urunModelleri = [];
         let duzenlenenIndex = -1;
@@ -85,7 +90,7 @@
         // ŞİFRE KONTROLÜ
         window.sifreKontrol = () => {
             const sifre = document.getElementById('adminSifre').value;
-            if(sifre === "1234") { // Android uygulamanızdaki şifreyle aynı
+            if(sifre === "1234") {
                 document.getElementById('sifreEkrani').classList.add('hidden');
                 document.getElementById('anaIcerik').classList.remove('hidden-content');
                 verileriYukle();
@@ -94,26 +99,50 @@
             }
         };
 
+        // VERİLERİ ÇEKME (Real-time Listener)
         async function verileriYukle() {
-            const snap = await getDoc(doc(db, "Kullanicilar", userPath, "Veriler", "UrunModelleri"));
-            if (snap.exists()) {
-                urunModelleri = snap.data().liste || [];
-                renderList();
-            }
+            const docRef = doc(db, "Kullanicilar", userPath, "Veriler", "UrunModelleri");
+            
+            console.log("Veri çekiliyor: ", docRef.path);
+
+            // Snapshot kullanarak Android'deki addSnapshotListener mantığını kuruyoruz
+            onSnapshot(docRef, (docSnap) => {
+                document.getElementById('yuklemeDurumu').classList.add('hidden');
+                
+                if (docSnap.exists()) {
+                    console.log("Gelen Veri:", docSnap.data());
+                    urunModelleri = docSnap.data().liste || [];
+                    renderList();
+                } else {
+                    console.error("Doküman bulunamadı! Lütfen Firebase'deki yolu kontrol edin.");
+                    document.getElementById('yuklemeDurumu').innerText = "Veri bulunamadı. Lütfen Firebase yolunu kontrol edin.";
+                    document.getElementById('yuklemeDurumu').classList.remove('hidden');
+                }
+            }, (error) => {
+                console.error("Firebase Hatası:", error);
+                alert("Veri çekme hatası: " + error.message);
+            });
         }
 
+        // LİSTEYİ EKRANA BASMA
         function renderList() {
             const container = document.getElementById('modellerListesi');
+            if(urunModelleri.length === 0) {
+                container.innerHTML = `<div class="col-span-full p-10 text-center text-gray-400">Henüz bir kategori eklenmemiş.</div>`;
+                return;
+            }
+
             container.innerHTML = urunModelleri.map((m, idx) => `
-                <div onclick="duzenleAc(${idx})" class="bg-white p-5 rounded-2xl border shadow-sm hover:shadow-md transition cursor-pointer border-l-4 border-l-indigo-500">
-                    <h3 class="font-black text-gray-800 uppercase mb-2">${m.ad}</h3>
+                <div onclick="duzenleAc(${idx})" class="bg-white p-5 rounded-2xl border shadow-sm hover:shadow-md transition cursor-pointer border-l-4 border-l-indigo-500 active:scale-95">
+                    <h3 class="font-black text-gray-800 uppercase mb-2 text-sm">${m.ad}</h3>
                     <div class="flex flex-wrap gap-1">
-                        ${m.ozellikler.map(o => `<span class="bg-gray-100 text-gray-600 text-[10px] px-2 py-1 rounded font-bold">${o}</span>`).join('')}
+                        ${m.ozellikler.map(o => `<span class="bg-indigo-50 text-indigo-600 text-[10px] px-2 py-1 rounded font-bold uppercase">${o}</span>`).join('')}
                     </div>
                 </div>
             `).join('');
         }
 
+        // MODAL İŞLEMLERİ
         window.yeniModelAc = () => {
             duzenlenenIndex = -1;
             document.getElementById('modalBaslik').innerText = "Yeni Kategori Ekle";
@@ -139,13 +168,14 @@
             document.getElementById('modelModal').classList.add('active');
         };
 
+        // DİNAMİK INPUT EKLEME (Android'deki TextWatcher mantığı)
         function yeniInputEkle(deger = "") {
             const container = document.getElementById('ozellikContainer');
             const input = document.createElement('input');
             input.type = "text";
             input.value = deger;
-            input.placeholder = "Özellik/Çeşit Adı";
-            input.className = "w-full border p-2 rounded-lg text-sm outline-none focus:border-indigo-400";
+            input.placeholder = "Özellik Adı Yazın...";
+            input.className = "w-full border p-3 rounded-xl text-sm outline-none focus:border-indigo-400 bg-gray-50 font-medium";
             
             input.addEventListener('input', () => {
                 if(input === container.lastElementChild && input.value.trim() !== "") {
@@ -156,30 +186,48 @@
             container.appendChild(input);
         }
 
+        // KAYDET
         window.modelKaydet = async () => {
+            const btn = document.getElementById('btnKaydet');
             const ad = document.getElementById('modelAdi').value.trim();
-            if(!ad) return alert("Kategori adı boş olamaz!");
+            if(!ad) return alert("Lütfen bir kategori adı girin (Örn: Renkler)");
 
             const ozellikler = Array.from(document.querySelectorAll('#ozellikContainer input'))
                                     .map(i => i.value.trim())
                                     .filter(v => v !== "");
+
+            if(ozellikler.length === 0) return alert("En az bir özellik eklemelisiniz.");
+
+            btn.disabled = true;
+            btn.innerText = "KAYDEDİLİYOR...";
 
             const yeniData = { ad, ozellikler };
 
             if(duzenlenenIndex > -1) urunModelleri[duzenlenenIndex] = yeniData;
             else urunModelleri.push(yeniData);
 
-            await setDoc(doc(db, "Kullanicilar", userPath, "Veriler", "UrunModelleri"), { liste: urunModelleri });
-            modalKapat();
-            verileriYukle();
+            try {
+                await setDoc(doc(db, "Kullanicilar", userPath, "Veriler", "UrunModelleri"), { liste: urunModelleri });
+                modalKapat();
+            } catch (err) {
+                alert("Hata oluştu: " + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "VERİLERİ KAYDET";
+            }
         };
 
+        // SİL
         window.modelSil = async () => {
-            if(!confirm("Bu kategoriyi ve tüm alt özelliklerini silmek istediğinize emin misiniz?")) return;
+            if(!confirm("Bu kategoriyi silmek istediğinize emin misiniz?")) return;
+            
             urunModelleri.splice(duzenlenenIndex, 1);
-            await setDoc(doc(db, "Kullanicilar", userPath, "Veriler", "UrunModelleri"), { liste: urunModelleri });
-            modalKapat();
-            verileriYukle();
+            try {
+                await setDoc(doc(db, "Kullanicilar", userPath, "Veriler", "UrunModelleri"), { liste: urunModelleri });
+                modalKapat();
+            } catch (err) {
+                alert("Silme hatası: " + err.message);
+            }
         };
 
         window.modalKapat = () => document.getElementById('modelModal').classList.remove('active');

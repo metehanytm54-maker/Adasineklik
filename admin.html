@@ -10,17 +10,12 @@
         body { font-family: 'Inter', sans-serif; }
         .admin-row { background: white; border: 1px solid #e5e7eb; border-radius: 12px; transition: all 0.2s; }
         .admin-row:hover { border-color: #3b82f6; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        
-        /* Modal Tasarımı */
         .modal { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(4px); padding: 20px; }
         .modal.active { display: flex; }
         .modal-content { background: white; width: 100%; max-width: 1100px; border-radius: 24px; max-height: 90vh; overflow-y: auto; position: relative; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
-        
-        .nav-card { transition: all 0.2s; cursor: pointer; border: 2px solid transparent; }
+        .nav-card { transition: all 0.2s; cursor: pointer; border: 2px solid transparent; background: white; }
         .nav-card:hover { border-color: #3b82f6; transform: translateY(-2px); }
-        
         #adminIcerik { display: none; }
-        @media print { .no-print { display: none; } }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-900">
@@ -31,61 +26,58 @@
             <h2 class="text-2xl font-black text-center mb-8 text-slate-800 tracking-tight">Yönetici Paneli</h2>
             <input type="text" id="adminUser" placeholder="Kullanıcı Adı" class="w-full border-2 border-slate-100 p-4 rounded-2xl mb-4 outline-none focus:border-blue-500 transition-all">
             <input type="password" id="adminPass" placeholder="Şifre" class="w-full border-2 border-slate-100 p-4 rounded-2xl mb-6 outline-none focus:border-blue-500 transition-all">
-            <button onclick="girisYap()" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all active:scale-95">Sisteme Giriş Yap</button>
+            <button id="btnGirisYap" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all active:scale-95">Sisteme Giriş Yap</button>
         </div>
     </div>
 
     <div id="adminIcerik" class="max-w-[1400px] mx-auto p-4 md:p-8">
-        
         <div class="mb-10">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 bg-white p-6 rounded-[24px] border shadow-sm">
                 <div>
                     <h1 class="text-2xl font-black text-slate-800 tracking-tighter uppercase">Ada Sineklik Yönetim</h1>
-                    <p class="text-sm text-slate-400 font-medium">Hoş geldiniz, tüm sistem kontrolünüz altında.</p>
+                    <p class="text-sm text-slate-400 font-medium italic">Kullanıcı: admin | Durum: Yetkili</p>
                 </div>
                 <div class="flex gap-3">
-                    <button onclick="verileriYukle()" class="bg-slate-100 text-slate-600 px-5 py-2.5 rounded-xl font-bold hover:bg-slate-200 transition">🔄 Yenile</button>
-                    <button onclick="cikisYap()" class="bg-red-50 text-red-600 px-5 py-2.5 rounded-xl font-bold border border-red-100 hover:bg-red-100 transition">Çıkış</button>
+                    <button id="btnYenile" class="bg-slate-100 text-slate-600 px-5 py-2.5 rounded-xl font-bold hover:bg-slate-200 transition">🔄 Yenile</button>
+                    <button id="btnCikis" class="bg-red-50 text-red-600 px-5 py-2.5 rounded-xl font-bold border border-red-100 hover:bg-red-100 transition">Çıkış</button>
                 </div>
             </div>
 
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-10">
-                <button onclick="modalAc('maliyetModal')" class="nav-card bg-white p-6 rounded-2xl shadow-sm flex flex-col items-center text-center">
+                <button onclick="modalAc('maliyetModal')" class="nav-card p-6 rounded-2xl shadow-sm flex flex-col items-center text-center">
                     <span class="text-2xl mb-2">💰</span>
-                    <span class="text-xs font-black text-slate-700 uppercase">Birim Fiyatı</span>
+                    <span class="text-[10px] font-black text-slate-700 uppercase">Birim Fiyatı</span>
                 </button>
-                <button onclick="modalAc('stokModal')" class="nav-card bg-white p-6 rounded-2xl shadow-sm flex flex-col items-center text-center">
+                <button onclick="modalAc('stokModal')" class="nav-card p-6 rounded-2xl shadow-sm flex flex-col items-center text-center">
                     <span class="text-2xl mb-2">📦</span>
-                    <span class="text-xs font-black text-slate-700 uppercase">Hammadde Stok</span>
+                    <span class="text-[10px] font-black text-slate-700 uppercase">Ham Malzeme Stok</span>
                 </button>
-                <button onclick="modalAc('ayarlarModal')" class="nav-card bg-white p-6 rounded-2xl shadow-sm flex flex-col items-center text-center">
+                <button onclick="modalAc('ayarlarModal')" class="nav-card p-6 rounded-2xl shadow-sm flex flex-col items-center text-center">
                     <span class="text-2xl mb-2">⚙️</span>
-                    <span class="text-xs font-black text-slate-700 uppercase">Ürün Ayarlar</span>
+                    <span class="text-[10px] font-black text-slate-700 uppercase">Ürün Ayarlar</span>
                 </button>
-                <button onclick="modalAc('endeksModal')" class="nav-card bg-white p-6 rounded-2xl shadow-sm flex flex-col items-center text-center">
+                <button onclick="modalAc('endeksModal')" class="nav-card p-6 rounded-2xl shadow-sm flex flex-col items-center text-center">
                     <span class="text-2xl mb-2">📏</span>
-                    <span class="text-xs font-black text-slate-700 uppercase">Kesim Endeksleri</span>
+                    <span class="text-[10px] font-black text-slate-700 uppercase">Kesim Endeksleri</span>
                 </button>
-                <button onclick="modalAc('musteriModal')" class="nav-card bg-white p-6 rounded-2xl shadow-sm flex flex-col items-center text-center">
+                <button onclick="modalAc('musteriModal')" class="nav-card p-6 rounded-2xl shadow-sm flex flex-col items-center text-center">
                     <span class="text-2xl mb-2">👥</span>
-                    <span class="text-xs font-black text-slate-700 uppercase">Müşteriler</span>
+                    <span class="text-[10px] font-black text-slate-700 uppercase">Müşteriler</span>
                 </button>
-                <button onclick="modalAc('odemeModal')" class="nav-card bg-white p-6 rounded-2xl shadow-sm flex flex-col items-center text-center">
+                <button onclick="modalAc('odemeModal')" class="nav-card p-6 rounded-2xl shadow-sm flex flex-col items-center text-center">
                     <span class="text-2xl mb-2">💳</span>
-                    <span class="text-xs font-black text-slate-700 uppercase">Alınan Ödemeler</span>
+                    <span class="text-[10px] font-black text-slate-700 uppercase">Alınan Ödemeler</span>
                 </button>
             </div>
         </div>
 
         <div class="bg-white rounded-[24px] border shadow-sm overflow-hidden">
             <div class="p-6 border-b bg-slate-50/50 flex justify-between items-center">
-                <h2 class="font-black text-slate-700 uppercase tracking-widest text-sm">Aktif Sipariş Havuzu</h2>
-                <span id="siparisSayisi" class="bg-blue-600 text-white text-[10px] px-3 py-1 rounded-full font-bold">0 SİPARİŞ</span>
+                <h2 class="font-black text-slate-700 uppercase tracking-widest text-xs">Aktif Sipariş Havuzu</h2>
+                <span id="siparisSayisi" class="bg-blue-600 text-white text-[10px] px-3 py-1 rounded-full font-bold uppercase">0 SİPARİŞ</span>
             </div>
-            <div class="overflow-x-auto">
-                <div id="adminSiparisListesi" class="divide-y divide-slate-100">
-                    <div class="p-20 text-center text-slate-400 font-medium italic">Veriler senkronize ediliyor...</div>
-                </div>
+            <div id="adminSiparisListesi" class="divide-y divide-slate-100 min-h-[200px]">
+                <div class="p-20 text-center text-slate-400 font-medium italic">Veriler yükleniyor...</div>
             </div>
         </div>
     </div>
@@ -96,58 +88,128 @@
                 <h2 id="modalBaslik" class="text-xl font-black text-slate-800 uppercase tracking-tighter">Panel</h2>
                 <button onclick="modalKapat('genelModal')" class="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-red-50 hover:text-red-500 transition-all text-2xl">&times;</button>
             </div>
-            <div id="modalBody" class="p-6">
-                <div class="flex justify-center p-10"><div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div></div>
-            </div>
-        </div>
-    </div>
-
-    <div id="detayModal" class="modal">
-        <div class="modal-content max-w-2xl p-6">
-            <div id="detayIcerik"></div>
-            <button onclick="modalKapat('detayModal')" class="w-full mt-4 bg-slate-100 py-3 rounded-xl font-bold">Kapat</button>
+            <div id="modalBody" class="p-6"></div>
         </div>
     </div>
 
     <script type="module">
-        // Firebase ve Temel Fonksiyonlar Buraya Gelecek (Önceki kodların devamı)
-        // ... (Firebase Initialize ve Render Sipariş Fonksiyonları)
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
-        // MODAL YÖNETİMİ VE DOSYA YÜKLEME SİSTEMİ
+        const firebaseConfig = {
+            apiKey: "AIzaSyD5cilsAyJrzPzwtgIBd1w7StfAkUBAO7E",
+            authDomain: "adasineklik-f8c9f.firebaseapp.com",
+            projectId: "adasineklik-f8c9f",
+            storageBucket: "adasineklik-f8c9f.firebasestorage.app",
+            messagingSenderId: "612764827500",
+            appId: "1:612764827500:web:5b11b94229a36336547d49"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const userPath = "adasineklik@54_com".replace(/\./g, '_');
+
+        const ADMIN_USER = "admin";
+        const ADMIN_PASS = "12345";
+        let tumSiparisler = [];
+
+        // GİRİŞ FONKSİYONU
+        document.getElementById('btnGirisYap').addEventListener('click', () => {
+            const u = document.getElementById('adminUser').value;
+            const p = document.getElementById('adminPass').value;
+            if (u === ADMIN_USER && p === ADMIN_PASS) {
+                sessionStorage.setItem("adminLoggedIn", "true");
+                checkAuth();
+            } else {
+                alert("Hatalı kullanıcı adı veya şifre!");
+            }
+        });
+
+        // ÇIKIŞ FONKSİYONU
+        document.getElementById('btnCikis').addEventListener('click', () => {
+            sessionStorage.removeItem("adminLoggedIn");
+            location.reload();
+        });
+
+        // OTURUM KONTROLÜ
+        function checkAuth() {
+            if (sessionStorage.getItem("adminLoggedIn") === "true") {
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('adminIcerik').style.display = 'block';
+                verileriYukle();
+            }
+        }
+        checkAuth();
+
+        // VERİLERİ YÜKLE (Realtime)
+        function verileriYukle() {
+            onSnapshot(doc(db, "Kullanicilar", userPath, "Veriler", "Siparisler"), (snap) => {
+                if (snap.exists()) {
+                    tumSiparisler = JSON.parse(snap.data().json_data || "[]");
+                    renderOrders();
+                }
+            });
+        }
+
+        function renderOrders() {
+            const container = document.getElementById('adminSiparisListesi');
+            const countLabel = document.getElementById('siparisSayisi');
+            const list = [...tumSiparisler].reverse();
+            
+            countLabel.innerText = `${list.length} SİPARİŞ`;
+            
+            if(list.length === 0) {
+                container.innerHTML = `<div class="p-20 text-center text-slate-400">Henüz sipariş yok.</div>`;
+                return;
+            }
+
+            container.innerHTML = list.map(sip => `
+                <div class="admin-row p-5 flex flex-wrap md:flex-nowrap justify-between items-center gap-4 m-2">
+                    <div class="w-full md:w-1/4">
+                        <p class="font-black text-slate-800 uppercase text-sm">${sip.musteriAdiSoyadi}</p>
+                        <p class="text-[10px] text-blue-500 font-bold font-mono">${sip.siparisKodu}</p>
+                    </div>
+                    <div class="text-xs font-bold text-slate-400 italic">${new Date(sip.olusturmaTarihi).toLocaleDateString('tr-TR')}</div>
+                    <div><span class="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-black uppercase">${sip.durum || 'Bekliyor'}</span></div>
+                    <div class="font-black text-slate-700">${Number(sip.toplamTutar).toLocaleString()} ₺</div>
+                    <div class="flex gap-2">
+                        <button class="bg-slate-800 text-white px-4 py-2 rounded-xl text-[10px] font-bold">DETAY</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // MODAL AÇMA (DİNAMİK DOSYA YÜKLEME)
         window.modalAc = async (tip) => {
             const modal = document.getElementById('genelModal');
             const body = document.getElementById('modalBody');
             const baslik = document.getElementById('modalBaslik');
             
             modal.classList.add('active');
-            body.innerHTML = `<div class="text-center p-10">Yükleniyor...</div>`;
+            body.innerHTML = `<div class="flex justify-center p-20"><div class="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full"></div></div>`;
 
             let dosyaAdi = "";
             switch(tip) {
                 case 'maliyetModal': dosyaAdi = 'birim_fiyat.html'; baslik.innerText = "Birim Fiyat Yönetimi"; break;
-                case 'stokModal': dosyaAdi = 'stok_yonetimi.html'; baslik.innerText = "Hammadde Stok Takibi"; break;
-                case 'ayarlarModal': dosyaAdi = 'urun_ayarlar.html'; baslik.innerText = "Uygulama Seçenekleri"; break;
-                case 'endeksModal': dosyaAdi = 'kesim_endeksleri.html'; baslik.innerText = "Kesim Formülleri"; break;
-                case 'musteriModal': dosyaAdi = 'musteriler.html'; baslik.innerText = "Cari Müşteri Kayıtları"; break;
-                case 'odemeModal': dosyaAdi = 'odemeler.html'; baslik.innerText = "Tahsilat Geçmişi"; break;
+                case 'stokModal': dosyaAdi = 'stok_yonetimi.html'; baslik.innerText = "Ham Malzeme Stok"; break;
+                case 'ayarlarModal': dosyaAdi = 'urun_ayarlar.html'; baslik.innerText = "Ürün Ayarları"; break;
+                case 'endeksModal': dosyaAdi = 'kesim_endeksleri.html'; baslik.innerText = "Kesim Endeksleri"; break;
+                case 'musteriModal': dosyaAdi = 'musteriler.html'; baslik.innerText = "Müşteri Listesi"; break;
+                case 'odemeModal': dosyaAdi = 'odemeler.html'; baslik.innerText = "Alınan Ödemeler"; break;
             }
 
             try {
-                const response = await fetch(dosyaAdi);
-                const data = await response.text();
-                body.innerHTML = data;
-                // Yüklenen dosya içindeki scriptleri çalıştırmak gerekirse:
-                const scripts = body.getElementsByTagName('script');
-                for (let script of scripts) { eval(script.innerText); }
+                const res = await fetch(dosyaAdi);
+                if(!res.ok) throw new Error("Dosya bulunamadı");
+                body.innerHTML = await res.text();
             } catch (err) {
-                body.innerHTML = `<div class="p-10 text-red-500 font-bold">Hata: ${dosyaAdi} dosyası bulunamadı!</div>`;
+                body.innerHTML = `<div class="p-10 text-center text-red-500 font-bold uppercase text-xs">Hata: ${dosyaAdi} dosyası oluşturulmamış!</div>`;
             }
         };
 
         window.modalKapat = (id) => document.getElementById(id).classList.remove('active');
+        document.getElementById('btnYenile').onclick = () => location.reload();
 
-        // Sipariş Render ve Firebase logiclerini buraya ekliyoruz (Sizin mevcut kodlarınızla aynı)
-        // ...
     </script>
 </body>
 </html>

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ada Sineklik - Maliyet Hesabı</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-4 md:p-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+            <div class="bg-indigo-600 p-6 text-white flex justify-between items-center">
+                <h1 class="text-2xl font-black uppercase">🧮 Maliyet Hesaplayıcı</h1>
+                <a href="admin.html" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg font-bold text-sm">Geri Dön</a>
+            </div>
+
+            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-xs font-bold text-gray-400 uppercase">Sineklik Modeli / Seri</label>
+                        <select id="maliyetSeri" onchange="hesapla()" class="w-full border-2 p-3 rounded-xl font-bold bg-gray-50 outline-none focus:border-indigo-500"></select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-xs font-bold text-gray-400 uppercase">Genişlik (cm)</label>
+                            <input type="number" id="maliyetEn" oninput="hesapla()" placeholder="Örn: 80" class="w-full border-2 p-3 rounded-xl outline-none focus:border-indigo-500">
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-400 uppercase">Yükseklik (cm)</label>
+                            <input type="number" id="maliyetBoy" oninput="hesapla()" placeholder="Örn: 120" class="w-full border-2 p-3 rounded-xl outline-none focus:border-indigo-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-400 uppercase">Tül Cinsi</label>
+                        <select id="maliyetTul" onchange="hesapla()" class="w-full border-2 p-3 rounded-xl font-bold bg-gray-50 outline-none focus:border-indigo-500"></select>
+                    </div>
+                </div>
+
+                <div class="bg-indigo-50 rounded-3xl p-8 flex flex-col justify-center items-center border-2 border-indigo-100 border-dashed">
+                    <span class="text-indigo-400 font-bold uppercase text-xs mb-2">Tahmini Toplam Maliyet</span>
+                    <div class="text-6xl font-black text-indigo-900" id="toplamMaliyet">0.00₺</div>
+                    <div class="mt-6 w-full space-y-2 text-sm text-indigo-700 font-medium" id="detayListesi">
+                        </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyD5cilsAyJrzPzwtgIBd1w7StfAkUBAO7E",
+            authDomain: "adasineklik-f8c9f.firebaseapp.com",
+            projectId: "adasineklik-f8c9f",
+            storageBucket: "adasineklik-f8c9f.firebasestorage.app",
+            messagingSenderId: "612764827500",
+            appId: "1:612764827500:web:5b11b94229a36336547d49"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const userPath = "adasineklik@54_com".replace(/\./g, '_');
+
+        let birimFiyatlar = [];
+        let ayarlar = [];
+
+        async function verileriYukle() {
+            const resFiyat = await getDoc(doc(db, "Kullanicilar", userPath, "Veriler", "DepoMaliyetleri"));
+            const resAyar = await getDoc(doc(db, "Kullanicilar", userPath, "Veriler", "UrunModelleri"));
+            
+            if(resFiyat.exists()) birimFiyatlar = JSON.parse(resFiyat.data().json_data || "[]");
+            if(resAyar.exists()) {
+                ayarlar = resAyar.data().liste || [];
+                const seri = ayarlar.find(a => a.ad === "Seri")?.ozellikler || [];
+                const tul = ayarlar.find(a => a.ad === "Tül Cinsi")?.ozellikler || [];
+                
+                document.getElementById('maliyetSeri').innerHTML = seri.map(s => `<option value="${s}">${s}</option>`).join('');
+                document.getElementById('maliyetTul').innerHTML = tul.map(t => `<option value="${t}">${t}</option>`).join('');
+            }
+        }
+
+        window.hesapla = () => {
+            const en = parseFloat(document.getElementById('maliyetEn').value) / 100 || 0;
+            const boy = parseFloat(document.getElementById('maliyetBoy').value) / 100 || 0;
+            const secilenSeri = document.getElementById('maliyetSeri').value;
+            const secilenTul = document.getElementById('maliyetTul').value;
+
+            let toplam = 0;
+            let detayHtml = "";
+
+            // 1. Profil Maliyeti (Metre Bazlı: Çevre Hesabı)
+            const profil = birimFiyatlar.find(b => b.seri === secilenSeri && b.metreFiyati > 0);
+            if(profil) {
+                const cevreMiktari = (en + boy) * 2;
+                const m = cevreMiktari * parseFloat(profil.metreFiyati);
+                toplam += m;
+                detayHtml += `<div class="flex justify-between"><span>Profil (${cevreMiktari.toFixed(2)}m):</span><b>${m.toFixed(2)}₺</b></div>`;
+            }
+
+            // 2. Tül Maliyeti (m² Bazlı)
+            const tul = birimFiyatlar.find(b => b.seri === secilenTul || b.ad.includes(secilenTul));
+            if(tul && tul.metrekareFiyati > 0) {
+                const alan = en * boy;
+                const m = alan * parseFloat(tul.metrekareFiyati);
+                toplam += m;
+                detayHtml += `<div class="flex justify-between"><span>Tül (${alan.toFixed(2)}m²):</span><b>${m.toFixed(2)}₺</b></div>`;
+            }
+
+            // 3. Aksesuar/Adet Maliyeti
+            const aksesuar = birimFiyatlar.find(b => b.seri === secilenSeri && b.adetFiyati > 0);
+            if(aksesuar) {
+                const m = parseFloat(aksesuar.adetFiyati);
+                toplam += m;
+                detayHtml += `<div class="flex justify-between"><span>Aksesuar Paketi:</span><b>${m.toFixed(2)}₺</b></div>`;
+            }
+
+            document.getElementById('toplamMaliyet').innerText = toplam.toFixed(2) + "₺";
+            document.getElementById('detayListesi').innerHTML = detayHtml;
+        };
+
+        verileriYukle();
+    </script>
+</body>
+</html>

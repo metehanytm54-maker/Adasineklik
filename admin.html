@@ -33,8 +33,8 @@
                 <nav class="flex gap-2">
                     <button onclick="viewDegistir('siparis')" class="px-4 py-2 rounded-lg text-sm font-bold bg-gray-100 text-gray-700 hover:bg-blue-600 hover:text-white transition">📦 Siparişler</button>
                     <button onclick="viewDegistir('malzeme')" class="px-4 py-2 rounded-lg text-sm font-bold bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition">💰 Birim Fiyatlar</button>
-                    <button onclick="window.location.href='stok.html'" class="px-4 py-2 rounded-lg text-sm font-bold bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white transition">📦 Ham Malzeme Stok</button>
-                    <button onclick="window.location.href='urun_ayar.html'" class="px-4 py-2 rounded-lg text-sm font-bold bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition">⚙️ Ürün Ayarları</button>
+                    <button onclick="window.location.href='maliyet.html'" class="px-4 py-2 rounded-lg text-sm font-bold bg-green-50 text-green-600 hover:bg-green-600 hover:text-white transition">🧮 Hesaplayıcı</button>
+                    <button onclick="window.location.href='urun_ayar.html'" class="px-4 py-2 rounded-lg text-sm font-bold bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition">⚙️ Ayarlar</button>
                 </nav>
             </div>
             <div class="flex gap-2">
@@ -45,7 +45,7 @@
 
         <div id="adminIcerik">
             <div class="hidden md:grid grid-cols-6 gap-4 px-6 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-widest border-b mb-2">
-                <div>Müşteri</div><div>Sipariş Kodu</div><div>Tarih</div><div>Durum</div><div>Fiyat</div><div class="text-right">İşlem</div>
+                <div>Müşteri</div><div>Sipariş Kodu</div><div>Tarih</div><div>Durum</div><div>Satış/Maliyet</div><div class="text-right">İşlem</div>
             </div>
             <div id="adminSiparisListesi" class="space-y-3">
                 <div class="text-center py-20 text-gray-400 font-medium">Siparişler yükleniyor...</div>
@@ -58,17 +58,16 @@
                 <button onclick="malzemeModalAc()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-green-700">+ Yeni Malzeme</button>
             </div>
             <div class="bg-white rounded-xl border shadow-sm overflow-hidden">
-                <table class="w-full text-left text-sm">
+                <table class="w-full text-left text-sm border-collapse">
                     <thead class="bg-gray-50 text-gray-400 text-[10px] uppercase font-bold">
                         <tr>
                             <th class="p-4">Malzeme / Seri</th>
                             <th class="p-4">Renk</th>
-                            <th class="p-4">Birim Fiyatlar (TL)</th>
+                            <th class="p-4">Birim Fiyatlar</th>
                             <th class="p-4 text-right">İşlem</th>
                         </tr>
                     </thead>
-                    <tbody id="malzemeTablosu" class="divide-y">
-                        </tbody>
+                    <tbody id="malzemeTablosu" class="divide-y"></tbody>
                 </table>
             </div>
         </div>
@@ -110,7 +109,7 @@
             <h3 class="text-lg font-black text-gray-800 mb-4 border-b pb-2 uppercase tracking-tighter">İmalat Listesi Düzeni</h3>
             <div id="sutunListesi" class="grid grid-cols-2 gap-2 mb-6"></div>
             <div class="flex gap-2">
-                <button onclick="imalatListesiHazirla()" class="flex-1 bg-orange-600 text-white py-3 rounded-xl font-bold hover:bg-orange-700 transition">📄 PDF Oluştur</button>
+                <button onclick="imalatListesiHazirla()" class="flex-1 bg-orange-600 text-white py-3 rounded-xl font-bold hover:bg-orange-700 transition">📄 PDF</button>
                 <button onclick="modalKapat('duzenModal')" class="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-bold">Vazgeç</button>
             </div>
         </div>
@@ -124,26 +123,26 @@
             </div>
             <div class="grid grid-cols-2 gap-4">
                 <div class="col-span-2">
-                    <label class="text-[10px] font-bold text-gray-400">MALZEME ADI</label>
-                    <input type="text" id="etMalzemeAdi" oninput="malzemeFormKontrol()" placeholder="Örn: 17x25 Profil veya Tül" class="w-full border p-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 uppercase">
+                    <label class="text-[10px] font-bold text-gray-400 uppercase">Malzeme Adı</label>
+                    <input type="text" id="etMalzemeAdi" oninput="malzemeFormKontrol()" placeholder="Örn: Profil veya Tül" class="w-full border p-2 rounded-lg uppercase">
                 </div>
                 <div>
-                    <label id="lblSeri" class="text-[10px] font-bold text-gray-400">SERİ / CİNS</label>
-                    <select id="spinnerSeri" class="w-full border p-2 rounded-lg outline-none"></select>
+                    <label id="lblSeri" class="text-[10px] font-bold text-gray-400 uppercase">Seri / Cins</label>
+                    <select id="spinnerSeri" class="w-full border p-2 rounded-lg"></select>
                 </div>
                 <div id="renkKutusu">
-                    <label class="text-[10px] font-bold text-gray-400">RENK</label>
-                    <input type="text" id="etRenk" class="w-full border p-2 rounded-lg outline-none uppercase">
+                    <label class="text-[10px] font-bold text-gray-400 uppercase">Renk</label>
+                    <input type="text" id="etRenk" class="w-full border p-2 rounded-lg uppercase">
                 </div>
                 <div class="col-span-2 grid grid-cols-2 gap-2 bg-gray-50 p-3 rounded-lg border">
-                    <p class="col-span-2 text-[10px] font-bold text-blue-600 border-b pb-1 mb-1">BİRİM FİYATLAR (₺)</p>
+                    <p class="col-span-2 text-[10px] font-bold text-blue-600 border-b pb-1 mb-1 uppercase">Birim Fiyatlar (₺)</p>
                     <input type="number" id="etAdetFiyati" placeholder="Adet Fiyatı" class="border p-2 rounded text-sm">
                     <input type="number" id="etKiloFiyati" placeholder="Kilo Fiyatı" class="border p-2 rounded text-sm">
                     <input type="number" id="etMetreFiyati" placeholder="Metre Fiyatı" class="border p-2 rounded text-sm">
                     <input type="number" id="etMetreKareFiyati" placeholder="m² Fiyatı" class="border p-2 rounded text-sm">
                 </div>
             </div>
-            <button onclick="malzemeKaydet()" class="w-full mt-6 bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition uppercase">Veriyi Kaydet / Güncelle</button>
+            <button onclick="malzemeKaydet()" class="w-full mt-6 bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition uppercase">Kaydet</button>
         </div>
     </div>
 
@@ -170,7 +169,6 @@
         let tumSiparisler = [];
         let tumEndeksler = [];
         let malzemeListesi = [];
-        let anaMalzemeAdlari = [];
         let seriListesi = [];
         let tulListesi = [];
         let seciliSiparisKodu = null;
@@ -185,7 +183,6 @@
         };
         let aktifSutunlar = Object.keys(SUTUN_TANIMLARI);
 
-        // --- GİRİŞ / ÇIKIŞ ---
         window.girisYap = () => {
             const u = document.getElementById('adminUser').value;
             const p = document.getElementById('adminPass').value;
@@ -202,25 +199,22 @@
             verileriYukle();
         }
 
-        // --- GÖRÜNÜM DEĞİŞTİRME ---
         window.viewDegistir = (target) => {
             document.getElementById('adminIcerik').style.display = target === 'siparis' ? 'block' : 'none';
             document.getElementById('malzemeIcerik').style.display = target === 'malzeme' ? 'block' : 'none';
         };
-        window.viewDegistir('siparis');
 
-        // --- VERİ YÜKLEME ---
+        // --- VERİ ÇEKME ---
         async function verileriYukle() {
             try {
-                const docs = ["Siparisler", "KesimEndeksleri", "DepoMaliyetleri", "AnaMalzemeAdlari", "UrunModelleri"];
+                const docs = ["Siparisler", "KesimEndeksleri", "DepoMaliyetleri", "UrunModelleri"];
                 const snaps = await Promise.all(docs.map(d => getDoc(doc(db, "Kullanicilar", userPath, "Veriler", d))));
                 
                 if (snaps[0].exists()) tumSiparisler = JSON.parse(snaps[0].data().json_data || "[]");
                 if (snaps[1].exists()) tumEndeksler = JSON.parse(snaps[1].data().json_data || "[]");
                 if (snaps[2].exists()) malzemeListesi = JSON.parse(snaps[2].data().json_data || "[]");
-                if (snaps[3].exists()) anaMalzemeAdlari = JSON.parse(snaps[3].data().json_data || "[]");
-                if (snaps[4].exists()) {
-                    const liste = snaps[4].data().liste || [];
+                if (snaps[3].exists()) {
+                    const liste = snaps[3].data().liste || [];
                     liste.forEach(item => {
                         if(item.ad === "Seri") seriListesi = item.ozellikler || [];
                         if(item.ad === "Tül Cinsi") tulListesi = item.ozellikler || [];
@@ -232,75 +226,81 @@
             } catch (err) { console.error("Yükleme Hatası:", err); }
         }
 
-        // --- SİPARİŞ RENDER (MEVCUT) ---
+        // --- MALİYET HESAPLAMA MOTORU ---
+        function siparisMaliyetHesapla(siparis) {
+            let toplamMaliyet = 0;
+            if (!siparis.urunler) return 0;
+
+            siparis.urunler.forEach(u => {
+                const en = (parseFloat(u.en) || 0) / 100;
+                const boy = (parseFloat(u.boy) || 0) / 100;
+                const adet = parseInt(u.adet) || 1;
+
+                // 1. Profil Maliyeti (Seri bazlı çevre)
+                const profil = malzemeListesi.find(m => m.seri === u.seri && m.metreFiyati > 0);
+                if (profil) {
+                    toplamMaliyet += ((en + boy) * 2) * parseFloat(profil.metreFiyati) * adet;
+                }
+
+                // 2. Tül Maliyeti (Tül cinsi bazlı m2)
+                const tul = malzemeListesi.find(m => (m.ad.toLowerCase().includes("tül") && m.seri === u.model) || m.seri === u.tulCinsi);
+                if (tul && tul.metrekareFiyati > 0) {
+                    toplamMaliyet += (en * boy) * parseFloat(tul.metrekareFiyati) * adet;
+                }
+
+                // 3. Sabit Aksesuar (Her ürün için 40 TL varsayılan aksesuar paketi)
+                toplamMaliyet += (40 * adet);
+            });
+            return toplamMaliyet;
+        }
+
+        // --- SİPARİŞ LİSTESİ RENDER ---
         function renderOrders() {
             const container = document.getElementById('adminSiparisListesi');
             const renderList = [...tumSiparisler].reverse();
-            container.innerHTML = renderList.map(sip => `
-                <div class="admin-row p-4 grid grid-cols-2 md:grid-cols-6 gap-4 items-center shadow-sm">
-                    <div class="col-span-1"><p class="text-sm font-bold text-gray-800">${sip.musteriAdiSoyadi || 'İsimsiz'}</p><p class="text-[10px] text-gray-400">${sip.telefon || '-'}</p></div>
-                    <div class="text-xs font-mono font-bold text-blue-600">${sip.siparisKodu}</div>
-                    <div class="text-xs text-gray-500">${sip.olusturmaTarihi ? new Date(sip.olusturmaTarihi).toLocaleDateString('tr-TR') : '-'}</div>
-                    <div><span class="px-2 py-1 rounded-md text-[10px] font-bold ${sip.durum === 'Tamamlandı' ? 'bg-green-100 text-green-700' : 'bg-blue-50 text-blue-600'}">${sip.durum || 'Bekliyor'}</span></div>
-                    <div class="font-black text-gray-700 text-sm">${(Number(sip.toplamTutar) || 0).toLocaleString('tr-TR')} TL</div>
-                    <div class="text-right flex flex-col md:flex-row gap-2 justify-end">
-                        <button onclick="duzenAc('${sip.siparisKodu}')" class="bg-orange-600 text-white px-3 py-2 rounded-lg text-[10px] font-bold">⚙️ İmalat</button>
-                        <button onclick="detayGoster('${sip.siparisKodu}')" class="bg-gray-900 text-white px-3 py-2 rounded-lg text-[10px] font-bold">Detay</button>
+            
+            container.innerHTML = renderList.map(sip => {
+                const satis = Number(sip.toplamTutar) || 0;
+                const maliyet = siparisMaliyetHesapla(sip);
+                const kar = satis - maliyet;
+
+                return `
+                <div class="admin-row p-4 shadow-sm border mb-3">
+                    <div class="grid grid-cols-2 md:grid-cols-6 gap-4 items-center">
+                        <div class="col-span-1"><p class="text-sm font-bold text-gray-800">${sip.musteriAdiSoyadi || 'İsimsiz'}</p><p class="text-[10px] text-gray-400">${sip.telefon || '-'}</p></div>
+                        <div class="text-xs font-mono font-bold text-blue-600">${sip.siparisKodu}</div>
+                        <div class="text-xs text-gray-500">${sip.olusturmaTarihi ? new Date(sip.olusturmaTarihi).toLocaleDateString('tr-TR') : '-'}</div>
+                        <div><span class="px-2 py-1 rounded-md text-[10px] font-bold ${sip.durum === 'Tamamlandı' ? 'bg-green-100 text-green-700' : 'bg-blue-50 text-blue-600'}">${sip.durum || 'Bekliyor'}</span></div>
+                        <div class="text-sm font-black text-gray-800">${satis.toLocaleString('tr-TR')} TL</div>
+                        <div class="text-right flex gap-2 justify-end">
+                            <button onclick="duzenAc('${sip.siparisKodu}')" class="bg-orange-600 text-white px-3 py-2 rounded-lg text-[10px] font-bold uppercase">İmalat</button>
+                            <button onclick="detayGoster('${sip.siparisKodu}')" class="bg-gray-900 text-white px-3 py-2 rounded-lg text-[10px] font-bold uppercase">Detay</button>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center bg-gray-50 p-3 rounded-xl mt-3 border border-dashed border-gray-200">
+                        <div class="text-center flex-1">
+                            <p class="text-[9px] text-gray-400 font-bold uppercase">Toplam Satış</p>
+                            <p class="text-sm font-black text-green-600">${satis.toFixed(2)}₺</p>
+                        </div>
+                        <div class="text-center flex-1 border-x px-4">
+                            <p class="text-[9px] text-gray-400 font-bold uppercase">Tahmini Maliyet</p>
+                            <p class="text-sm font-black text-red-500">${maliyet.toFixed(2)}₺</p>
+                        </div>
+                        <div class="text-center flex-1">
+                            <p class="text-[9px] text-gray-400 font-bold uppercase">Net Kâr</p>
+                            <p class="text-sm font-black ${kar > 0 ? 'text-blue-600' : 'text-red-700'}">${kar.toFixed(2)}₺</p>
+                        </div>
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
         }
-        // admin.html içinde Sipariş Kartı Render Kısmına Eklenecek Bölüm:
 
-function maliyetHesapla(siparis) {
-    // Bu değerler DepoMaliyetleri dokümanından gelen güncel fiyatlar olmalıdır
-    // Örnek basitleştirilmiş hesaplama:
-    const en = (siparis.en || 0) / 100;
-    const boy = (siparis.boy || 0) / 100;
-    
-    // Varsayılan birim maliyetler (Firebase'den çekilen verilerle eşleşmeli)
-    let profilMetreFiyati = 45; // Örnek
-    let tulMetreKareFiyati = 120; // Örnek
-    
-    const profilMaliyeti = ((en + boy) * 2) * profilMetreFiyati;
-    const tulMaliyeti = (en * boy) * tulMetreKareFiyati;
-    const sabitGider = 30; // Aksesuar, tekerlek vb.
-    
-    return profilMaliyeti + tulMaliyeti + sabitGider;
-}
-
-// Kartın HTML yapısı içinde Satış Tutarı yanına:
-const satisTutari = siparis.toplamTutar || 0;
-const tahminiMaliyet = maliyetHesapla(siparis);
-const kar = satisTutari - tahminiMaliyet;
-
-// HTML Çıktısı (Kart tasarımı içine ekleyin):
-`
-<div class="flex justify-between items-center bg-gray-50 p-3 rounded-xl mt-2 border border-dashed border-gray-300">
-    <div class="text-center">
-        <p class="text-[10px] text-gray-400 font-bold uppercase">Satış</p>
-        <p class="text-sm font-black text-green-600">${satisTutari}₺</p>
-    </div>
-    <div class="text-center border-x px-4">
-        <p class="text-[10px] text-gray-400 font-bold uppercase">Maliyet</p>
-        <p class="text-sm font-black text-red-500">${tahminiMaliyet.toFixed(2)}₺</p>
-    </div>
-    <div class="text-center">
-        <p class="text-[10px] text-gray-400 font-bold uppercase">Kâr</p>
-        <p class="text-sm font-black ${kar > 0 ? 'text-blue-600' : 'text-red-700'}">${kar.toFixed(2)}₺</p>
-    </div>
-</div>
-`
-
-        // --- MALZEME / BİRİM FİYAT RENDER (YENİ) ---
+        // --- MALZEME LİSTESİ RENDER ---
         function renderMaterials() {
             const tbody = document.getElementById('malzemeTablosu');
-            if(malzemeListesi.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="p-10 text-center text-gray-400">Malzeme kaydı bulunamadı.</td></tr>`;
-                return;
-            }
             tbody.innerHTML = malzemeListesi.map((m, idx) => `
-                <tr class="hover:bg-gray-50 transition">
+                <tr class="hover:bg-gray-50 transition border-b">
                     <td class="p-4 font-bold text-gray-800">${m.ad}<br><span class="text-[10px] text-blue-500 uppercase">${m.seri}</span></td>
                     <td class="p-4 text-gray-500">${m.renk}</td>
                     <td class="p-4">
@@ -319,7 +319,7 @@ const kar = satisTutari - tahminiMaliyet;
             `).join('');
         }
 
-        // --- MALZEME FORM MANTIĞI ---
+        // --- MALZEME İŞLEMLERİ ---
         window.malzemeFormKontrol = () => {
             const ad = document.getElementById('etMalzemeAdi').value.toLowerCase();
             const spinner = document.getElementById('spinnerSeri');
@@ -339,10 +339,8 @@ const kar = satisTutari - tahminiMaliyet;
 
         function populateSpinner(liste, baslik) {
             const spinner = document.getElementById('spinnerSeri');
-            const current = spinner.value;
             spinner.innerHTML = `<option value="Yok">${baslik}</option>` + 
                                 liste.map(item => `<option value="${item}">${item}</option>`).join('');
-            if([...spinner.options].some(o => o.value === current)) spinner.value = current;
         }
 
         window.malzemeModalAc = () => {
@@ -355,59 +353,59 @@ const kar = satisTutari - tahminiMaliyet;
             document.getElementById('malzemeModal').classList.add('active');
         };
 
-        window.malzemeDuzenle = (idx) => {
-            const m = malzemeListesi[idx];
-            duzenlenenMalzemeId = m.id;
-            document.getElementById('malzemeModalBaslik').innerText = "Malzeme Düzenle";
-            document.getElementById('etMalzemeAdi').value = m.ad;
-            malzemeFormKontrol();
-            document.getElementById('spinnerSeri').value = m.seri;
-            document.getElementById('etRenk').value = m.renk;
-            document.getElementById('etAdetFiyati').value = m.adetFiyati;
-            document.getElementById('etKiloFiyati').value = m.kiloFiyati;
-            document.getElementById('etMetreFiyati').value = m.metreFiyati;
-            document.getElementById('etMetreKareFiyati').value = m.metrekareFiyati;
-            document.getElementById('malzemeModal').classList.add('active');
-        };
-
         window.malzemeKaydet = async () => {
             const ad = document.getElementById('etMalzemeAdi').value.trim();
             if(!ad) return alert("Ad gerekli!");
-
             const yeni = {
                 id: duzenlenenMalzemeId || crypto.randomUUID(),
                 ad: ad,
                 seri: document.getElementById('spinnerSeri').value,
-                renk: document.getElementById('etRenk').value || "Yok",
+                renk: document.getElementById('etRenk').value || "Standart",
                 adetFiyati: document.getElementById('etAdetFiyati').value,
                 kiloFiyati: document.getElementById('etKiloFiyati').value,
                 metreFiyati: document.getElementById('etMetreFiyati').value,
                 metrekareFiyati: document.getElementById('etMetreKareFiyati').value,
                 olusturmaTarihi: Date.now()
             };
-
             const idx = malzemeListesi.findIndex(m => m.id === yeni.id);
             if(idx !== -1) malzemeListesi[idx] = yeni; else malzemeListesi.push(yeni);
-
-            // Ana Adları Güncelle (Android logic)
-            if(!anaMalzemeAdlari.some(a => a.toLowerCase() === ad.toLowerCase())) {
-                anaMalzemeAdlari.push(ad);
-                await setDoc(doc(db, "Kullanicilar", userPath, "Veriler", "AnaMalzemeAdlari"), { json_data: JSON.stringify(anaMalzemeAdlari) });
-            }
-
             await setDoc(doc(db, "Kullanicilar", userPath, "Veriler", "DepoMaliyetleri"), { json_data: JSON.stringify(malzemeListesi) });
             modalKapat('malzemeModal');
             verileriYukle();
         };
 
         window.malzemeSil = async (idx) => {
-            if(!confirm("Bu malzeme ve fiyat bilgisini silmek istediğinize emin misiniz?")) return;
+            if(!confirm("Emin misiniz?")) return;
             malzemeListesi.splice(idx, 1);
             await setDoc(doc(db, "Kullanicilar", userPath, "Veriler", "DepoMaliyetleri"), { json_data: JSON.stringify(malzemeListesi) });
             verileriYukle();
         };
 
-        // --- ESKİ FONKSİYONLARIN DEVAMI (KORUNANLAR) ---
+        // --- DİĞER FONKSİYONLAR ---
+        window.detayGoster = (kod) => {
+            seciliSiparisKodu = kod;
+            const sip = tumSiparisler.find(s => s.siparisKodu === kod);
+            if(!sip) return;
+            document.getElementById('detayBaslik').innerText = `${sip.musteriAdiSoyadi}`;
+            document.getElementById('modalFiyat').value = sip.toplamTutar;
+            document.getElementById('modalDurum').value = sip.durum;
+            const urunHtml = `<table class="w-full text-left text-sm border-collapse"><thead class="bg-gray-800 text-white"><tr><th class="p-3">Ürün</th><th class="p-3 text-center">Ölçü</th><th class="p-3 text-center">Adet</th></tr></thead><tbody class="divide-y border">${sip.urunler.map(u => `<tr><td class="p-4"><b>${u.model}</b><br><small>${u.renk} | ${u.seri}</small></td><td class="text-center font-bold">${u.en}x${u.boy}</td><td class="text-center">${u.adet}</td></tr>`).join('')}</tbody></table>`;
+            document.getElementById('detayIcerik').innerHTML = urunHtml;
+            document.getElementById('detayModal').classList.add('active');
+        };
+
+        window.siparisGuncelle = async () => {
+            const index = tumSiparisler.findIndex(s => s.siparisKodu === seciliSiparisKodu);
+            if (index !== -1) {
+                tumSiparisler[index].toplamTutar = parseFloat(document.getElementById('modalFiyat').value) || 0;
+                tumSiparisler[index].durum = document.getElementById('modalDurum').value;
+                await setDoc(doc(db, "Kullanicilar", userPath, "Veriler", "Siparisler"), { json_data: JSON.stringify(tumSiparisler) });
+                modalKapat('detayModal');
+                verileriYukle();
+            }
+        };
+
+        window.modalKapat = (id) => document.getElementById(id).classList.remove('active');
         window.duzenAc = (kod) => {
             seciliSiparisKodu = kod;
             const container = document.getElementById('sutunListesi');
@@ -425,33 +423,6 @@ const kar = satisTutari - tahminiMaliyet;
             else { aktifSutunlar = aktifSutunlar.filter(i => i !== el.value); }
         };
 
-        window.detayGoster = (kod) => {
-            seciliSiparisKodu = kod;
-            const sip = tumSiparisler.find(s => s.siparisKodu === kod);
-            if(!sip) return;
-            document.getElementById('detayBaslik').innerText = `${sip.musteriAdiSoyadi} | ${sip.siparisKodu}`;
-            document.getElementById('modalFiyat').value = sip.toplamTutar;
-            document.getElementById('modalDurum').value = sip.durum;
-            const urunHtml = `<table class="w-full text-left text-sm border-collapse"><thead class="bg-gray-800 text-white"><tr><th class="p-3">Ürün</th><th class="p-3 text-center">Ölçü</th><th class="p-3 text-center">Adet</th></tr></thead><tbody class="divide-y border">${sip.urunler.map(u => `<tr><td class="p-4"><b>${u.model}</b><br><small>${u.renk} | ${u.yon}</small></td><td class="text-center font-bold">${u.en}x${u.boy}</td><td class="text-center">${u.adet}</td></tr>`).join('')}</tbody></table>`;
-            document.getElementById('detayIcerik').innerHTML = urunHtml;
-            document.getElementById('detayModal').classList.add('active');
-        };
-
-        window.siparisGuncelle = async () => {
-            const index = tumSiparisler.findIndex(s => s.siparisKodu === seciliSiparisKodu);
-            if (index !== -1) {
-                tumSiparisler[index].toplamTutar = parseFloat(document.getElementById('modalFiyat').value) || 0;
-                tumSiparisler[index].durum = document.getElementById('modalDurum').value;
-                await setDoc(doc(db, "Kullanicilar", userPath, "Veriler", "Siparisler"), { json_data: JSON.stringify(tumSiparisler) });
-                modalKapat('detayModal');
-                verileriYukle();
-            }
-        };
-
-        window.modalKapat = (id) => document.getElementById(id).classList.remove('active');
-        window.verileriYukle = verileriYukle;
-
-        // İmalat Hazırlama ve Hesapla fonksiyonları (Eskisi gibi bırakıldı)
         const hesapla = (deger, form) => {
             if (!form) return deger;
             const d = parseFloat(form.deger) || 0;
@@ -472,7 +443,7 @@ const kar = satisTutari - tahminiMaliyet;
             iframe.style.display = 'none';
             document.body.appendChild(iframe);
             let docStr = iframe.contentWindow.document;
-            let html = `<html><head><style>@page { size: A4 landscape; margin: 1cm; } body { font-family: sans-serif; font-size: 8pt; } table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid #ccc; padding: 4px; text-align: center; }</style></head><body><h2>ADA SİNEKLİK İMALAT: ${sip.siparisKodu} - ${sip.musteriAdiSoyadi}</h2><table><thead><tr>`;
+            let html = `<html><head><style>@page { size: A4 landscape; margin: 1cm; } body { font-family: sans-serif; font-size: 8pt; } table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid #ccc; padding: 4px; text-align: center; }</style></head><body><h2>ADA SİNEKLİK İMALAT: ${sip.siparisKodu}</h2><table><thead><tr>`;
             aktifSutunlar.forEach(key => { html += `<th>${SUTUN_TANIMLARI[key]}</th>`; });
             html += `</tr></thead><tbody>`;
             sip.urunler.forEach((u, i) => {
@@ -502,6 +473,3 @@ const kar = satisTutari - tahminiMaliyet;
     </script>
 </body>
 </html>
-
-
-

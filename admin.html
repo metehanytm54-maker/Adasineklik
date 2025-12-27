@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ada Sineklik | Kurumsal Yönetim Paneli v2.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .sidebar-item { transition: all 0.2s; border-radius: 12px; margin-bottom: 4px; }
+        .sidebar-item:hover { background-color: #334155; color: #60a5fa; }
+        .sidebar-item.active { background-color: #2563eb; color: white; }
+        .section-content { display: none; animation: fadeIn 0.3s ease-out; }
+        .active-section { display: block !important; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        #adminPanel { display: none; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    </style>
+</head>
+<body class="text-slate-900">
+
+    <div id="loginSection" class="min-h-screen flex items-center justify-center bg-slate-900 px-4">
+        <div class="bg-white p-10 rounded-3xl shadow-2xl w-full max-w-md">
+            <div class="text-center mb-10">
+                <div class="bg-blue-600 w-16 h-16 rounded-2xl mx-auto flex items-center justify-center mb-4 shadow-lg shadow-blue-500/50">
+                    <span class="text-white text-3xl font-black">A</span>
+                </div>
+                <h2 class="text-3xl font-extrabold text-slate-800 tracking-tight">Ada Sineklik</h2>
+                <p class="text-slate-500 mt-2">Yönetici Girişi</p>
+            </div>
+            <form id="loginForm" class="space-y-6">
+                <div>
+                    <label class="text-xs font-bold text-slate-400 uppercase ml-1">E-Posta</label>
+                    <input type="email" id="loginEmail" required class="w-full px-4 py-4 border-2 border-slate-100 rounded-2xl outline-none focus:border-blue-500 transition-colors">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-400 uppercase ml-1">Şifre</label>
+                    <input type="password" id="loginPassword" required class="w-full px-4 py-4 border-2 border-slate-100 rounded-2xl outline-none focus:border-blue-500 transition-colors">
+                </div>
+                <button type="submit" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-xl shadow-blue-500/30 active:scale-95">Giriş Yap</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="adminPanel" class="flex h-screen overflow-hidden">
+        
+        <aside class="w-80 bg-slate-900 text-white flex flex-col shadow-2xl z-50">
+            <div class="p-8 border-b border-slate-800">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center font-bold text-xl text-white">A</div>
+                    <div>
+                        <h1 class="font-black text-xl leading-none">ADA</h1>
+                        <p class="text-[10px] text-blue-400 font-bold uppercase tracking-[0.2em]">Management v2</p>
+                    </div>
+                </div>
+            </div>
+            
+            <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto font-medium text-slate-400">
+                <button onclick="showSection('siparisler', this)" class="sidebar-item active w-full flex items-center p-4">
+                    <span class="w-6 text-xl text-center">📦</span> <span class="ml-4">Sipariş Yönetimi</span>
+                </button>
+                <button onclick="showSection('musteriler', this)" class="sidebar-item w-full flex items-center p-4">
+                    <span class="w-6 text-xl text-center">👥</span> <span class="ml-4">Müşteriler</span>
+                </button>
+                <button onclick="showSection('stok', this)" class="sidebar-item w-full flex items-center p-4">
+                    <span class="w-6 text-xl text-center">🏗️</span> <span class="ml-4">Malzeme / Stok</span>
+                </button>
+                <button onclick="showSection('maliyet', this)" class="sidebar-item w-full flex items-center p-4">
+                    <span class="w-6 text-xl text-center">📊</span> <span class="ml-4">Maliyet Analizi</span>
+                </button>
+                <button onclick="showSection('kasap', this)" class="sidebar-item w-full flex items-center p-4 text-emerald-400">
+                    <span class="w-6 text-xl text-center">💰</span> <span class="ml-4 font-bold">Kasa & Ödemeler</span>
+                </button>
+                <div class="pt-6 pb-2 px-4 text-[10px] font-bold text-slate-600 uppercase">Sistem Yapılandırma</div>
+                <button onclick="showSection('ayarlar', this)" class="sidebar-item w-full flex items-center p-4">
+                    <span class="w-6 text-xl text-center">⚙️</span> <span class="ml-4">Model & Üretim Ayarları</span>
+                </button>
+            </nav>
+
+            <div class="p-6 border-t border-slate-800 bg-slate-900/50">
+                <div class="flex items-center gap-3 mb-4">
+                    <div id="userAvatar" class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-xs">👤</div>
+                    <div class="overflow-hidden">
+                        <p id="userMail" class="text-xs font-bold text-slate-200 truncate"></p>
+                        <p class="text-[10px] text-slate-500">Süper Yönetici</p>
+                    </div>
+                </div>
+                <button id="btnLogout" class="w-full bg-red-500/10 text-red-500 text-xs py-2 rounded-lg font-bold hover:bg-red-500 hover:text-white transition-all">Sistemden Çık</button>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col overflow-hidden">
+            
+            <header class="bg-white border-b h-20 flex items-center justify-between px-10 shrink-0">
+                <h2 id="sectionTitle" class="text-2xl font-black text-slate-800">Sipariş Yönetimi</h2>
+                <div class="flex gap-4">
+                    <div class="bg-slate-100 px-4 py-2 rounded-xl text-sm font-bold text-slate-600 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span> Sistem Aktif
+                    </div>
+                </div>
+            </header>
+
+            <div class="flex-1 overflow-y-auto p-10">
+                
+                <section id="siparisler" class="section-content active-section">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                        <div class="bg-white p-6 rounded-2xl border shadow-sm"><p class="text-xs font-bold text-slate-400 uppercase">Toplam Sipariş</p><p id="countAll" class="text-3xl font-black text-blue-600">0</p></div>
+                        <div class="bg-white p-6 rounded-2xl border shadow-sm"><p class="text-xs font-bold text-slate-400 uppercase">Bekleyen</p><p id="countPending" class="text-3xl font-black text-orange-500">0</p></div>
+                        <div class="bg-white p-6 rounded-2xl border shadow-sm"><p class="text-xs font-bold text-slate-400 uppercase">Üretimde</p><p id="countWork" class="text-3xl font-black text-indigo-600">0</p></div>
+                        <div class="bg-white p-6 rounded-2xl border shadow-sm"><p class="text-xs font-bold text-slate-400 uppercase">Tamamlanan</p><p id="countDone" class="text-3xl font-black text-emerald-500">0</p></div>
+                    </div>
+
+                    <div class="bg-white rounded-3xl shadow-xl border overflow-hidden">
+                        <div class="p-6 border-b flex justify-between items-center bg-slate-50/50">
+                            <h3 class="font-bold text-slate-700">Güncel İş Listesi</h3>
+                            <button onclick="toggleModal('orderModal')" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:bg-blue-700 transition-all">+ Yeni Sipariş Ekle</button>
+                        </div>
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b">
+                                    <th class="p-6">Müşteri & Tarih</th>
+                                    <th class="p-6">Ürün Detayı</th>
+                                    <th class="p-6">Ölçüler</th>
+                                    <th class="p-6">Durum</th>
+                                    <th class="p-6 text-right">Aksiyon</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ordersTableBody" class="text-sm"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section id="musteriler" class="section-content">
+                    <div class="flex justify-between items-center mb-10">
+                        <div>
+                            <h3 class="text-3xl font-black text-slate-800">Müşteri Portföyü</h3>
+                            <p class="text-slate-500">Sisteme kayıtlı tüm müşteriler ve iletişim detayları.</p>
+                        </div>
+                    </div>
+                    <div id="customerGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                        </div>
+                </section>
+
+                <section id="stok" class="section-content">
+                    <div class="flex justify-between items-center mb-8">
+                        <h3 class="text-2xl font-black">Hammadde & Stok Takibi</h3>
+                        <div class="flex gap-3 bg-white p-2 rounded-2xl shadow-sm border">
+                            <input type="text" id="newStokName" placeholder="Malzeme Adı (Örn: Profil)" class="px-4 py-2 outline-none border-r">
+                            <button onclick="addNewStok()" class="bg-blue-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-blue-700 transition">Ekle</button>
+                        </div>
+                    </div>
+                    <div id="stokGrid" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                        </div>
+                </section>
+
+                <section id="maliyet" class="section-content">
+                    <div class="max-w-4xl mx-auto">
+                        <div class="bg-white rounded-3xl shadow-xl border overflow-hidden p-8">
+                            <h3 class="text-2xl font-black mb-6 flex items-center gap-3">
+                                <span class="bg-indigo-100 p-2 rounded-lg text-xl">📐</span> Otomatik Maliyet Hesaplayıcı
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div class="space-y-6">
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-400 mb-2 uppercase">Model Seçimi</label>
+                                        <select id="calcModel" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-500"></select>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-xs font-bold text-slate-400 mb-2 uppercase">Genişlik (En)</label>
+                                            <input type="number" id="calcW" placeholder="cm" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-500">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-bold text-slate-400 mb-2 uppercase">Yükseklik (Boy)</label>
+                                            <input type="number" id="calcH" placeholder="cm" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-500">
+                                        </div>
+                                    </div>
+                                    <button onclick="calculateInstantCost()" class="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black text-lg shadow-xl shadow-indigo-500/30 hover:bg-indigo-700 transition-all">HESAPLA</button>
+                                </div>
+                                <div id="calcResult" class="bg-slate-900 rounded-3xl p-8 text-white flex flex-col justify-center items-center text-center">
+                                    <p class="text-slate-400 font-bold mb-4 uppercase tracking-widest text-xs">Hesaplanan Tutar</p>
+                                    <p class="text-5xl font-black text-emerald-400" id="resPrice">0,00 ₺</p>
+                                    <div class="mt-8 w-full border-t border-slate-800 pt-6 space-y-3 text-sm text-slate-400">
+                                        <div class="flex justify-between"><span>Malzeme:</span><span id="resMat" class="text-white">0.00</span></div>
+                                        <div class="flex justify-between"><span>İşçilik:</span><span id="resLabor" class="text-white">0.00</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="ayarlar" class="section-content">
+                    <div class="bg-white rounded-3xl border shadow-sm p-8">
+                        <div class="flex justify-between items-center mb-8">
+                            <h3 class="text-xl font-bold">Üretim Modelleri ve Formüller</h3>
+                            <div class="flex gap-2">
+                                <input type="text" id="newModelName" placeholder="Model Adı" class="border px-4 py-2 rounded-xl text-sm">
+                                <button onclick="addNewModel()" class="bg-slate-800 text-white px-6 py-2 rounded-xl text-sm font-bold">Model Tanımla</button>
+                            </div>
+                        </div>
+                        <div id="modelList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            </div>
+                    </div>
+                </section>
+
+                <section id="kasap" class="section-content">
+                    <div class="bg-emerald-900 text-white rounded-3xl p-10 mb-8 flex justify-between items-center shadow-2xl shadow-emerald-900/20">
+                        <div>
+                            <p class="text-emerald-300 font-bold uppercase text-xs tracking-widest">Kasadaki Toplam Mevcut</p>
+                            <h3 class="text-6xl font-black mt-2">₺ 142.550,00</h3>
+                        </div>
+                        <div class="bg-white/10 p-6 rounded-3xl backdrop-blur-md">
+                            <p class="text-xs font-bold uppercase opacity-60">Bekleyen Tahsilat</p>
+                            <p class="text-2xl font-black text-emerald-100">₺ 18.400,00</p>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <div id="orderModal" class="fixed inset-0 bg-slate-900/80 hidden items-center justify-center z-[100] backdrop-blur-sm p-4">
+        <div class="bg-white rounded-[40px] w-full max-w-4xl p-10 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-8">
+                <h3 class="text-3xl font-black text-slate-800">Yeni İş Emri</h3>
+                <button onclick="toggleModal('orderModal')" class="text-slate-400 hover:text-red-500 text-2xl font-bold">✕</button>
+            </div>
+            <form id="orderForm" class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="space-y-6">
+                    <div>
+                        <label class="text-xs font-bold text-slate-500 uppercase ml-1">Müşteri Seçin</label>
+                        <select id="ordCustomer" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 mt-2" required></select>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-slate-500 uppercase ml-1">Sineklik Türü / Model</label>
+                        <select id="ordModel" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 mt-2" required></select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-xs font-bold text-slate-500 uppercase ml-1">En (cm)</label>
+                            <input type="number" id="ordEn" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 mt-2" required>
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-slate-500 uppercase ml-1">Boy (cm)</label>
+                            <input type="number" id="ordBoy" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 mt-2" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="space-y-6">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-xs font-bold text-slate-500 uppercase ml-1">Adet</label>
+                            <input type="number" id="ordQty" value="1" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 mt-2">
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-slate-500 uppercase ml-1">Renk</label>
+                            <input type="text" id="ordColor" placeholder="Örn: Antrasit" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 mt-2">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-slate-500 uppercase ml-1">Notlar / Adres Detayı</label>
+                        <textarea id="ordNote" rows="4" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 mt-2"></textarea>
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 text-white py-5 rounded-[20px] font-black text-xl hover:shadow-2xl hover:bg-blue-700 transition-all">SİPARİŞİ OLUŞTUR</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="stokModal" class="fixed inset-0 bg-slate-900/60 hidden flex items-center justify-center z-[110] p-4">
+        <div class="bg-white rounded-3xl w-full max-w-md p-8 shadow-2xl">
+            <h4 id="stokDetailTitle" class="text-2xl font-black mb-6">Stok Güncelle</h4>
+            <form id="stokEditForm" class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="text" id="stokColor" placeholder="Renk" class="w-full p-4 border rounded-xl">
+                    <input type="number" id="stokAdet" placeholder="Adet" class="w-full p-4 border rounded-xl">
+                    <input type="number" id="stokMetre" placeholder="Metre" class="w-full p-4 border rounded-xl">
+                    <input type="number" id="stokFiyat" placeholder="Birim Fiyat" class="w-full p-4 border rounded-xl">
+                </div>
+                <button type="submit" class="w-full bg-blue-600 text-white py-4 rounded-xl font-bold mt-4">Güncelle</button>
+                <button type="button" onclick="toggleModal('stokModal')" class="w-full text-slate-400 font-bold">Kapat</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="materialModal" class="fixed inset-0 bg-slate-900/90 hidden flex items-center justify-center z-[120] p-4">
+        <div class="bg-white rounded-[30px] w-full max-w-4xl p-10 shadow-2xl max-h-[85vh] overflow-hidden flex flex-col">
+            <h4 id="selectedModelTitle" class="text-2xl font-black mb-6 border-b pb-4">Formül Detayları</h4>
+            <form id="materialForm" class="grid grid-cols-12 gap-3 mb-8 bg-slate-50 p-6 rounded-2xl border">
+                <input type="text" id="matName" placeholder="Parça Adı" class="col-span-4 p-3 border rounded-xl" required>
+                <input type="number" id="matQtyEn" placeholder="En Adet" class="col-span-2 p-3 border rounded-xl">
+                <input type="number" id="matPayEn" placeholder="En Pay(-)" class="col-span-2 p-3 border rounded-xl">
+                <input type="number" id="matQtyBoy" placeholder="Boy Adet" class="col-span-2 p-3 border rounded-xl">
+                <input type="number" id="matPayBoy" placeholder="Boy Pay(-)" class="col-span-2 p-3 border rounded-xl">
+                <button type="submit" class="col-span-12 bg-blue-600 text-white py-3 rounded-xl font-black">+ FORMÜLE EKLE</button>
+            </form>
+            <div class="flex-1 overflow-y-auto">
+                <table class="w-full text-left">
+                    <thead class="sticky top-0 bg-white shadow-sm font-bold text-xs uppercase text-slate-400 border-b">
+                        <tr><th class="p-4">Parça</th><th class="p-4 text-center">En (Ad/Pay)</th><th class="p-4 text-center">Boy (Ad/Pay)</th><th class="p-4 text-right">Sil</th></tr>
+                    </thead>
+                    <tbody id="materialListTable"></tbody>
+                </table>
+            </div>
+            <button onclick="toggleModal('materialModal')" class="mt-8 text-slate-500 font-bold hover:text-slate-800">PANELİ KAPAT</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, updateDoc, doc, deleteDoc, getDocs, serverTimestamp, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // CONFIG (Sizin Bilgileriniz)
+        const firebaseConfig = {
+            apiKey: "AIzaSyD5cilsAyJrzPzwtgIBd1w7StfAkUBAO7E",
+            authDomain: "adasineklik-f8c9f.firebaseapp.com",
+            projectId: "adasineklik-f8c9f",
+            storageBucket: "adasineklik-f8c9f.firebasestorage.app",
+            messagingSenderId: "612764827500",
+            appId: "1:612764827500:web:5b11b94229a36336547d49",
+            measurementId: "G-F1YF4VDFBL"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentModelId = null;
+        let currentStokId = null;
+
+        // AUTH KONTROL
+        onAuthStateChanged(auth, user => {
+            if (user) {
+                document.getElementById('loginSection').style.display = 'none';
+                document.getElementById('adminPanel').style.display = 'flex';
+                document.getElementById('userMail').innerText = user.email;
+                // Verileri Başlat
+                listenOrders(); listenModels(); listenStok(); listenCustomers();
+            } else {
+                document.getElementById('loginSection').style.display = 'flex';
+                document.getElementById('adminPanel').style.display = 'none';
+            }
+        });
+
+        // LOGIN / LOGOUT
+        document.getElementById('loginForm').addEventListener('submit', e => {
+            e.preventDefault();
+            signInWithEmailAndPassword(auth, document.getElementById('loginEmail').value, document.getElementById('loginPassword').value)
+                .catch(err => alert("Giriş Başarısız: " + err.message));
+        });
+        document.getElementById('btnLogout').addEventListener('click', () => signOut(auth));
+
+        // NAVİGASYON
+        window.showSection = (id, btn) => {
+            document.querySelectorAll('.section-content').forEach(s => s.classList.remove('active-section'));
+            document.querySelectorAll('.sidebar-item').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).classList.add('active-section');
+            if(btn) btn.classList.add('active');
+            document.getElementById('sectionTitle').innerText = btn ? btn.innerText.trim() : id;
+        };
+
+        window.toggleModal = (id) => {
+            const el = document.getElementById(id);
+            el.classList.toggle('hidden');
+            el.classList.toggle('flex');
+        }
+
+        // --- MÜŞTERİ YÖNETİMİ (KAYDOL'DAN GELENLER) ---
+        const listenCustomers = () => {
+            onSnapshot(collection(db, "musteriler"), snap => {
+                const grid = document.getElementById('customerGrid');
+                const ordCust = document.getElementById('ordCustomer');
+                grid.innerHTML = ''; 
+                ordCust.innerHTML = '<option value="">Müşteri Seçin...</option>';
+
+                snap.forEach(d => {
+                    const m = d.data();
+                    // Kart Görünümü
+                    grid.innerHTML += `
+                        <div class="bg-white p-8 rounded-[30px] border shadow-sm relative overflow-hidden group hover:shadow-xl transition-all">
+                            <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-100 transition-opacity">
+                                <button onclick="deleteDoc(doc(db, 'musteriler', '${d.id}'))" class="text-red-500">🗑️ Sil</button>
+                            </div>
+                            <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl mb-4 text-blue-600 font-bold">
+                                ${m.ad[0]}
+                            </div>
+                            <h4 class="text-xl font-black text-slate-800">${m.ad}</h4>
+                            <div class="mt-4 space-y-3">
+                                <p class="text-sm flex items-center text-slate-500 font-medium"> <span class="w-8">📞</span> ${m.tel || 'Eklenmemiş'}</p>
+                                <p class="text-sm flex items-center text-slate-500 font-medium"> <span class="w-8">📧</span> ${m.email}</p>
+                                <p class="text-sm flex items-start text-slate-400 leading-relaxed italic"> <span class="w-8">📍</span> ${m.adres || 'Adres bilgisi yok'}</p>
+                            </div>
+                            <div class="mt-6 pt-6 border-t flex justify-between items-center">
+                                <span class="bg-emerald-100 text-emerald-700 px-4 py-1 rounded-full text-[10px] font-black uppercase">Aktif Cari</span>
+                                <span class="font-black text-slate-700">₺ ${m.bakiye || 0}</span>
+                            </div>
+                        </div>`;
+                    
+                    // Sipariş Modalı İçin Dropdown
+                    ordCust.innerHTML += `<option value="${m.ad}">${m.ad}</option>`;
+                });
+            });
+        };
+
+        // --- SİPARİŞ İŞLEMLERİ ---
+        document.getElementById('orderForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                await addDoc(collection(db, "siparisler"), {
+                    musteri: document.getElementById('ordCustomer').value,
+                    tur: document.getElementById('ordModel').value,
+                    en: Number(document.getElementById('ordEn').value),
+                    boy: Number(document.getElementById('ordBoy').value),
+                    adet: Number(document.getElementById('ordQty').value),
+                    renk: document.getElementById('ordColor').value,
+                    not: document.getElementById('ordNote').value,
+                    durum: "Beklemede",
+                    tarih: serverTimestamp()
+                });
+                alert("Sipariş başarıyla havuza eklendi!");
+                toggleModal('orderModal');
+                e.target.reset();
+            } catch (hata) { alert("Hata: " + hata); }
+        });
+
+        const listenOrders = () => {
+            onSnapshot(query(collection(db, "siparisler"), orderBy("tarih", "desc")), snap => {
+                const tbody = document.getElementById('ordersTableBody');
+                tbody.innerHTML = '';
+                let p = 0, w = 0, d = 0;
+
+                snap.forEach(docSnap => {
+                    const s = docSnap.data();
+                    const id = docSnap.id;
+                    if(s.durum === "Beklemede") p++; else if(s.durum === "Üretimde") w++; else d++;
+
+                    const statusClass = s.durum === "Tamamlandı" ? "bg-emerald-100 text-emerald-700" : (s.durum === "Üretimde" ? "bg-indigo-100 text-indigo-700" : "bg-orange-100 text-orange-700");
+
+                    tbody.innerHTML += `
+                        <tr class="border-b hover:bg-slate-50 transition-colors">
+                            <td class="p-6">
+                                <p class="font-black text-slate-800">${s.musteri}</p>
+                                <p class="text-[10px] text-slate-400 font-bold uppercase mt-1">🕒 ${s.tarih?.toDate().toLocaleDateString('tr-TR') || 'Yeni'}</p>
+                            </td>
+                            <td class="p-6">
+                                <p class="font-bold text-slate-700">${s.tur}</p>
+                                <p class="text-xs text-slate-400">${s.renk}</p>
+                            </td>
+                            <td class="p-6">
+                                <div class="inline-flex items-center bg-slate-100 px-3 py-1 rounded-lg">
+                                    <span class="font-black text-slate-700">${s.en}x${s.boy}</span>
+                                    <span class="mx-2 text-slate-300">|</span>
+                                    <span class="text-xs font-bold text-blue-600">${s.adet} ADET</span>
+                                </div>
+                            </td>
+                            <td class="p-6">
+                                <select onchange="updateOrderStatus('${id}', this.value)" class="${statusClass} px-4 py-2 rounded-full text-[11px] font-black uppercase outline-none cursor-pointer">
+                                    <option value="Beklemede" ${s.durum==='Beklemede'?'selected':''}>Beklemede</option>
+                                    <option value="Üretimde" ${s.durum==='Üretimde'?'selected':''}>Üretimde</option>
+                                    <option value="Tamamlandı" ${s.durum==='Tamamlandı'?'selected':''}>Tamamlandı</option>
+                                </select>
+                            </td>
+                            <td class="p-6 text-right">
+                                <button onclick="deleteDoc(doc(db, 'siparisler', '${id}'))" class="text-slate-300 hover:text-red-500 transition-colors">✕ Sil</button>
+                            </td>
+                        </tr>`;
+                });
+                document.getElementById('countAll').innerText = snap.size;
+                document.getElementById('countPending').innerText = p;
+                document.getElementById('countWork').innerText = w;
+                document.getElementById('countDone').innerText = d;
+            });
+        };
+
+        window.updateOrderStatus = (id, newStatus) => updateDoc(doc(db, "siparisler", id), { durum: newStatus });
+
+        // --- STOK VE MALZEME ---
+        window.addNewStok = () => {
+            const ad = document.getElementById('newStokName').value;
+            if(!ad) return;
+            addDoc(collection(db, "stok"), { ad, renk: "Beyaz", adet: 0, metre: 0, fiyat: 0 });
+            document.getElementById('newStokName').value = '';
+        };
+
+        const listenStok = () => {
+            onSnapshot(collection(db, "stok"), snap => {
+                const grid = document.getElementById('stokGrid');
+                grid.innerHTML = '';
+                snap.forEach(d => {
+                    const s = d.data();
+                    grid.innerHTML += `
+                        <div onclick="openStokEditor('${d.id}')" class="bg-white p-6 rounded-3xl border-2 border-transparent hover:border-blue-500 shadow-sm cursor-pointer transition-all group">
+                            <h6 class="font-black text-slate-800 text-lg">${s.ad}</h6>
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-tighter">${s.renk}</p>
+                            <div class="mt-6 flex justify-between items-end">
+                                <div><p class="text-[10px] font-bold text-slate-400 uppercase">Mevcut</p><p class="text-xl font-black text-blue-600">${s.adet} Adet</p></div>
+                                <div class="text-right"><p class="text-[10px] font-bold text-slate-400 uppercase">Metraj</p><p class="font-black text-slate-600">${s.metre}m</p></div>
+                            </div>
+                        </div>`;
+                });
+            });
+        };
+
+        window.openStokEditor = (id) => {
+            currentStokId = id;
+            onSnapshot(doc(db, "stok", id), d => {
+                const s = d.data();
+                document.getElementById('stokDetailTitle').innerText = s.ad;
+                document.getElementById('stokColor').value = s.renk;
+                document.getElementById('stokAdet').value = s.adet;
+                document.getElementById('stokMetre').value = s.metre;
+                document.getElementById('stokFiyat').value = s.fiyat;
+                toggleModal('stokModal');
+            }, { onlyOnce: true });
+        };
+
+        document.getElementById('stokEditForm').addEventListener('submit', async e => {
+            e.preventDefault();
+            await updateDoc(doc(db, "stok", currentStokId), {
+                renk: document.getElementById('stokColor').value,
+                adet: Number(document.getElementById('stokAdet').value),
+                metre: Number(document.getElementById('stokMetre').value),
+                fiyat: Number(document.getElementById('stokFiyat').value)
+            });
+            toggleModal('stokModal');
+        });
+
+        // --- MODEL & FORMÜL ---
+        window.addNewModel = () => {
+            const ad = document.getElementById('newModelName').value;
+            if(ad) addDoc(collection(db, "modeller"), { ad });
+            document.getElementById('newModelName').value = '';
+        };
+
+        const listenModels = () => {
+            onSnapshot(collection(db, "modeller"), snap => {
+                const list = document.getElementById('modelList');
+                const calcSelect = document.getElementById('calcModel');
+                const ordModel = document.getElementById('ordModel');
+                list.innerHTML = ''; calcSelect.innerHTML = ''; ordModel.innerHTML = '';
+                
+                snap.forEach(d => {
+                    const m = d.data();
+                    list.innerHTML += `<div onclick="openMatEditor('${d.id}', '${m.ad}')" class="p-4 bg-slate-900 text-white rounded-2xl cursor-pointer hover:bg-blue-600 transition-all font-bold text-center">${m.ad}</div>`;
+                    calcSelect.innerHTML += `<option value="${d.id}">${m.ad}</option>`;
+                    ordModel.innerHTML += `<option value="${m.ad}">${m.ad}</option>`;
+                });
+            });
+        };
+
+        window.openMatEditor = (id, ad) => {
+            currentModelId = id;
+            document.getElementById('selectedModelTitle').innerText = ad + " Formülü";
+            listenMaterials(id);
+            toggleModal('materialModal');
+        };
+
+        const listenMaterials = (id) => {
+            onSnapshot(collection(db, "modeller", id, "malzemeler"), snap => {
+                const table = document.getElementById('materialListTable');
+                table.innerHTML = '';
+                snap.forEach(d => {
+                    const m = d.data();
+                    table.innerHTML += `
+                        <tr class="border-b text-slate-600">
+                            <td class="p-4 font-bold text-slate-800">${m.ad}</td>
+                            <td class="p-4 text-center font-medium">Ad: ${m.enQty} / Pay: ${m.enPay}</td>
+                            <td class="p-4 text-center font-medium">Ad: ${m.boyQty} / Pay: ${m.boyPay}</td>
+                            <td class="p-4 text-right"><button onclick="deleteDoc(doc(db, 'modeller', '${currentModelId}', 'malzemeler', '${d.id}'))" class="text-red-400 font-bold">Sil</button></td>
+                        </tr>`;
+                });
+            });
+        };
+
+        document.getElementById('materialForm').addEventListener('submit', async e => {
+            e.preventDefault();
+            await addDoc(collection(db, "modeller", currentModelId, "malzemeler"), {
+                ad: document.getElementById('matName').value,
+                enQty: Number(document.getElementById('matQtyEn').value), enPay: Number(document.getElementById('matPayEn').value),
+                boyQty: Number(document.getElementById('matQtyBoy').value), boyPay: Number(document.getElementById('matPayBoy').value)
+            });
+            e.target.reset();
+        });
+
+        // --- HESAPLAMA MOTORU ---
+        window.calculateInstantCost = async () => {
+            const modelId = document.getElementById('calcModel').value;
+            const w = Number(document.getElementById('calcW').value);
+            const h = Number(document.getElementById('calcH').value);
+            if(!w || !h) return alert("Ölçü Eksik");
+
+            const mats = await getDocs(collection(db, "modeller", modelId, "malzemeler"));
+            let totalM = 0;
+            mats.forEach(d => {
+                const m = d.data();
+                const enMetraj = (m.enQty * (w - m.enPay)) / 100;
+                const boyMetraj = (m.boyQty * (h - m.boyPay)) / 100;
+                totalM += (enMetraj + boyMetraj) * 45; // Örn Birim maliyet
+            });
+            
+            document.getElementById('resPrice').innerText = `₺ ${totalM.toFixed(2)}`;
+            document.getElementById('resMat').innerText = totalM.toFixed(2);
+            document.getElementById('resLabor').innerText = (totalM * 0.2).toFixed(2);
+        };
+
+    </script>
+</body>
+</html>

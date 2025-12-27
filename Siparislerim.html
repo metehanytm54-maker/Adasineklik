@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ada Sineklik | Siparişlerim</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+        .order-card { transition: all 0.3s; }
+        .status-badge { padding: 4px 12px; border-radius: 999px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
+        .modal { display: none; align-items: center; justify-content: center; position: fixed; inset: 0; z-index: 50; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(4px); }
+        .modal.active { display: flex; }
+    </style>
+</head>
+<body class="text-slate-900">
+
+    <nav class="bg-white border-b sticky top-0 z-40">
+        <div class="max-w-5xl mx-auto px-6 h-20 flex items-center justify-between">
+            <h1 class="text-xl font-black text-blue-600 tracking-tighter">ADA SİNEKLİK</h1>
+            <div class="flex items-center gap-4">
+                <span id="userName" class="text-sm font-bold text-slate-600 italic italic">Kontrol ediliyor...</span>
+                <button id="btnLogout" class="text-xs bg-red-50 text-red-600 px-4 py-2 rounded-lg font-bold hover:bg-red-600 hover:text-white transition">Çıkış</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto p-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div class="bg-white p-6 rounded-3xl shadow-sm border text-center">
+                <p class="text-[10px] font-black text-slate-400 uppercase">Toplam Kayıt</p>
+                <p id="totalOrders" class="text-3xl font-black text-blue-600">0</p>
+            </div>
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-emerald-100 text-center">
+                <p class="text-[10px] font-black text-slate-400 uppercase">Bakiyem</p>
+                <p id="userBalance" class="text-3xl font-black text-emerald-600">₺ 0,00</p>
+            </div>
+            <div class="bg-white p-6 rounded-3xl shadow-sm border text-center">
+                <p class="text-[10px] font-black text-slate-400 uppercase">Bekleyen</p>
+                <p id="pendingOrders" class="text-3xl font-black text-orange-500">0</p>
+            </div>
+        </div>
+
+        <div class="flex justify-between items-center mb-8">
+            <h3 class="text-2xl font-black text-slate-800 italic">Sipariş Geçmişim</h3>
+            <a href="siparis_olustur.html" class="bg-blue-600 text-white px-6 py-3 rounded-2xl font-bold shadow-lg hover:bg-blue-700 transition">+ Yeni Sipariş</a>
+        </div>
+
+        <div id="ordersList" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="col-span-full py-20 text-center">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-600 mb-4"></div>
+                <p class="text-slate-400 font-medium">Siparişleriniz yükleniyor, lütfen bekleyin...</p>
+            </div>
+        </div>
+    </main>
+
+    <div id="detailModal" class="modal p-4">
+        <div class="bg-white w-full max-w-3xl rounded-[32px] overflow-hidden shadow-2xl">
+            <div class="p-8 border-b flex justify-between items-center">
+                <h4 class="text-xl font-black">Sipariş Detayı</h4>
+                <button onclick="window.closeModal()" class="text-slate-400 hover:text-red-500">✕ Kapat</button>
+            </div>
+            <div class="p-8 max-h-[60vh] overflow-y-auto">
+                <table class="w-full text-left">
+                    <thead class="text-[10px] font-bold text-slate-400 uppercase border-b">
+                        <tr>
+                            <th class="pb-2">Model</th>
+                            <th class="pb-2 text-center">Ölçü</th>
+                            <th class="pb-2 text-center">Adet</th>
+                            <th class="pb-2 text-right">Özellik</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modalItemsBody" class="text-sm"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, query, where, onSnapshot, orderBy, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyD5cilsAyJrzPzwtgIBd1w7StfAkUBAO7E",
+            authDomain: "adasineklik-f8c9f.firebaseapp.com",
+            projectId: "adasineklik-f8c9f",
+            storageBucket: "adasineklik-f8c9f.firebasestorage.app",
+            messagingSenderId: "612764827500",
+            appId: "1:612764827500:web:5b11b94229a36336547d49"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                try {
+                    // Kullanıcı bilgilerini çek
+                    const q = query(collection(db, "musteriler"), where("email", "==", user.email));
+                    const snap = await getDocs(q);
+                    
+                    if (!snap.empty) {
+                        const userData = snap.docs[0].data();
+                        document.getElementById('userName').innerText = "👤 " + userData.ad;
+                        document.getElementById('userBalance').innerText = "₺ " + (userData.bakiye || 0).toLocaleString('tr-TR');
+                        // Siparişleri dinlemeye başla
+                        fetchOrders(userData.ad);
+                    } else {
+                        // Müşteri kaydı yoksa e-posta ile ara
+                        document.getElementById('userName').innerText = "👤 " + user.email;
+                        fetchOrdersByEmail(user.email);
+                    }
+                } catch (error) {
+                    console.error("Giriş hatası:", error);
+                    document.getElementById('ordersList').innerHTML = "Veri yüklenirken bir hata oluştu.";
+                }
+            } else {
+                window.location.href = "giris.html";
+            }
+        });
+
+        // Siparişleri Ad ile Getir (Öncelikli)
+        function fetchOrders(musteriAdi) {
+            // NOT: orderBy hataya sebep oluyorsa kaldırılabilir
+            const q = query(collection(db, "siparisler"), where("musteri", "==", musteriAdi));
+            
+            onSnapshot(q, (snap) => {
+                renderOrders(snap);
+            }, (err) => {
+                console.error("Siparişler çekilemedi:", err);
+                // Hata genellikle indeks eksikliğindendir, basit sorguya dön:
+                const simpleQ = query(collection(db, "siparisler"), where("musteri", "==", musteriAdi));
+                onSnapshot(simpleQ, renderOrders);
+            });
+        }
+
+        // Siparişleri E-posta ile Getir (Yedek)
+        function fetchOrdersByEmail(email) {
+            const q = query(collection(db, "siparisler"), where("musteriEmail", "==", email));
+            onSnapshot(q, renderOrders);
+        }
+
+        function renderOrders(snap) {
+            const list = document.getElementById('ordersList');
+            let pending = 0;
+            let html = '';
+
+            if (snap.empty) {
+                list.innerHTML = '<div class="col-span-full py-20 text-center text-slate-400 bg-white rounded-3xl border border-dashed">Henüz bir siparişiniz bulunmuyor.</div>';
+                return;
+            }
+
+            snap.forEach(d => {
+                const s = d.data();
+                if(s.durum !== "Tamamlandı") pending++;
+                
+                // Tarih formatlama
+                let tarihStr = "Yeni";
+                if(s.tarih) {
+                    const dt = s.tarih.toDate();
+                    tarihStr = dt.toLocaleDateString('tr-TR') + " " + dt.toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'});
+                }
+
+                const colors = { "Beklemede": "bg-orange-100 text-orange-600", "Üretimde": "bg-blue-100 text-blue-600", "Tamamlandı": "bg-emerald-100 text-emerald-600" };
+
+                html += `
+                    <div class="order-card bg-white p-6 rounded-[32px] border shadow-sm">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h4 class="text-sm font-black text-slate-500 uppercase tracking-tighter">Sipariş #${d.id.slice(0,5)}</h4>
+                                <p class="text-[11px] text-slate-400 font-bold">${tarihStr}</p>
+                            </div>
+                            <span class="status-badge ${colors[s.durum] || 'bg-slate-100'}">${s.durum}</span>
+                        </div>
+                        <div class="bg-slate-50 rounded-2xl p-4 flex justify-between items-center mb-4">
+                            <div>
+                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">İçerik</p>
+                                <p class="text-sm font-black text-blue-600">${s.kalemSayisi} Kalem / ${s.toplamAdet} Parça</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Tutar</p>
+                                <p class="text-lg font-black text-slate-800">₺ ${(s.toplamFiyat || 0).toLocaleString('tr-TR')}</p>
+                            </div>
+                        </div>
+                        <button onclick="window.showDetail('${d.id}')" class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold text-xs hover:bg-blue-600 transition">DETAYLARI İNCELE</button>
+                    </div>`;
+            });
+
+            list.innerHTML = html;
+            document.getElementById('totalOrders').innerText = snap.size;
+            document.getElementById('pendingOrders').innerText = pending;
+        }
+
+        window.showDetail = async (id) => {
+            const itemsBody = document.getElementById('modalItemsBody');
+            itemsBody.innerHTML = 'Yükleniyor...';
+            document.getElementById('detailModal').classList.add('active');
+            
+            try {
+                const dSnap = await getDoc(doc(db, "siparisler", id));
+                if (dSnap.exists()) {
+                    const data = dSnap.data();
+                    let rows = '';
+                    data.urunler.forEach(u => {
+                        rows += `
+                            <tr class="border-b border-slate-50">
+                                <td class="py-4 font-bold">${u.model}</td>
+                                <td class="py-4 text-center">${u.en}x${u.boy}</td>
+                                <td class="py-4 text-center font-black">${u.adet}</td>
+                                <td class="py-4 text-right text-[10px] text-slate-500 uppercase">${u.renk} / ${u.tul}</td>
+                            </tr>`;
+                    });
+                    itemsBody.innerHTML = rows;
+                }
+            } catch (err) { alert("Detay hatası!"); }
+        };
+
+        window.closeModal = () => document.getElementById('detailModal').classList.remove('active');
+        document.getElementById('btnLogout').addEventListener('click', () => signOut(auth).then(() => window.location.href = "giris.html"));
+    </script>
+</body>
+</html>

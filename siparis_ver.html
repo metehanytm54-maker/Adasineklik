@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sipariş Ver - Ada Sineklik</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .auth-overlay {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(4px);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen font-sans">
+
+    <div class="bg-white border-b shadow-sm sticky top-0 z-50 px-8 py-4 mb-8">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-12">
+                <h1 class="text-2xl font-black text-slate-800 uppercase tracking-tighter italic">ADA <span class="text-indigo-600">SİNEKLİK</span></h1>
+                <nav class="hidden md:flex items-center gap-6">
+                    <a href="urunler.html" class="text-sm font-bold text-slate-600 hover:text-indigo-600 uppercase tracking-wide transition-colors">
+                        <i class="fas fa-th-large mr-2"></i>Ürünler
+                    </a>
+                    <a id="navSiparislerim" href="siparislerim.html" class="hidden text-sm font-bold text-slate-600 hover:text-indigo-600 uppercase tracking-wide transition-colors">
+                        <i class="fas fa-box mr-2"></i>Siparişlerim
+                    </a>
+                </nav>
+            </div>
+            <div class="flex items-center gap-4">
+                <div id="authButtons" class="flex gap-2">
+                    <a href="login.html" class="px-6 py-2 rounded-xl border-2 border-slate-100 font-bold text-slate-600 text-sm uppercase">Giriş</a>
+                    <a href="login.html" class="px-6 py-2 rounded-xl bg-indigo-600 font-bold text-white text-sm uppercase">Kayıt</a>
+                </div>
+                <div id="userInfo" class="hidden flex items-center gap-4 border-l pl-4">
+                    <div class="text-right">
+                        <span id="userNameDisplay" class="text-sm font-bold text-slate-800 uppercase">-</span>
+                    </div>
+                    <button onclick="cikisYap()" class="w-10 h-10 flex items-center justify-center rounded-full bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition-all">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-6 pb-20">
+        <div class="relative bg-slate-900 p-8 rounded-[2.5rem] shadow-2xl mb-8 text-white overflow-hidden">
+            <div id="lockOverlay" class="absolute inset-0 z-40 auth-overlay flex flex-col items-center justify-center text-center p-6 transition-all">
+                <i class="fas fa-lock text-4xl text-indigo-400 mb-4"></i>
+                <h2 class="text-xl font-black uppercase italic mb-2">Ürün Eklemek İçin Oturum Açın</h2>
+                <p class="text-slate-300 text-sm mb-6 font-medium">Fiyatları görmek ve sepetinizi oluşturmak için giriş yapmalısınız.</p>
+                <a href="login.html" class="bg-indigo-600 px-8 py-3 rounded-xl font-black uppercase text-sm hover:bg-indigo-500 transition-all shadow-lg">Şimdi Giriş Yap</a>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4">
+                <div class="lg:col-span-2">
+                    <label class="block text-[10px] uppercase mb-2 text-slate-400 font-bold tracking-widest">1. Üretim Tanımı</label>
+                    <select id="form_tanim" onchange="fiyatKurallariniGetir(this.value)" class="w-full p-4 rounded-2xl bg-slate-800 border-2 border-slate-700 text-sm font-bold text-white outline-none focus:border-indigo-500 transition-all">
+                        <option value="">Lütfen Ürün Seçin...</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] uppercase mb-2 text-slate-400 font-bold tracking-widest">Ölçü (En x Boy)</label>
+                    <div class="flex gap-1">
+                        <input type="number" id="form_en" placeholder="En" class="w-full p-4 rounded-2xl bg-slate-800 border-2 border-slate-700 text-xs font-bold text-white text-center">
+                        <input type="number" id="form_boy" placeholder="Boy" class="w-full p-4 rounded-2xl bg-slate-800 border-2 border-slate-700 text-xs font-bold text-white text-center">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[10px] uppercase mb-2 text-slate-400 font-bold tracking-widest">Profil Renk</label>
+                    <select id="form_renk" class="w-full p-4 rounded-2xl bg-slate-800 border-2 border-slate-700 text-xs font-bold text-white"></select>
+                </div>
+                <div>
+                    <label class="block text-[10px] uppercase mb-2 text-slate-400 font-bold tracking-widest">Tül Tipi</label>
+                    <select id="form_tul" class="w-full p-4 rounded-2xl bg-slate-800 border-2 border-slate-700 text-xs font-bold text-white"></select>
+                </div>
+                <div>
+                    <label class="block text-[10px] uppercase mb-2 text-slate-400 font-bold tracking-widest">Adet</label>
+                    <input type="number" id="form_adet" value="1" min="1" class="w-full p-4 rounded-2xl bg-slate-800 border-2 border-slate-700 text-xs font-bold text-white text-center">
+                </div>
+                <div class="flex items-end">
+                    <button onclick="kalemEkle()" class="w-full bg-indigo-600 hover:bg-indigo-500 p-4 rounded-2xl font-black text-xs transition-all uppercase italic shadow-xl">
+                        Sepete Ekle
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-[2.5rem] shadow-xl border border-slate-100 overflow-hidden">
+            <table class="w-full text-left">
+                <thead class="bg-slate-50 border-b">
+                    <tr>
+                        <th class="p-8 text-[10px] font-black text-slate-400 uppercase tracking-widest">Ürün Bilgileri</th>
+                        <th class="p-8 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Ölçüler</th>
+                        <th class="p-8 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Adet</th>
+                        <th class="p-8 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Fiyat</th>
+                        <th class="p-8 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">İşlem</th>
+                    </tr>
+                </thead>
+                <tbody id="siparisKalemleri" class="divide-y divide-slate-100"></tbody>
+            </table>
+            <div id="bosMesaj" class="p-20 text-center">
+                <p class="text-slate-400 font-bold uppercase italic">Liste henüz boş</p>
+            </div>
+            
+            <div id="toplamPaneli" class="hidden p-8 bg-indigo-50 border-t border-indigo-100 flex justify-end items-center gap-8">
+                <div class="text-right">
+                    <span class="block text-[10px] font-black text-indigo-400 uppercase">Genel Toplam</span>
+                    <span id="genelToplam" class="text-3xl font-black text-indigo-700 italic">0,00 ₺</span>
+                </div>
+                <button onclick="siparisOnayla()" class="bg-indigo-600 text-white px-10 py-5 rounded-2xl font-black shadow-xl hover:bg-indigo-700 transition-all uppercase italic">
+                    Siparişi Onayla
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, doc, getDoc, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC4yp1I0chuf2j_emvMUiGqWXoo9x-PxgY",
+            authDomain: "adasineklik54-148c1.firebaseapp.com",
+            projectId: "adasineklik54-148c1",
+            storageBucket: "adasineklik54-148c1.firebasestorage.app",
+            messagingSenderId: "203700124554",
+            appId: "1:203700124554:web:049b5df50866a795dba673"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let sepet = JSON.parse(localStorage.getItem("ada_sineklik_sepet") || "[]");
+        let aktifKurallar = []; // Yeni m2 kurallarını burada tutacağız
+
+        function oturumArayuzGuncelle() {
+            const isLogged = sessionStorage.getItem("musteriGiris") === "true";
+            const musteriBilgi = JSON.parse(sessionStorage.getItem("musteriBilgi") || "{}");
+            const lockOverlay = document.getElementById('lockOverlay');
+            const navSiparislerim = document.getElementById('navSiparislerim');
+
+            if(isLogged) {
+                document.getElementById('authButtons').classList.add('hidden');
+                document.getElementById('userInfo').classList.remove('hidden');
+                document.getElementById('userNameDisplay').innerText = musteriBilgi.adSoyad?.toLocaleUpperCase('tr-TR') || "";
+                lockOverlay.classList.add('hidden');
+                navSiparislerim.classList.remove('hidden');
+            } else {
+                document.getElementById('authButtons').classList.remove('hidden');
+                document.getElementById('userInfo').classList.add('hidden');
+                lockOverlay.classList.remove('hidden');
+                navSiparislerim.classList.add('hidden');
+            }
+        }
+
+        // Ürünleri Listele
+        onSnapshot(collection(db, "urunler"), (snap) => {
+            const select = document.getElementById('form_tanim');
+            const urlParams = new URLSearchParams(window.location.search);
+            const gelenTanim = urlParams.get('tanim')?.toLocaleUpperCase('tr-TR');
+
+            select.innerHTML = '<option value="">Lütfen Üretim Tanımı Seçin...</option>';
+            snap.forEach(res => {
+                const u = res.data();
+                const ad = u.ozellikler?.[0]?.deger || "İsimsiz Ürün";
+                const adBüyük = ad.toLocaleUpperCase('tr-TR');
+                const isSelected = adBüyük === gelenTanim ? 'selected' : '';
+                select.innerHTML += `<option value="${res.id}" ${isSelected}>${adBüyük}</option>`;
+            });
+
+            if (select.value) window.fiyatKurallariniGetir(select.value);
+        });
+
+        // Ayarları Getir (Renk ve Tül)
+        onSnapshot(collection(db, "ayarlar"), (snap) => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const gelenRenk = urlParams.get('renk')?.toLocaleUpperCase('tr-TR');
+            const gelenTul = urlParams.get('tul')?.toLocaleUpperCase('tr-TR');
+
+            snap.forEach(res => {
+                const data = res.data();
+                const baslik = data.baslik?.toLocaleUpperCase('tr-TR') || "";
+                if(baslik.includes("RENK")) {
+                    document.getElementById('form_renk').innerHTML = data.liste.map(r => {
+                        const val = r.toLocaleUpperCase('tr-TR');
+                        return `<option value="${val}" ${val === gelenRenk ? 'selected' : ''}>${val}</option>`;
+                    }).join('');
+                }
+                if(baslik.includes("TÜL") || baslik.includes("TUL")) {
+                    document.getElementById('form_tul').innerHTML = data.liste.map(t => {
+                        const val = t.toLocaleUpperCase('tr-TR');
+                        return `<option value="${val}" ${val === gelenTul ? 'selected' : ''}>${val}</option>`;
+                    }).join('');
+                }
+            });
+        });
+
+        // --- YENİ M2 FİYATLANDIRMA MANTIĞI ---
+        window.fiyatKurallariniGetir = async (id) => {
+            if(!id) { aktifKurallar = []; return; }
+            const docSnap = await getDoc(doc(db, "fiyatKuralları", id));
+            aktifKurallar = docSnap.exists() ? docSnap.data().kurallar : [];
+        };
+
+        function fiyatHesapla(en, boy) {
+            if(!aktifKurallar || aktifKurallar.length === 0) return 0;
+            
+            const m2 = (en * boy) / 10000;
+            // Tanımlanan kurallar arasında m2'nin hangi aralığa düştüğünü bul
+            const kural = aktifKurallar.find(k => m2 >= k.min && m2 <= k.max);
+            
+            return kural ? parseFloat(kural.fiyat) : 0;
+        }
+        // ------------------------------------
+
+        window.kalemEkle = () => {
+            if(sessionStorage.getItem("musteriGiris") !== "true") return alert("Lütfen giriş yapın!");
+            const selectEl = document.getElementById('form_tanim');
+            const tanim = selectEl.options[selectEl.selectedIndex].text;
+            const en = parseFloat(document.getElementById('form_en').value);
+            const boy = parseFloat(document.getElementById('form_boy').value);
+            const adet = parseInt(document.getElementById('form_adet').value);
+            const renk = document.getElementById('form_renk').value;
+            const tul = document.getElementById('form_tul').value;
+
+            if(!en || !boy || selectEl.value === "") return alert("Lütfen tüm alanları doldurun!");
+            
+            const birimFiyat = fiyatHesapla(en, boy);
+            if(birimFiyat === 0) return alert("Bu ölçüler (m2) için bir fiyat aralığı tanımlanmamış!");
+
+            sepet.push({
+                id: Date.now(),
+                tanim: tanim,
+                en, boy, adet, renk, tul,
+                maliyet: birimFiyat * adet 
+            });
+
+            localStorage.setItem("ada_sineklik_sepet", JSON.stringify(sepet));
+            tabloGuncelle();
+            document.getElementById('form_en').value = "";
+            document.getElementById('form_boy').value = "";
+        };
+
+        window.kalemSil = (id) => {
+            sepet = sepet.filter(k => k.id !== id);
+            localStorage.setItem("ada_sineklik_sepet", JSON.stringify(sepet));
+            tabloGuncelle();
+        };
+
+        function tabloGuncelle() {
+            const tbody = document.getElementById('siparisKalemleri');
+            const panel = document.getElementById('toplamPaneli');
+            const bos = document.getElementById('bosMesaj');
+            tbody.innerHTML = "";
+            let gToplam = 0;
+
+            if(sepet.length === 0) {
+                bos.classList.remove('hidden');
+                panel.classList.add('hidden');
+                return;
+            }
+
+            bos.classList.add('hidden');
+            panel.classList.remove('hidden');
+
+            sepet.forEach(k => {
+                gToplam += k.maliyet;
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="p-8">
+                            <span class="block font-black text-slate-800 uppercase italic tracking-tighter">${k.tanim}</span>
+                            <div class="text-[9px] text-slate-400 font-black mt-1 uppercase flex gap-2">
+                                <span class="bg-slate-100 px-2 py-1 rounded">RENK: ${k.renk}</span>
+                                <span class="bg-slate-100 px-2 py-1 rounded">TÜL: ${k.tul}</span>
+                            </div>
+                        </td>
+                        <td class="p-8 text-center font-black text-slate-800">${k.en} x ${k.boy}</td>
+                        <td class="p-8 text-center font-black text-slate-800 text-lg">${k.adet} <span class="text-[10px] text-slate-400 uppercase">Adet</span></td>
+                        <td class="p-8 text-right font-black text-slate-900 text-xl italic">${k.maliyet.toFixed(2)} ₺</td>
+                        <td class="p-8 text-right">
+                            <button onclick="kalemSil(${k.id})" class="w-10 h-10 bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white rounded-xl transition-all"><i class="fas fa-trash-alt"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+            document.getElementById('genelToplam').innerText = gToplam.toLocaleString('tr-TR', { minimumFractionDigits: 2 }) + " ₺";
+        }
+
+        window.siparisOnayla = async () => {
+            const musteriBilgi = JSON.parse(sessionStorage.getItem("musteriBilgi"));
+            if(!musteriBilgi || sepet.length === 0) return;
+            const hesaplananToplam = sepet.reduce((a, b) => a + b.maliyet, 0);
+
+            try {
+                await addDoc(collection(db, "siparisler"), {
+                    musteri: musteriBilgi.adSoyad, 
+                    musteriId: musteriBilgi.id,
+                    telNo: musteriBilgi.telNo,
+                    kalemler: sepet,
+                    durum: "Online Sipariş",
+                    tarih: new Date().toISOString(),
+                    fiyat: hesaplananToplam,
+                    toplamTutar: hesaplananToplam,
+                    toplamAdet: sepet.reduce((a, b) => a + b.adet, 0),
+                    kaynak: "Web Müşteri"
+                });
+                alert("Siparişiniz başarıyla alınmıştır!");
+                sepet = [];
+                localStorage.removeItem("ada_sineklik_sepet");
+                tabloGuncelle();
+            } catch (e) { alert("Hata: " + e.message); }
+        };
+
+        window.cikisYap = () => { sessionStorage.clear(); localStorage.removeItem("ada_sineklik_sepet"); window.location.reload(); };
+        
+        oturumArayuzGuncelle();
+        tabloGuncelle();
+    </script>
+</body>
+</html>

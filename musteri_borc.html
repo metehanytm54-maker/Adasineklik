@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hesap Özeti | Ada Sineklik</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); }
+        .scroll-hide::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="bg-[#F3F4F6] min-h-screen text-slate-900">
+
+    <nav class="sticky top-0 z-50 bg-white/70 backdrop-blur-lg border-b border-slate-200 px-6 py-4">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-8">
+                <h1 onclick="location.href='urunler.html'" class="text-xl font-extrabold tracking-tighter italic cursor-pointer">
+                    ADA <span class="text-indigo-600">SİNEKLİK</span>
+                </h1>
+                
+                <div class="hidden md:flex items-center gap-6 border-l border-slate-200 pl-8">
+                    <a href="urunler.html" class="text-xs font-bold text-slate-600 hover:text-indigo-600 uppercase tracking-widest transition-colors">
+                        <i class="fas fa-th-large mr-2"></i>Ürünler
+                    </a>
+                    <a href="siparislerim.html" class="text-xs font-bold text-slate-600 hover:text-indigo-600 uppercase tracking-widest transition-colors">
+                        <i class="fas fa-history mr-2"></i>Siparişlerim
+                    </a>
+                    <a href="siparis_ver.html" class="text-xs font-bold text-slate-600 hover:text-indigo-600 uppercase tracking-widest transition-colors">
+                        <i class="fas fa-plus-circle mr-2"></i>Yeni Sipariş Ver
+                    </a>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <div class="text-right hidden sm:block">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase leading-none">Hoşgeldiniz</p>
+                    <p id="musteriAdHeader" class="text-sm font-bold text-slate-700">-</p>
+                </div>
+                <button onclick="sessionStorage.clear(); location.href='login.html'" class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-rose-50 hover:text-rose-600 transition-all">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto px-6 py-8">
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200 relative overflow-hidden group">
+                <div class="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform duration-500">
+                    <i class="fas fa-shopping-cart text-8xl"></i>
+                </div>
+                <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2">Toplam Satın Alma</p>
+                <h3 id="toplamSatinAlma" class="text-3xl font-extrabold text-slate-800 tracking-tight">0.00 ₺</h3>
+                <p class="text-[10px] text-slate-400 mt-2 font-semibold">Tüm siparişlerin toplamı</p>
+            </div>
+
+            <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200 relative overflow-hidden group">
+                <div class="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform duration-500 text-emerald-600">
+                    <i class="fas fa-money-bill-wave text-8xl"></i>
+                </div>
+                <p class="text-[11px] font-black text-emerald-500 uppercase tracking-widest mb-2">Toplam Ödemelerim</p>
+                <h3 id="toplamOdeme" class="text-3xl font-extrabold text-emerald-600 tracking-tight">0.00 ₺</h3>
+                <p class="text-[10px] text-emerald-400 mt-2 font-semibold">Sisteme işlenen tahsilatlar</p>
+            </div>
+
+            <div id="bakiyeKarti" class="bg-slate-900 p-6 rounded-[2rem] shadow-2xl relative overflow-hidden group transition-all duration-500">
+                <div class="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform duration-500">
+                    <i class="fas fa-wallet text-8xl text-white"></i>
+                </div>
+                <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2">Güncel Borç Durumu</p>
+                <h3 id="kalanBorc" class="text-3xl font-extrabold text-white tracking-tight">0.00 ₺</h3>
+                <div id="durumRozeti" class="inline-flex items-center gap-2 mt-2 px-3 py-1 rounded-full bg-white/10 text-[10px] font-bold text-white uppercase tracking-tighter">
+                    Hesaplanıyor...
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+            <div class="lg:col-span-3">
+                <div class="flex items-center justify-between mb-6 px-2">
+                    <h2 class="text-lg font-extrabold text-slate-800 uppercase tracking-tighter italic">
+                        <i class="fas fa-history mr-2 text-indigo-600"></i> Sipariş Detayları
+                    </h2>
+                </div>
+                <div id="siparisListesi" class="space-y-4">
+                    </div>
+            </div>
+
+            <div class="lg:col-span-2">
+                <div class="flex items-center justify-between mb-6 px-2">
+                    <h2 class="text-lg font-extrabold text-slate-800 uppercase tracking-tighter italic">
+                        <i class="fas fa-receipt mr-2 text-emerald-500"></i> Ödeme Hareketleri
+                    </h2>
+                </div>
+                <div id="tahsilatListesi" class="space-y-4 bg-white/50 p-4 rounded-[2rem] border border-slate-200 border-dashed">
+                    </div>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC4yp1I0chuf2j_emvMUiGqWXoo9x-PxgY",
+            authDomain: "adasineklik54-148c1.firebaseapp.com",
+            projectId: "adasineklik54-148c1",
+            storageBucket: "adasineklik54-148c1.firebasestorage.app",
+            messagingSenderId: "203700124554",
+            appId: "1:203700124554:web:049b5df50866a795dba673"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const musteriBilgi = JSON.parse(sessionStorage.getItem("musteriBilgi") || "{}");
+        const ad = musteriBilgi.adSoyad;
+        document.getElementById('musteriAdHeader').innerText = ad || "Misafir";
+
+        let tBorc = 0;
+        let tOdeme = 0;
+
+        function formatPara(tutar) {
+            return new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(tutar) + " ₺";
+        }
+
+        onSnapshot(query(collection(db, "siparisler"), where("musteri", "==", ad)), (snap) => {
+            tBorc = 0;
+            const liste = document.getElementById('siparisListesi');
+            let html = "";
+            const docs = [];
+            snap.forEach(doc => docs.push(doc.data()));
+            docs.sort((a,b) => new Date(b.tarih) - new Date(a.tarih));
+
+            docs.forEach(s => {
+                const tutar = parseFloat(s.fiyat || s.toplamTutar || 0);
+                tBorc += tutar;
+                html += `
+                    <div class="bg-white p-5 rounded-3xl border border-slate-200 hover:border-indigo-300 transition-all group">
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
+                                    <i class="fas fa-box"></i>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">${new Date(s.tarih).toLocaleDateString('tr-TR')}</p>
+                                    <h4 class="font-bold text-slate-800 uppercase italic text-sm tracking-tight">${s.kalemler?.length || 0} Ürün Sipariş Edildi</h4>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-extrabold text-slate-900 tracking-tight italic">${formatPara(tutar)}</p>
+                                <span class="text-[9px] font-black text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded uppercase">Borç Kaydı</span>
+                            </div>
+                        </div>
+                    </div>`;
+            });
+            liste.innerHTML = html || '<div class="text-center py-10 text-slate-400 font-bold uppercase text-xs italic tracking-widest">Henüz bir siparişiniz bulunmuyor.</div>';
+            document.getElementById('toplamSatinAlma').innerText = formatPara(tBorc);
+            hesaplaGenelDurum();
+        });
+
+        onSnapshot(query(collection(db, "tahsilatlar"), where("musteri", "==", ad)), (snap) => {
+            tOdeme = 0;
+            const liste = document.getElementById('tahsilatListesi');
+            let html = "";
+            const docs = [];
+            snap.forEach(doc => docs.push(doc.data()));
+            docs.sort((a,b) => new Date(b.tarih) - new Date(a.tarih));
+
+            docs.forEach(t => {
+                const tutar = parseFloat(t.tutar || 0);
+                tOdeme += tutar;
+                html += `
+                    <div class="flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-emerald-100">
+                        <div>
+                            <p class="text-[9px] font-bold text-emerald-500 leading-none mb-1">${new Date(t.tarih).toLocaleDateString('tr-TR')}</p>
+                            <h5 class="text-[11px] font-bold text-slate-700 uppercase italic leading-none">${t.aciklama || 'Ödeme Alındı'}</h5>
+                        </div>
+                        <p class="text-xs font-black text-emerald-600 italic tracking-tight">+ ${formatPara(tutar)}</p>
+                    </div>`;
+            });
+            liste.innerHTML = html || '<div class="text-center py-4 text-slate-400 text-[10px] font-bold uppercase italic">Ödeme kaydı yok.</div>';
+            document.getElementById('toplamOdeme').innerText = formatPara(tOdeme);
+            hesaplaGenelDurum();
+        });
+
+        function hesaplaGenelDurum() {
+            const bakiye = tBorc - tOdeme;
+            const bakiyeEl = document.getElementById('kalanBorc');
+            const durumEl = document.getElementById('durumRozeti');
+            const kartEl = document.getElementById('bakiyeKarti');
+
+            bakiyeEl.innerText = formatPara(Math.abs(bakiye));
+
+            if (bakiye > 0) {
+                durumEl.innerText = "Borcunuz Bulunuyor";
+                durumEl.className = "inline-flex items-center gap-2 mt-2 px-3 py-1 rounded-full bg-rose-500/20 text-[10px] font-bold text-rose-300 uppercase tracking-tighter";
+                kartEl.classList.replace('bg-emerald-900', 'bg-slate-900');
+            } else if (bakiye < 0) {
+                durumEl.innerText = "Alacaklısınız (Fazla Ödeme)";
+                durumEl.className = "inline-flex items-center gap-2 mt-2 px-3 py-1 rounded-full bg-emerald-500/20 text-[10px] font-bold text-emerald-400 uppercase tracking-tighter";
+                kartEl.classList.replace('bg-slate-900', 'bg-emerald-900');
+            } else {
+                durumEl.innerText = "Borç Kapalı";
+                durumEl.className = "inline-flex items-center gap-2 mt-2 px-3 py-1 rounded-full bg-white/10 text-[10px] font-bold text-white uppercase tracking-tighter";
+            }
+        }
+    </script>
+</body>
+</html>

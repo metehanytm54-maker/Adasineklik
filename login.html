@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giriş & Kayıt - Ada Sineklik</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+        body { font-family: 'Inter', sans-serif; background: #f8fafc; }
+        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        .input-focus { transition: all 0.3s ease; }
+        .input-focus:focus { border-color: #4f46e5; background: white; box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1); }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 md:p-10">
+
+    <div class="w-full max-w-xl glass-card rounded-[3rem] shadow-2xl border border-white overflow-hidden">
+        <div class="p-8 md:p-12">
+            
+            <div class="text-center mb-10">
+                <h1 class="text-4xl font-black text-slate-900 tracking-tighter italic uppercase">ADA <span class="text-indigo-600">SİNEKLİK</span></h1>
+                <p id="formBaslik" class="text-slate-400 font-bold mt-2 uppercase text-[10px] tracking-[0.2em]">Hızlı Sipariş İçin Oturum Açın</p>
+            </div>
+
+            <div id="girisBolumu" class="space-y-4">
+                <div class="space-y-1">
+                    <label class="text-[10px] font-black text-slate-400 uppercase ml-2">Telefon Numaranız</label>
+                    <input type="text" id="g_telNo" placeholder="05XXXXXXXXX" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none font-bold input-focus">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[10px] font-black text-slate-400 uppercase ml-2">Şifreniz</label>
+                    <input type="password" id="g_sifre" placeholder="••••••" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none font-bold input-focus">
+                </div>
+                <button onclick="girisYap()" id="btnGiris" class="w-full bg-slate-900 text-white py-5 rounded-2xl font-black shadow-xl hover:bg-indigo-600 transition-all uppercase italic tracking-wider">
+                    Giriş Yap ve Devam Et
+                </button>
+                <button onclick="formDegistir('kayit')" class="w-full text-indigo-600 font-bold text-sm uppercase tracking-tighter py-2">
+                    Hesabınız yok mu? <span class="underline">Hemen Kayıt Olun</span>
+                </button>
+            </div>
+
+            <div id="kayitBolumu" class="hidden space-y-4">
+                <div class="space-y-1">
+                    <label class="text-[10px] font-black text-slate-400 uppercase ml-2">Ad Soyad / Firma Ünvanı *</label>
+                    <input type="text" id="k_adSoyad" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none font-bold input-focus uppercase">
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-black text-slate-400 uppercase ml-2">Telefon No *</label>
+                        <input type="text" id="k_telNo" placeholder="05XXXXXXXXX" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none font-bold input-focus">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-black text-slate-400 uppercase ml-2">Şifre Belirleyin *</label>
+                        <input type="text" id="k_sifre" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none font-bold input-focus">
+                    </div>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-[10px] font-black text-slate-400 uppercase ml-2">E-Posta Adresi (Opsiyonel)</label>
+                    <input type="email" id="k_email" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none font-bold input-focus">
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-[10px] font-black text-slate-400 uppercase ml-2">Teslimat / Fatura Adresi</label>
+                    <textarea id="k_adres" rows="3" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none font-bold input-focus"></textarea>
+                </div>
+
+                <button onclick="kayitOl()" id="btnKayit" class="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black shadow-xl hover:bg-slate-900 transition-all uppercase italic tracking-wider mt-2">
+                    Kaydı Tamamla
+                </button>
+                <button onclick="formDegistir('giris')" class="w-full text-slate-500 font-bold text-sm uppercase tracking-tighter py-2">
+                    Zaten Üyeyim, <span class="underline text-indigo-600">Giriş Yap</span>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC4yp1I0chuf2j_emvMUiGqWXoo9x-PxgY",
+            authDomain: "adasineklik54-148c1.firebaseapp.com",
+            projectId: "adasineklik54-148c1",
+            storageBucket: "adasineklik54-148c1.firebasestorage.app",
+            messagingSenderId: "203700124554",
+            appId: "1:203700124554:web:049b5df50866a795dba673"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.formDegistir = (tip) => {
+            const g = document.getElementById('girisBolumu');
+            const k = document.getElementById('kayitBolumu');
+            const b = document.getElementById('formBaslik');
+            if(tip === 'kayit') {
+                g.classList.add('hidden'); k.classList.remove('hidden');
+                b.innerText = "Müşteri Portföyüne Kayıt Ol";
+            } else {
+                k.classList.add('hidden'); g.classList.remove('hidden');
+                b.innerText = "Hızlı Sipariş İçin Oturum Açın";
+            }
+        };
+
+        window.girisYap = async () => {
+            const telNo = document.getElementById('g_telNo').value.trim();
+            const sifre = document.getElementById('g_sifre').value.trim();
+            const btn = document.getElementById('btnGiris');
+            if(!telNo || !sifre) return alert("Lütfen telefon ve şifrenizi girin.");
+            btn.disabled = true; btn.innerText = "KONTROL EDİLİYOR...";
+            try {
+                const q = query(collection(db, "musteriler"), where("telNo", "==", telNo), where("sifre", "==", sifre));
+                const snap = await getDocs(q);
+                if (!snap.empty) {
+                    const mDoc = snap.docs[0]; const mData = mDoc.data();
+                    sessionStorage.setItem("musteriGiris", "true");
+                    sessionStorage.setItem("musteriBilgi", JSON.stringify({ id: mDoc.id, adSoyad: mData.adSoyad, telNo: mData.telNo, adres: mData.adres }));
+                    window.location.href = "siparis_ver.html?islem=tamamla";
+                } else { alert("Telefon numarası veya şifre hatalı!"); }
+            } catch (e) { alert("Giriş hatası: " + e.message); } 
+            finally { btn.disabled = false; btn.innerText = "Giriş Yap ve Devam Et"; }
+        };
+
+        // KESİN ÇÖZÜMLÜ KAYIT FONKSİYONU
+        window.kayitOl = async () => {
+            const btn = document.getElementById('btnKayit');
+            // Türkçe karakter uyumlu büyük harf dönüşümü
+            const adSoyadRaw = document.getElementById('k_adSoyad').value.trim();
+            const adSoyad = adSoyadRaw.toLocaleUpperCase('tr-TR'); 
+            
+            const telNo = document.getElementById('k_telNo').value.trim();
+            const email = document.getElementById('k_email').value.trim().toLowerCase();
+            const sifre = document.getElementById('k_sifre').value.trim();
+            const adres = document.getElementById('k_adres').value.trim();
+
+            if(!adSoyad || !telNo || !sifre) return alert("Lütfen zorunlu alanları (*) doldurun!");
+
+            btn.disabled = true;
+            btn.innerText = "KAYIT KONTROL EDİLİYOR...";
+
+            try {
+                // 1. ADIM: AYNI İSİM VAR MI?
+                const qAd = query(collection(db, "musteriler"), where("adSoyad", "==", adSoyad));
+                const snapAd = await getDocs(qAd);
+                if(!snapAd.empty) {
+                    alert("DİKKAT: '" + adSoyad + "' ismiyle zaten bir kayıt var! Lütfen giriş yapın veya isminizi kontrol edin.");
+                    btn.disabled = false; btn.innerText = "Kaydı Tamamla";
+                    return;
+                }
+
+                // 2. ADIM: AYNI TELEFON VAR MI?
+                const qTel = query(collection(db, "musteriler"), where("telNo", "==", telNo));
+                const snapTel = await getDocs(qTel);
+                if(!snapTel.empty) {
+                    alert("DİKKAT: Bu telefon numarası (" + telNo + ") zaten sistemde kayıtlı!");
+                    btn.disabled = false; btn.innerText = "Kaydı Tamamla";
+                    return;
+                }
+
+                // 3. ADIM: AYNI EMAİL VAR MI? (Eğer girildiyse)
+                if(email !== "") {
+                    const qMail = query(collection(db, "musteriler"), where("email", "==", email));
+                    const snapMail = await getDocs(qMail);
+                    if(!snapMail.empty) {
+                        alert("DİKKAT: Bu e-posta adresi zaten kullanılıyor!");
+                        btn.disabled = false; btn.innerText = "Kaydı Tamamla";
+                        return;
+                    }
+                }
+
+                // EĞER BURAYA GELDİYSE KAYIT YAPILABİLİR
+                const payload = {
+                    adSoyad: adSoyad,
+                    telNo: telNo,
+                    email: email,
+                    adres: adres,
+                    sifre: sifre,
+                    sonGuncelleme: new Date().toISOString(),
+                    kayitTarihi: new Date().toISOString(),
+                    durum: "Aktif"
+                };
+
+                const docRef = await addDoc(collection(db, "musteriler"), payload);
+                
+                sessionStorage.setItem("musteriGiris", "true");
+                sessionStorage.setItem("musteriBilgi", JSON.stringify({ id: docRef.id, adSoyad: payload.adSoyad, telNo: payload.telNo, adres: payload.adres }));
+
+                alert("Kaydınız başarıyla oluşturuldu! Hoş geldiniz.");
+                window.location.href = "siparis_ver.html?islem=tamamla";
+
+            } catch (e) {
+                alert("Kayıt sırasında bir teknik hata oluştu: " + e.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Kaydı Tamamla";
+            }
+        };
+    </script>
+</body>
+</html>

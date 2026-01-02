@@ -6,7 +6,6 @@
     <title>Sipariş Ver - Ada Sineklik</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
         .auth-overlay {
             background: rgba(15, 23, 42, 0.8);
@@ -134,11 +133,8 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // EmailJS Başlatma (BURAYA KENDİ PUBLIC KEY'İNİ YAZMALISIN)
-        emailjs.init("SENIN_PUBLIC_KEYIN");
-
         let sepet = JSON.parse(localStorage.getItem("ada_sineklik_sepet") || "[]");
-        let aktifKurallar = [];
+        let aktifKurallar = []; // Yeni m2 kurallarını burada tutacağız
 
         function oturumArayuzGuncelle() {
             const isLogged = sessionStorage.getItem("musteriGiris") === "true";
@@ -160,10 +156,12 @@
             }
         }
 
+        // Ürünleri Listele
         onSnapshot(collection(db, "urunler"), (snap) => {
             const select = document.getElementById('form_tanim');
             const urlParams = new URLSearchParams(window.location.search);
             const gelenTanim = urlParams.get('tanim')?.toLocaleUpperCase('tr-TR');
+
             select.innerHTML = '<option value="">Lütfen Üretim Tanımı Seçin...</option>';
             snap.forEach(res => {
                 const u = res.data();
@@ -172,13 +170,16 @@
                 const isSelected = adBüyük === gelenTanim ? 'selected' : '';
                 select.innerHTML += `<option value="${res.id}" ${isSelected}>${adBüyük}</option>`;
             });
+
             if (select.value) window.fiyatKurallariniGetir(select.value);
         });
 
+        // Ayarları Getir (Renk ve Tül)
         onSnapshot(collection(db, "ayarlar"), (snap) => {
             const urlParams = new URLSearchParams(window.location.search);
             const gelenRenk = urlParams.get('renk')?.toLocaleUpperCase('tr-TR');
             const gelenTul = urlParams.get('tul')?.toLocaleUpperCase('tr-TR');
+
             snap.forEach(res => {
                 const data = res.data();
                 const baslik = data.baslik?.toLocaleUpperCase('tr-TR') || "";
@@ -197,6 +198,7 @@
             });
         });
 
+        // --- YENİ M2 FİYATLANDIRMA MANTIĞI ---
         window.fiyatKurallariniGetir = async (id) => {
             if(!id) { aktifKurallar = []; return; }
             const docSnap = await getDoc(doc(db, "fiyatKuralları", id));
@@ -205,10 +207,14 @@
 
         function fiyatHesapla(en, boy) {
             if(!aktifKurallar || aktifKurallar.length === 0) return 0;
+            
             const m2 = (en * boy) / 10000;
+            // Tanımlanan kurallar arasında m2'nin hangi aralığa düştüğünü bul
             const kural = aktifKurallar.find(k => m2 >= k.min && m2 <= k.max);
+            
             return kural ? parseFloat(kural.fiyat) : 0;
         }
+        // ------------------------------------
 
         window.kalemEkle = () => {
             if(sessionStorage.getItem("musteriGiris") !== "true") return alert("Lütfen giriş yapın!");
@@ -219,12 +225,23 @@
             const adet = parseInt(document.getElementById('form_adet').value);
             const renk = document.getElementById('form_renk').value;
             const tul = document.getElementById('form_tul').value;
+
             if(!en || !boy || selectEl.value === "") return alert("Lütfen tüm alanları doldurun!");
+            
             const birimFiyat = fiyatHesapla(en, boy);
-            if(birimFiyat === 0) return alert("Bu ölçüler için fiyat tanımlanmamış!");
-            sepet.push({ id: Date.now(), tanim, en, boy, adet, renk, tul, maliyet: birimFiyat * adet });
+            if(birimFiyat === 0) return alert("Bu ölçüler (m2) için bir fiyat aralığı tanımlanmamış!");
+
+            sepet.push({
+                id: Date.now(),
+                tanim: tanim,
+                en, boy, adet, renk, tul,
+                maliyet: birimFiyat * adet 
+            });
+
             localStorage.setItem("ada_sineklik_sepet", JSON.stringify(sepet));
             tabloGuncelle();
+            document.getElementById('form_en').value = "";
+            document.getElementById('form_boy').value = "";
         };
 
         window.kalemSil = (id) => {
@@ -239,13 +256,37 @@
             const bos = document.getElementById('bosMesaj');
             tbody.innerHTML = "";
             let gToplam = 0;
-            if(sepet.length === 0) { bos.classList.remove('hidden'); panel.classList.add('hidden'); return; }
-            bos.classList.add('hidden'); panel.classList.remove('hidden');
+
+            if(sepet.length === 0) {
+                bos.classList.remove('hidden');
+                panel.classList.add('hidden');
+                return;
+            }
+
+            bos.classList.add('hidden');
+            panel.classList.remove('hidden');
+
             sepet.forEach(k => {
                 gToplam += k.maliyet;
-                tbody.innerHTML += `<tr><td class="p-8"><span class="block font-black text-slate-800 uppercase italic tracking-tighter">${k.tanim}</span></td><td class="p-8 text-center font-black">${k.en}x${k.boy}</td><td class="p-8 text-center font-black">${k.adet}</td><td class="p-8 text-right font-black">${k.maliyet.toFixed(2)} ₺</td><td class="p-8 text-right"><button onclick="kalemSil(${k.id})" class="text-rose-500"><i class="fas fa-trash-alt"></i></button></td></tr>`;
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="p-8">
+                            <span class="block font-black text-slate-800 uppercase italic tracking-tighter">${k.tanim}</span>
+                            <div class="text-[9px] text-slate-400 font-black mt-1 uppercase flex gap-2">
+                                <span class="bg-slate-100 px-2 py-1 rounded">RENK: ${k.renk}</span>
+                                <span class="bg-slate-100 px-2 py-1 rounded">TÜL: ${k.tul}</span>
+                            </div>
+                        </td>
+                        <td class="p-8 text-center font-black text-slate-800">${k.en} x ${k.boy}</td>
+                        <td class="p-8 text-center font-black text-slate-800 text-lg">${k.adet} <span class="text-[10px] text-slate-400 uppercase">Adet</span></td>
+                        <td class="p-8 text-right font-black text-slate-900 text-xl italic">${k.maliyet.toFixed(2)} ₺</td>
+                        <td class="p-8 text-right">
+                            <button onclick="kalemSil(${k.id})" class="w-10 h-10 bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white rounded-xl transition-all"><i class="fas fa-trash-alt"></i></button>
+                        </td>
+                    </tr>
+                `;
             });
-            document.getElementById('genelToplam').innerText = gToplam.toLocaleString('tr-TR') + " ₺";
+            document.getElementById('genelToplam').innerText = gToplam.toLocaleString('tr-TR', { minimumFractionDigits: 2 }) + " ₺";
         }
 
         window.siparisOnayla = async () => {
@@ -254,7 +295,6 @@
             const hesaplananToplam = sepet.reduce((a, b) => a + b.maliyet, 0);
 
             try {
-                // 1. Firebase Kaydı
                 await addDoc(collection(db, "siparisler"), {
                     musteri: musteriBilgi.adSoyad, 
                     musteriId: musteriBilgi.id,
@@ -262,20 +302,12 @@
                     kalemler: sepet,
                     durum: "Online Sipariş",
                     tarih: new Date().toISOString(),
-                    toplamTutar: hesaplananToplam
+                    fiyat: hesaplananToplam,
+                    toplamTutar: hesaplananToplam,
+                    toplamAdet: sepet.reduce((a, b) => a + b.adet, 0),
+                    kaynak: "Web Müşteri"
                 });
-
-                // 2. MAİL GÖNDERME (EmailJS)
-                emailjs.send("SERVICE_ID", "TEMPLATE_ID", {
-                    musteri: musteriBilgi.adSoyad,
-                    to_email: "ebubekir5491@gmail.com"
-                }).then(() => {
-                    console.log("Mail başarıyla gönderildi.");
-                }, (hata) => {
-                    console.error("Mail hatası:", hata);
-                });
-
-                alert("Sipariş alındı ve bildirim gönderildi!");
+                alert("Siparişiniz başarıyla alınmıştır!");
                 sepet = [];
                 localStorage.removeItem("ada_sineklik_sepet");
                 tabloGuncelle();
@@ -283,6 +315,7 @@
         };
 
         window.cikisYap = () => { sessionStorage.clear(); localStorage.removeItem("ada_sineklik_sepet"); window.location.reload(); };
+        
         oturumArayuzGuncelle();
         tabloGuncelle();
     </script>
